@@ -28,9 +28,9 @@
     var payload = Object.assign({ a: a, s: SESSION }, body || {});
     var res;
     try { res = await fetch(API, { method: 'POST', body: JSON.stringify(payload), redirect: 'follow' }); }
-    catch (e) { setOnline(false); throw err('unavailable', 'Sin conexión con el servidor.'); }
+    catch (e) { setOnline(false); throw err('unavailable', 'Sin respuesta del servidor (' + (e && e.message || e) + ').'); }
     if (!res.ok) { setOnline(false); throw err('unavailable', 'El servidor no respondió (' + res.status + ').'); }
-    var j; try { j = await res.json(); } catch (e) { throw err('unavailable', 'Respuesta inválida del servidor.'); }
+    var txt = await res.text(), j; try { j = JSON.parse(txt); } catch (e) { throw err('unavailable', 'El servidor respondió algo que no es JSON: ' + txt.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 140)); }
     setOnline(true);
     if (!j.ok) {
       if ((j.code === 'unauthenticated' || j.code === 'revoked') && !(opts && opts.quiet)) onAuthLost(j);
@@ -104,7 +104,8 @@
       hideGate();
       loginResolve();
     } catch (e) {
-      showGate(e.code === 'sin_acceso' ? e.message : e.code === 'unavailable' ? 'No se pudo conectar con el servidor. Revisá la conexión e intentá de nuevo.' : (e.message || 'No se pudo ingresar.'), true);
+      showGate(e.code === 'sin_acceso' ? e.message : e.code === 'unavailable' ? 'No se pudo conectar con el servidor. Detalle: ' + e.message : (e.message || 'No se pudo ingresar.'), true);
+      var dg = gate && gate.querySelector('.dg-foot'); if (dg && !dg.querySelector('a')) dg.insertAdjacentHTML('beforeend', ' <a href="diagnostico.html">Diagnóstico de conexión</a>');
     }
   }
   var authLost = false;

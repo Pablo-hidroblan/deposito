@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Diagnóstico · Depósito</title>
+<script src="config.js"></script>
+<style>
+:root{--bg:#eef1f3;--card:#fff;--line:#d5dbe0;--ink:#17222b;--muted:#5d6b77;--ok:#1d7a4a;--bad:#b3261e}
+@media (prefers-color-scheme:dark){:root{--bg:#12181d;--card:#1b232a;--line:#2c3740;--ink:#e6edf2;--muted:#9aa8b3;--ok:#5fcf8f;--bad:#f2847b}}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;padding:16px}
+main{max-width:760px;margin:0 auto;display:grid;gap:12px}
+h1{font-size:22px;margin:4px 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:grid;gap:8px}
+.r{font-family:ui-monospace,Consolas,monospace;font-size:13px;white-space:pre-wrap;word-break:break-all;background:var(--bg);border-radius:6px;padding:8px}
+.ok{color:var(--ok);font-weight:600}.bad{color:var(--bad);font-weight:600}.m{color:var(--muted)}
+button{font:inherit;padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+</style>
+</head>
+<body>
+<main>
+  <h1>Diagnóstico de conexión</h1>
+  <p class="m">Esta página prueba la conexión entre la aplicación y el servidor de Google. Mandale a Claude una captura de toda la página.</p>
+  <div class="card"><b>1 · Configuración (config.js)</b><div class="r" id="c1"></div></div>
+  <div class="card"><b>2 · Servidor (Apps Script)</b><div class="r" id="c2">Probando…</div></div>
+  <div class="card"><b>3 · Ingreso con Google</b><div class="m">Tocá el botón y elegí la cuenta. Se muestra la respuesta exacta del servidor.</div><div id="gbtn"></div><div class="r" id="c3">Esperando…</div></div>
+  <div class="card"><b>4 · Navegador</b><div class="r" id="c4"></div></div>
+  <p><button onclick="location.reload()">Repetir</button> <a href="./">Volver a la aplicación</a></p>
+</main>
+<script>
+const C=window.DEP_CONFIG||{};const $=id=>document.getElementById(id);
+const tag=(ok,t)=>`<span class="${ok?'ok':'bad'}">${ok?'✔':'✘'} ${t}</span>`;
+$('c1').innerHTML=!window.DEP_CONFIG?tag(false,'No se cargó config.js'):
+  [tag(/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(C.apiUrl||''),'apiUrl: '+(C.apiUrl||'(vacío)')),
+   tag(/^\d+-[a-z0-9]+\.apps\.googleusercontent\.com$/.test(C.clientId||''),'clientId: '+(C.clientId||'(vacío)'))].join('\n');
+$('c4').textContent=['Dirección: '+location.href,'Navegador: '+navigator.userAgent,'En línea: '+navigator.onLine].join('\n');
+async function post(body){
+  const t0=Date.now();
+  try{
+    const r=await fetch(C.apiUrl,{method:'POST',body:JSON.stringify(body),redirect:'follow'});
+    const txt=await r.text();let j=null;try{j=JSON.parse(txt)}catch(e){}
+    return {ms:Date.now()-t0,status:r.status,url:r.url,json:j,txt:txt.slice(0,600)};
+  }catch(e){return {ms:Date.now()-t0,err:String(e&&e.message||e)}}
+}
+function show(el,x,okFn){
+  if(x.err){el.innerHTML=tag(false,'No hubo respuesta (bloqueo de red o CORS): '+x.err)+`\n(${x.ms} ms)`;return}
+  const good=x.json&&okFn(x.json);
+  el.innerHTML=tag(good,'HTTP '+x.status+' · '+x.ms+' ms')+'\n'+(x.json?'Respuesta: '+JSON.stringify(x.json):tag(false,'La respuesta no es JSON. Inicio de la respuesta:')+'\n'+x.txt.replace(/</g,'&lt;'))+'\nURL final: '+x.url;
+}
+(async()=>{
+  if(!C.apiUrl){$('c2').innerHTML=tag(false,'Falta apiUrl');return}
+  show($('c2'),await post({a:'ping'}),j=>j.ok===true);
+  const s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';
+  s.onerror=()=>{$('c3').innerHTML=tag(false,'No se pudo cargar el ingreso de Google (accounts.google.com).')};
+  s.onload=()=>{try{
+    google.accounts.id.initialize({client_id:C.clientId,callback:async r=>{$('c3').textContent='Cuenta elegida. Consultando al servidor…';
+      const x=await post({a:'login',idToken:r.credential});
+      show($('c3'),x,j=>j.ok===true);
+      if(x.json&&x.json.ok)$('c3').innerHTML+='\n'+tag(true,'Ingreso correcto: '+x.json.user.email+' · perfil '+x.json.user.perfil);}});
+    google.accounts.id.renderButton($('gbtn'),{theme:'filled_blue',size:'large',text:'signin_with',locale:'es'});
+  }catch(e){$('c3').innerHTML=tag(false,'Error del botón de Google: '+e.message)}};
+  document.head.appendChild(s);
+})();
+</script>
+</body>
+</html>
