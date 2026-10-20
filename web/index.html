@@ -2219,48 +2219,60 @@ function saveChoice(filename,data){
 }
 /* ventana de envío: destinatarios (agenda), asunto, mensaje y adjuntos */
 function openMailSend(o){
-  if(!mailer){toast("El envío por correo está disponible en la aplicación de Google.");return}
   if(!guardWrite("deposito"))return;
+  const direct=!!mailer;   /* sin envío directo (claude.ai): se abre el programa de correo con los destinatarios elegidos */
   const R=new Set((o.to||[]).map(e=>String(e).trim()).filter(e=>EMAIL_RE.test(e)));
-  const A=agendaList(),sug=knownEmails().filter(s=>!agendaBy(s.e));
   const files=o.files||[],tot=files.reduce((s,f)=>s+blobOf(f.data).size,0);
-  modal(`<div class="modal-h"><div><div class="meta">${esc(o.sub||"Correo desde la cuenta de la empresa")}</div><h3>${esc(o.title||"Enviar por correo")}</h3></div><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
+  /* contactos: agenda + Compras + proveedores + usados antes */
+  const contacts=()=>{const out=[],seen=new Set(),add=(e,n,a)=>{e=String(e||"").trim();if(!EMAIL_RE.test(e)||seen.has(e.toLowerCase()))return;seen.add(e.toLowerCase());out.push({e,n:n||"",a:a||""})};
+    agendaList().forEach(c=>add(c.email,c.nombre,c.area));
+    (S.config.comprasEmail||"").split(/[,;]/).forEach(e=>add(e,"Compras","Compras"));
+    knownEmails().forEach(s=>add(s.e,"",s.l));return out};
+  modal(`<div class="modal-h"><div><div class="meta">${esc(o.sub||(direct?"Correo desde la cuenta de la empresa":"Se abre tu programa de correo"))}</div><h3>${esc(o.title||"Enviar por correo")}</h3></div><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
    <form class="form" id="f-ms" autocomplete="off" style="padding:18px">
-     <div class="field full"><label class="lb" for="ms-in">Para <em>*</em></label>
-       <div class="chips" id="ms-chips"></div>
-       <div style="display:flex;gap:8px"><input type="text" id="ms-in" inputmode="email" list="dl-msall" placeholder="nombre@empresa.com · Enter para agregar (podés pegar varios)" style="flex:1"><button type="button" class="btn sm" id="ms-add">Agregar</button></div>
-       <datalist id="dl-msall">${A.map(c=>`<option value="${esc(c.email)}" label="${esc([c.nombre,c.area].filter(Boolean).join(" · "))}"></option>`).join("")}${sug.map(s=>`<option value="${esc(s.e)}" label="${esc(s.l)}"></option>`).join("")}</datalist>
-       ${A.length?`<div class="lb" style="margin-top:8px">Agenda</div><div style="display:flex;gap:6px;flex-wrap:wrap;max-height:120px;overflow:auto">${A.map(c=>`<button type="button" class="btn sm" data-msadd="${esc(c.email)}" title="${esc(c.email)}">+ ${esc(c.nombre||c.email)}${c.area?` <span class="meta">· ${esc(c.area)}</span>`:""}</button>`).join("")}</div>`:`<span class="hint">Las direcciones que uses se pueden guardar en la agenda (Administración › Agenda de correos).</span>`}
-     </div>
-     <div class="field full"><label class="lb" for="ms-cc">Con copia (CC)</label><input type="text" id="ms-cc" list="dl-msall" placeholder="Opcional, separadas por coma"></div>
+     <div class="field full"><label class="lb">Para <em>*</em></label>
+       <div class="chips" id="ms-chips"></div><span class="hint" id="ms-none">Elegí uno o varios destinatarios de la agenda.</span></div>
+     <div class="field full"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><input type="search" id="ms-q" placeholder="Buscar en la agenda por nombre, email o área" style="flex:1 1 220px"><button type="button" class="btn sm" id="ms-newb">+ Nuevo contacto</button></div>
+       <div class="card" id="ms-list" style="max-height:220px;overflow:auto;margin-top:6px"></div>
+       <div class="card" id="ms-new" hidden style="padding:10px 12px;margin-top:8px;background:var(--surface-2);display:grid;gap:8px">
+         <div class="lb">Nuevo contacto (se guarda en la agenda)</div>
+         <div style="display:flex;gap:8px;flex-wrap:wrap"><input type="text" id="ms-nn" placeholder="Nombre" style="flex:1 1 150px"><input type="email" id="ms-ne" inputmode="email" placeholder="email@empresa.com *" style="flex:1 1 200px"><input type="text" id="ms-na" list="dl-agarea" placeholder="Área o empresa" style="flex:1 1 140px"></div>
+         <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn sm primary" id="ms-nok">Guardar y agregar</button><button type="button" class="btn sm" id="ms-nx">Cancelar</button></div>
+       </div></div>
+     <div class="field full"><label class="lb" for="ms-cc">Con copia (CC)</label><input type="text" id="ms-cc" list="dl-msall" placeholder="Opcional, separadas por coma"><datalist id="dl-msall"></datalist></div>
      <div class="field full"><label class="lb" for="ms-subj">Asunto <em>*</em></label><input type="text" id="ms-subj" value="${esc(o.subject||"")}"></div>
      <div class="field full"><label class="lb" for="ms-body">Mensaje</label><textarea id="ms-body" rows="7">${esc(o.body||"")}</textarea></div>
-     <div class="field full"><div class="lb">Adjunto${files.length===1?"":"s"}</div>${files.length?files.map(f=>`<div class="meta">📎 ${esc(f.name)} · ${fmtSize(blobOf(f.data).size)}</div>`).join(""):'<div class="meta">Sin adjuntos</div>'}${tot>MAIL_MAX?'<div class="banner bad" style="margin:6px 0 0">Los adjuntos superan 20 MB: no se pueden enviar por correo.</div>':""}</div>
-     <label class="chk full" id="ms-save-w" hidden><input type="checkbox" id="ms-save" checked> <span id="ms-save-t">Guardar las direcciones nuevas en la agenda</span></label>
-     <div class="form-actions"><button type="button" class="btn" data-close>Cancelar</button><button type="submit" class="btn primary" id="ms-go"${tot>MAIL_MAX?" disabled":""}>Enviar</button></div>
+     <div class="field full"><div class="lb">Adjunto${files.length===1?"":"s"}</div>${files.length?files.map((f,i)=>`<div class="meta">📎 ${esc(f.name)} · ${fmtSize(blobOf(f.data).size)}${direct?"":` <button type="button" class="btn sm" data-msdl="${i}">Descargar para adjuntar</button>`}</div>`).join(""):'<div class="meta">Sin adjuntos</div>'}${direct&&tot>MAIL_MAX?'<div class="banner bad" style="margin:6px 0 0">Los adjuntos superan 20 MB: no se pueden enviar por correo.</div>':""}${direct?"":'<div class="hint">Desde esta planilla el correo se abre en tu programa de correo con destinatarios, asunto y texto: adjuntá el archivo descargado y envialo. El envío automático con adjunto funciona en la aplicación de Google.</div>'}</div>
+     <div class="form-actions"><button type="button" class="btn" data-close>Cancelar</button><button type="submit" class="btn primary" id="ms-go"${direct&&tot>MAIL_MAX?" disabled":""}>${direct?"Enviar":"Abrir en el correo"}</button></div>
    </form>`,"wide");
-  const nuevos=()=>Array.from(R).concat(String($("#ms-cc").value).split(/[\s,;]+/).filter(e=>EMAIL_RE.test(e))).filter(e=>!agendaBy(e));
+  const list=()=>{const q=norm($("#ms-q").value),C=contacts().filter(c=>!q||norm([c.n,c.e,c.a].join(" ")).includes(q));
+    $("#ms-list").innerHTML=C.length?C.map(c=>`<label class="chk" style="display:flex;gap:8px;align-items:center;padding:6px 10px;border-bottom:1px solid var(--line)"><input type="checkbox" data-mspick="${esc(c.e)}"${R.has(c.e)?" checked":""}><span style="min-width:0"><b>${esc(c.n||c.e)}</b>${c.n?` <span class="mono meta">${esc(c.e)}</span>`:""}${c.a?` <span class="meta">· ${esc(c.a)}</span>`:""}</span></label>`).join(""):`<div class="meta" style="padding:10px">${contacts().length?"Ningún contacto coincide.":"La agenda está vacía: agregá un contacto nuevo."}</div>`;
+    $("#dl-msall").innerHTML=contacts().map(c=>`<option value="${esc(c.e)}" label="${esc([c.n,c.a].filter(Boolean).join(" · "))}"></option>`).join("")};
   const upd=()=>{$("#ms-chips").innerHTML=Array.from(R).map(e=>{const c=agendaBy(e);return `<span class="chip"><span>${esc(c&&c.nombre?c.nombre+" · "+e:e)}</span><button type="button" data-msrm="${esc(e)}" aria-label="Quitar ${esc(e)}">✕</button></span>`}).join("");
-    const n=uniq(nuevos().map(e=>e.toLowerCase()));$("#ms-save-w").hidden=!n.length;$("#ms-save-t").textContent=`Guardar en la agenda: ${n.join(", ")}`;$("#ms-go").textContent=R.size?`Enviar a ${R.size} destinatario${R.size===1?"":"s"}`:"Enviar"};
-  const addRaw=v=>{const bad=[];String(v||"").split(/[\s,;]+/).map(x=>x.replace(/^<|>$/g,"").trim()).filter(Boolean).forEach(e=>{if(EMAIL_RE.test(e))R.add(e);else bad.push(e)});
-    if(bad.length)toast("No parece un email válido: "+bad.join(", "));$("#ms-in").value=bad.join(", ");upd()};
-  $("#ms-in").addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===","||e.key===";"){e.preventDefault();addRaw($("#ms-in").value)}});
-  $("#ms-in").addEventListener("change",()=>{if(EMAIL_RE.test($("#ms-in").value.trim()))addRaw($("#ms-in").value)});
-  $("#ms-in").addEventListener("paste",()=>setTimeout(()=>{if(/[,;\s]/.test($("#ms-in").value.trim()))addRaw($("#ms-in").value)},0));
-  $("#ms-add").onclick=()=>addRaw($("#ms-in").value);$("#ms-cc").addEventListener("input",upd);
-  $("#scrim").addEventListener("click",e=>{const a=e.target.closest("[data-msadd]");if(a){R.add(a.dataset.msadd);upd()}const r=e.target.closest("[data-msrm]");if(r){R.delete(r.dataset.msrm);upd()}});
-  upd();setTimeout(()=>{const i=R.size?$("#ms-subj"):$("#ms-in");if(i)i.focus()},50);
+    $("#ms-none").hidden=!!R.size;$("#ms-go").textContent=direct?(R.size?`Enviar a ${R.size} destinatario${R.size===1?"":"s"}`:"Enviar"):"Abrir en el correo"};
+  $("#ms-q").addEventListener("input",list);
+  $("#ms-list").addEventListener("change",e=>{const c=e.target.dataset.mspick;if(!c)return;if(e.target.checked)R.add(c);else R.delete(c);upd()});
+  $("#ms-chips").addEventListener("click",e=>{const r=e.target.closest("[data-msrm]");if(r){R.delete(r.dataset.msrm);upd();list()}});
+  $("#ms-newb").onclick=()=>{$("#ms-new").hidden=false;$("#ms-ne").value=EMAIL_RE.test($("#ms-q").value.trim())?$("#ms-q").value.trim():"";setTimeout(()=>$($("#ms-ne").value?"#ms-nn":"#ms-ne").focus(),30)};
+  $("#ms-nx").onclick=()=>{$("#ms-new").hidden=true};
+  $("#ms-nok").onclick=async()=>{if(!guardWrite("deposito"))return;const em=$("#ms-ne").value.trim().toLowerCase();if(!EMAIL_RE.test(em)){toast("Escribí un email válido.");$("#ms-ne").focus();return}
+    if(!agendaBy(em)){const d={nombre:$("#ms-nn").value.trim(),email:em,area:$("#ms-na").value.trim(),obs:"",creado:new Date().toISOString(),by:myId||""};
+      try{const r=await db.collection("agenda").add(d);S.agenda.set(r.id,Object.assign({id:r.id},d));toast("Contacto guardado en la agenda")}catch(err){writeError(err);return}}
+    R.add(em);["#ms-nn","#ms-ne","#ms-na"].forEach(s=>$(s).value="");$("#ms-new").hidden=true;$("#ms-q").value="";list();upd()};
+  $$("[data-msdl]").forEach(b=>b.onclick=()=>{const f=files[+b.dataset.msdl];if(f)save(f.name,f.data,{direct:true})});
+  list();upd();setTimeout(()=>$("#ms-q").focus(),50);
   $("#f-ms").addEventListener("submit",async e=>{e.preventDefault();if(!guardWrite("deposito"))return;
-    if($("#ms-in").value.trim())addRaw($("#ms-in").value);
-    if(!R.size){toast("Agregá al menos un destinatario.");$("#ms-in").focus();return}
+    if(!R.size){toast("Elegí al menos un destinatario de la agenda.");$("#ms-q").focus();return}
     const subject=$("#ms-subj").value.trim();if(!subject){toast("Escribí el asunto.");$("#ms-subj").focus();return}
     const cc=String($("#ms-cc").value).split(/[\s,;]+/).filter(Boolean);const badCc=cc.filter(x=>!EMAIL_RE.test(x));if(badCc.length){toast("CC no válido: "+badCc.join(", "));return}
-    const toSave=$("#ms-save-w").hidden||!$("#ms-save").checked?[]:uniq(nuevos().map(x=>x.toLowerCase()));
+    const body=$("#ms-body").value;
+    if(!direct){const short=body.length>1500?body.slice(0,1400)+"\n…\n(El detalle completo está en el archivo adjunto.)":body;
+      const a=document.createElement("a");a.href=`mailto:${encodeURIComponent(Array.from(R).join(",")).replace(/%2C/g,",")}?${cc.length?"cc="+encodeURIComponent(cc.join(",")).replace(/%2C/g,",")+"&":""}subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(short)}`;a.target="_blank";a.rel="noopener";document.body.appendChild(a);a.click();a.remove();
+      rememberEmails(Array.from(R).concat(cc));toast("Se abrió el correo: adjuntá el archivo y envialo.");if(o.onOpened)o.onOpened(Array.from(R).concat(cc).join(", "));return}
     const b=$("#ms-go");b.disabled=true;b.textContent="Enviando…";
-    try{const r=await mailer.send({to:Array.from(R),cc,subject,body:$("#ms-body").value,files,guardar:o.guardar||""});
+    try{const r=await mailer.send({to:Array.from(R),cc,subject,body,files,guardar:o.guardar||""});
       rememberEmails(Array.from(R).concat(cc));
-      for(const em of toSave){try{await db.collection("agenda").add({nombre:"",email:em,area:"",obs:"",creado:new Date().toISOString(),by:myId||""})}catch(err){}}
-      closeModal();toast(`Correo enviado a ${(r.to||[]).length+(r.cc||[]).length} destinatario${(r.to||[]).length+(r.cc||[]).length===1?"":"s"}${toSave.length?` · ${toSave.length} guardado${toSave.length===1?"":"s"} en la agenda`:""}`);
+      closeModal();toast(`Correo enviado a ${(r.to||[]).length+(r.cc||[]).length} destinatario${(r.to||[]).length+(r.cc||[]).length===1?"":"s"}`);
       if(o.onSent)o.onSent(r)}
     catch(err){b.disabled=false;upd();toast(err&&err.message?"No se pudo enviar: "+err.message:"No se pudo enviar el correo. Revisá la conexión.")}});
 }
@@ -4771,7 +4783,7 @@ async function pfGenerate(){
   const b=$("#pf-go");b.disabled=true;
   try{let id=ex?ex.id:null;if(ex)await db.doc("pedidos/"+ex.id).set(body);else{const r=await db.collection("pedidos").add(body);id=r.id}
     const full=Object.assign({id},body);S.peds.set(id,full);if(!ex){PF.list=[];try{localStorage.removeItem(pfDraftKey)}catch(e){}}
-    toast(ex?"Nota actualizada":pedNum(body.numero)+" generada");closeModal();showTab("ped");openPed(id);pedPdf(full)}
+    toast(ex?"Nota actualizada":pedNum(body.numero)+" generada");closeModal();showTab("ped");openPed(id);pedPdf(full,{store:true})}
   catch(e){writeError(e);b.disabled=false}
 }
 function pedSubject(p){const d=new Date(p.fecha||p.creado||Date.now());return `Nota de pedido ${pedNum(p.numero)} – ${isNaN(d)?"":String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0")+"/"+d.getFullYear()}${p.prioridad==="urgente"?" · URGENTE":""}`}
@@ -4782,13 +4794,14 @@ async function pedStorePdf(p,blob,envio){
   try{const cur=S.peds.get(p.id)||p,h=pedHash(cur),L=(cur.pdfs||[]).slice();let v=L.find(x=>x.h===h);
     if(!v){const nombre=`Nota de pedido ${pedNum(cur.numero)}${L.length?" (v"+(L.length+1)+")":""}.pdf`;
       let r;try{r=await assets.upload(blob,window.DEP?{type:"application/pdf",name:nombre}:{type:"application/pdf"})}catch(e){if(e&&e.code==="store_unavailable"){await new Promise(z=>setTimeout(z,1200));r=await assets.upload(blob,window.DEP?{type:"application/pdf",name:nombre}:{type:"application/pdf"})}else throw e}
-      v={id:r.id,nombre,fecha:new Date().toISOString(),h,by:myId||"",envios:[]};L.push(v)}
+      v={id:r.id,nombre,fecha:new Date().toISOString(),h,by:myId||"",envios:[]};L.push(v);
+      if(window.DEP&&DEP.call){try{const b64=await new Promise((ok,ko)=>{const fr=new FileReader();fr.onload=()=>ok(String(fr.result).split(",")[1]||"");fr.onerror=ko;fr.readAsDataURL(blob)});DEP.call("archive",{kind:"np",name:`Nota de pedido ${pedNum(cur.numero)}.pdf`,type:"application/pdf",b64}).catch(()=>{})}catch(e){}}}
     else if(!envio)return v;
     if(envio){v.envios=(v.envios||[]).concat([{fecha:new Date().toISOString(),para:envio}])}
     await db.doc("pedidos/"+cur.id).update({pdfs:L});S.peds.set(cur.id,Object.assign({},S.peds.get(cur.id)||cur,{pdfs:L}));return v}
   catch(e){console.error(e);toast("No se pudo guardar el PDF en la base (queda descargado).");return null}}
 function pedText(p){
-  const L=[`Hola, equipo de Compras:`,``,`Envío la nota de pedido ${pedNum(p.numero)} del depósito${p.prioridad==="urgente"?" (URGENTE)":""}.`,``,
+  const L=[`Hola:`,``,`Envío la nota de pedido ${pedNum(p.numero)} del depósito${p.prioridad==="urgente"?" (URGENTE)":""}.`,``,
     `Fecha: ${fmtD(p.fecha).split(" ")[0]}`,`Solicita: ${p.solicita}${p.area?" · "+p.area:""}`];
   if(p.imputacion)L.push(`Imputación: ${p.imputacion}`);
   if(p.necesario)L.push(`Se necesita para: ${p.necesario.split("-").reverse().join("/")}`);
@@ -4810,20 +4823,9 @@ function openPed(id){
      </tbody></table></div>
      ${p.obs?`<div><div class="lb">Observaciones</div><div>${esc(p.obs)}</div></div>`:""}
      ${p.estado==="anulado"?"":`<div class="card" style="padding:14px;display:grid;gap:10px;background:var(--surface-2)">
-       <div class="lb">Enviar a Compras</div>
-       ${to?`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="meta">Para:</span><span class="mono">${esc(to)}</span><button type="button" class="btn ghost sm" id="pd-cto">Copiar</button></div>`:`<div class="banner warn" style="margin:0">Cargá el email del área de Compras en la pestaña Ajustes para que aparezca como destinatario.</div>`}
-       ${mailer?`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="pd-send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16v12H4z"/><path d="M4 7l8 6 8-6"/></svg>Enviar por correo con el PDF</button><button class="btn" id="pd-pdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Descargar PDF</button></div><span class="hint">Sale desde la cuenta de la empresa con el PDF adjunto; podés agregar o cambiar destinatarios. Al enviarla, la nota queda marcada como enviada y el PDF se guarda en Drive.</span>`:`
-       <ol class="steps" style="margin:0">
-         <li>Descargá la nota en PDF.</li>
-         <li>Abrí el correo: el asunto y el texto ya vienen escritos. Si no se abre tu programa de correo, copiá el texto y pegalo en un mail nuevo.</li>
-         <li>Adjuntá el PDF, enviá y marcá la nota como enviada.</li>
-       </ol>
-       <div style="display:flex;gap:8px;flex-wrap:wrap">
-         <button class="btn primary" id="pd-pdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Descargar PDF</button>
-         <a class="btn" id="pd-mail" href="#" target="_blank" rel="noopener">Abrir en el correo</a>
-         <button class="btn" id="pd-copy">Copiar asunto y texto</button>
-       </div>
-       <details><summary class="meta" style="cursor:pointer">Ver el texto del mail</summary><pre id="pd-txt" style="white-space:pre-wrap;font-family:var(--f-body);font-size:13px;margin:8px 0 0;user-select:all">${esc(pedSubject(p)+"\n\n"+pedText(p))}</pre></details>`}
+       <div class="lb">Enviar por correo</div>
+       <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="pd-send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16v12H4z"/><path d="M4 7l8 6 8-6"/></svg>Enviar por correo</button><button class="btn" id="pd-pdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Descargar PDF</button></div>
+       <span class="hint">${mailer?"Elegís los destinatarios en la agenda (o cargás uno nuevo) y el correo sale desde la cuenta de la empresa con el PDF adjunto. Al enviarla, la nota queda marcada como enviada.":"Elegís los destinatarios en la agenda (o cargás uno nuevo) y se abre tu programa de correo con el asunto y el texto: adjuntá el PDF descargado y marcá la nota como enviada."}</span>
      </div>`}
      ${p.enviado?`<div class="meta">Enviada el ${esc(fmtD(p.enviado))}${p.enviadoA?" a "+esc(p.enviadoA):""}.${p.recibido?" Recibida el "+esc(fmtD(p.recibido))+".":""}</div>`:""}
      <div id="pd-pdfs">${(p.pdfs||[]).length?`<div class="lb" style="margin-bottom:6px">PDF guardados en la base</div><div class="card table-wrap"><table class="prev"><tbody>${(p.pdfs||[]).slice().reverse().map((v,i)=>`<tr><td><a href="${esc("/_blob/"+v.id)}" target="_blank" rel="noopener" class="btn sm${i===0?" primary":""}">${i===0?"Ver PDF guardado":"Ver versión anterior"}</a></td><td class="wrap"><b>${esc(v.nombre)}</b><div class="meta">Guardado el ${esc(fmtD(v.fecha))}${i===0&&(p.pdfs||[]).length>1?" · versión actual":""}</div>${(v.envios||[]).map(e=>`<div class="meta">✉ Enviado el ${esc(fmtD(e.fecha))} a ${esc(e.para)}</div>`).join("")}</td></tr>`).join("")}</tbody></table></div>`:`<div class="meta">El PDF se guarda en la base al generarlo o descargarlo${mailer?" y al enviarlo":""}.</div>`}</div>
@@ -4843,7 +4845,8 @@ function openPed(id){
   const bt=$("#pd-cto");if(bt)bt.onclick=()=>cp(to,"Email copiado");
   const bp=$("#pd-pdf");if(bp)bp.onclick=()=>pedPdf(p);
   const bsd=$("#pd-send");if(bsd)bsd.onclick=async()=>{const blob=await pedPdf(p,{blob:true});if(!blob)return;
-    openMailSend({title:"Enviar nota de pedido "+pedNum(p.numero),sub:"Nota de pedido con el PDF adjunto",to:to.split(/[,;]/).map(x=>x.trim()).filter(Boolean),subject:pedSubject(p),body:pedText(p),files:[{name:`Nota de pedido ${pedNum(p.numero)}.pdf`,data:blob}],guardar:"np",
+    pedStorePdf(p,blob);
+    openMailSend({title:"Enviar nota de pedido "+pedNum(p.numero),sub:mailer?"Nota de pedido con el PDF adjunto":"Se abre tu programa de correo",to:[],subject:pedSubject(p),body:pedText(p),files:[{name:`Nota de pedido ${pedNum(p.numero)}.pdf`,data:blob}],guardar:"np",
       onSent:async r=>{const all=(r.to||[]).concat(r.cc||[]).join(", "),now=new Date().toISOString();await pedStorePdf(p,blob,all);const cur=S.peds.get(p.id)||p,ex={enviado:now,enviadoA:all,enviadoPor:myId||"",actualizado:now};if(cur.estado==="pendiente")ex.estado="enviado";
         try{await db.doc("pedidos/"+p.id).update(ex);S.peds.set(p.id,Object.assign({},cur,ex))}catch(e){writeError(e)}openPed(p.id)}})};
   const setEst=async(est,extra)=>{if(!guardWrite("deposito"))return;try{await db.doc("pedidos/"+p.id).update(Object.assign({estado:est,actualizado:new Date().toISOString()},extra||{}));S.peds.set(p.id,Object.assign({},p,{estado:est},extra||{}));toast("Nota "+pedNum(p.numero)+": "+PED_EST[est][1].toLowerCase());openPed(p.id)}catch(e){writeError(e)}};
@@ -4911,6 +4914,7 @@ async function pedPdf(p,opt){
   if(p.obs){const t=doc.splitTextToSize(p.obs,W-2);if(y+t.length*3.8+9>BOT){header()}y+=5;doc.setFont("helvetica","bold");doc.setFontSize(8.5);doc.text("Observaciones generales:",cx[0],y);doc.setFont("helvetica","normal");doc.text(t,cx[0],y+4.2);y+=t.length*3.8+4}
   const tp=doc.getNumberOfPages();for(let i=1;i<=tp;i++){doc.setPage(i);doc.setFontSize(6.5);doc.setTextColor(130);doc.text(`${pedNum(p.numero)} · generada el ${fmtD(new Date().toISOString())} desde Depósito Hidroblan${tp>1?` · hoja ${i} de ${tp}`:""}`,M,292);doc.setTextColor(0)}
   const pdfBlob=doc.output("blob");if(opt&&opt.blob)return pdfBlob;
+  if(opt&&opt.store){const v=await pedStorePdf(p,pdfBlob);if(v){toast(`PDF de la nota ${pedNum(p.numero)} guardado en la base`);if($("#pd-pdfs"))openPed(p.id)}else if(!assets)toast("La nota quedó guardada. Para el PDF usá Descargar PDF.");return pdfBlob}
   pedStorePdf(p,pdfBlob).then(v=>{if(v&&$("#pd-pdfs"))openPed(p.id)});
   await save(`Nota de pedido ${pedNum(p.numero)}.pdf`,pdfBlob);
 }
