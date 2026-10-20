@@ -627,6 +627,19 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
       <div class="card rec-close" id="rec-close"></div>
     </div>
   </section>
+  <section id="v-agenda" data-view="agenda" hidden>
+    <div class="section-head"><div><h2>Agenda de correos</h2><p class="sub">Direcciones para enviar por correo notas de pedido, listados, planillas e historiales. Se eligen al enviar; las nuevas se pueden guardar desde la misma ventana de envío.</p></div><span class="meta" id="ag-count"></span></div>
+    <div id="ag-old"></div>
+    <form class="card form need-dep" id="f-ag" autocomplete="off">
+      <div class="field"><label class="lb" for="ag-n">Nombre</label><input type="text" id="ag-n" placeholder="Nombre y apellido"></div>
+      <div class="field"><label class="lb" for="ag-e">Email <em>*</em></label><input type="email" id="ag-e" inputmode="email" placeholder="nombre@empresa.com"></div>
+      <div class="field"><label class="lb" for="ag-a">Área o empresa</label><input type="text" id="ag-a" list="dl-agarea" placeholder="Compras, Administración, proveedor…"></div>
+      <div class="field"><label class="lb" for="ag-o">Notas</label><input type="text" id="ag-o" placeholder="Opcional"></div>
+      <div class="form-actions"><button type="submit" class="btn primary">Agregar a la agenda</button></div>
+    </form>
+    <div class="toolbar" style="margin-top:14px"><input class="grow" type="search" id="ag-q" placeholder="Buscar por nombre, email o área"></div>
+    <div class="card"><div class="table-wrap"><table class="cards"><thead><tr><th>Nombre</th><th>Email</th><th>Área / empresa</th><th>Notas</th><th></th></tr></thead><tbody id="ag-list"></tbody></table></div></div>
+  </section>
   <section id="v-backup" data-view="backup" hidden>
     <div class="section-head"><div><h2>Copia de seguridad</h2><p class="sub">Descarga toda la base de la planilla en un solo Excel, para guardarlo en tu PC o en la red de la empresa.</p></div></div>
     <div class="card" style="padding:14px 16px;display:grid;gap:12px">
@@ -789,24 +802,24 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
     <div class="kpis" id="tr-kpis" style="grid-template-columns:repeat(auto-fill,minmax(130px,1fr))"></div>
     <div class="toolbar">
       <input class="grow" type="search" id="tr-q" placeholder="Buscar por código, tipo, diámetro o ubicación">
-      <select id="tr-est" style="width:auto"><option value="">Todos menos descarte</option><option value="nuevo">Nuevo</option><option value="optimo">Óptimo</option><option value="malo">Malo (todos)</option><option value="taller">Malo · en taller</option><option value="descarte">Malo · descarte</option><option value="todos">Todos (con descarte)</option></select>
+      <select id="tr-est" style="width:auto"><option value="">Todos menos descarte</option><option value="nuevo">Nuevo</option><option value="optimo">Operativo</option><option value="taller">Araña</option><option value="descarte">Descarte</option><option value="todos">Todos (con descarte)</option></select>
       <select id="tr-ub" style="width:auto"><option value="">Todas las ubicaciones</option></select>
     </div>
     <div class="card"><div class="table-wrap"><table class="cards" id="t-tr">
-      <thead><tr><th>Código</th><th>Tipo</th><th>Diámetro</th><th>Ubicación</th><th>Estado</th><th class="hide-m">Último movimiento</th></tr></thead>
+      <thead><tr><th>Código</th><th>Tipo</th><th>Diámetro</th><th>Ubicación</th><th>Estado</th><th class="hide-m">Último movimiento</th><th class="need-dep"></th></tr></thead>
       <tbody></tbody>
     </table></div></div>
     <div class="lb" style="margin:22px 0 8px">Resumen por tipo y diámetro</div>
-    <div class="card"><div class="table-wrap"><table id="t-tr-res"><thead><tr><th>Tipo</th><th>Diámetro</th><th class="r">Nuevos</th><th class="r">Óptimos</th><th class="r">Malos (taller)</th><th class="r">Descarte</th><th class="r">En base</th><th class="r">En equipos</th></tr></thead><tbody></tbody></table></div></div>
+    <div class="card"><div class="table-wrap"><table id="t-tr-res"><thead><tr><th>Tipo</th><th>Diámetro</th><th class="r">Nuevos</th><th class="r">Operativos</th><th class="r">Araña</th><th class="r">Descarte</th><th class="r">En base</th><th class="r">En equipos</th></tr></thead><tbody></tbody></table></div></div>
   </section>
   <section id="v-tr-in" data-view="tr-in" hidden>
-    <div class="section-head"><div><h2>Entrada de trépanos</h2><p class="sub">Ingreso al stock: <b>Nuevo</b> (llega en caja, se carga por cantidad y con código a asignar), <b>Óptimo</b> (vuelve en buen estado) o <b>Malo</b> (va a reparación en taller o a descarte).</p></div></div>
+    <div class="section-head"><div><h2>Entrada de trépanos</h2><p class="sub">Ingreso al stock: <b>Nuevo</b> (llega en caja, se carga por cantidad y con código a asignar), <b>Operativo</b>, <b>Araña</b> o <b>Descarte</b>, con la ubicación donde queda.</p></div></div>
     <form class="card form" id="f-tr-in" autocomplete="off"></form>
     <div class="lb" style="margin:20px 0 8px">Últimas entradas</div>
     <div class="card"><div class="table-wrap"><table class="cards" id="t-tr-in"><tbody></tbody></table></div></div>
   </section>
   <section id="v-tr-out" data-view="tr-out" hidden>
-    <div class="section-head"><div><h2>Salida de trépanos</h2><p class="sub">Egreso hacia un equipo: un <b>Nuevo</b> (se le asigna el código al salir) o un <b>Óptimo</b>. También el <b>traspaso</b> de un trépano de un equipo a otro.</p></div></div>
+    <div class="section-head"><div><h2>Salida de trépanos</h2><p class="sub">Egreso hacia un equipo: un <b>Nuevo</b> (se le asigna el código al salir) o un <b>Operativo</b>. También el <b>traspaso</b> de un trépano de un equipo a otro.</p></div></div>
     <form class="card form" id="f-tr-out" autocomplete="off"></form>
     <div class="lb" style="margin:20px 0 8px">Últimas salidas y traspasos</div>
     <div class="card"><div class="table-wrap"><table class="cards" id="t-tr-out"><tbody></tbody></table></div></div>
@@ -820,7 +833,7 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
       <div><h2>Historial de movimientos</h2><p class="sub">Entradas, salidas y traspasos de todos los trépanos en orden cronológico. Tocá ✎ en una fila para agregar o corregir una observación.</p></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn need-adm" data-trimp>Importar Excel</button><button class="btn" data-trhxls>Exportar Excel</button></div>
     </div>
-    <div class="toolbar"><input class="grow" type="search" id="trh-q" placeholder="Buscar por código, tipo, origen o destino"><select id="trh-mov" style="width:auto"><option value="">Entradas, salidas y traspasos</option><option value="entrada">Entradas</option><option value="salida">Salidas</option><option value="traspaso">Traspasos</option><option value="todos">Todos (incluye ajustes y cambios)</option></select><select id="trh-est" style="width:auto"><option value="">Todos los estados</option><option value="nuevo">Nuevo</option><option value="optimo">Óptimo</option><option value="malo">Malo</option></select><input type="date" id="trh-d1" title="Desde" style="width:auto"><input type="date" id="trh-d2" title="Hasta" style="width:auto"><select id="trh-ord" style="width:auto"><option value="asc">Más antiguos primero</option><option value="desc">Más recientes primero</option></select><button class="btn" id="trh-clear">Limpiar</button></div>
+    <div class="toolbar"><input class="grow" type="search" id="trh-q" placeholder="Buscar por código, tipo, origen o destino"><select id="trh-mov" style="width:auto"><option value="">Entradas, salidas, traspasos y cambios</option><option value="entrada">Entradas</option><option value="salida">Salidas</option><option value="traspaso">Traspasos</option><option value="estado">Cambios de estado / ubicación</option><option value="todos">Todos (incluye ajustes y cambios)</option></select><select id="trh-est" style="width:auto"><option value="">Todos los estados</option><option value="nuevo">Nuevo</option><option value="optimo">Operativo</option><option value="taller">Araña</option><option value="descarte">Descarte</option></select><input type="date" id="trh-d1" title="Desde" style="width:auto"><input type="date" id="trh-d2" title="Hasta" style="width:auto"><select id="trh-ord" style="width:auto"><option value="asc">Más antiguos primero</option><option value="desc">Más recientes primero</option></select><button class="btn" id="trh-clear">Limpiar</button></div>
     <p class="hint" id="trh-count" style="margin:0 0 8px"></p>
     <div class="card"><div class="table-wrap"><table class="cards" id="t-trh">
       <thead><tr><th>Fecha</th><th>Movimiento</th><th>Código</th><th>Tipo · diám.</th><th>Origen</th><th>Destino</th><th>Estado</th><th>Observaciones</th></tr></thead>
@@ -1045,7 +1058,7 @@ const ICON_IN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke
 const ICON_OUT='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7-7 7 7"/></svg>';
 
 let db=null,user=null,downloads=null,assets=null,ASSETS_READY=false,canWrite=true,myId=null;
-const S={trarq:new Map(),loadedTA:false,docs:new Map(),loadedDc:false,recs:new Map(),loadedR:false,recL:new Map(),loadedRL:false,perfiles:new Map(),usuarios:new Map(),bit:[],loadedB:false,sugs:new Map(),loadedSg:false,trep:new Map(),trmov:[],loadedT:false,clis:new Map(),loadedC:false,peds:new Map(),loadedPd:false,products:new Map(),provs:new Map(),loadedV:false,movs:[],stock:new Map(),config:{baseUrl:"",origenes:[],destinos:[],categorias:[],personas:[]},loadedP:false,loadedM:false,names:{}};
+const S={agenda:new Map(),trarq:new Map(),loadedTA:false,docs:new Map(),loadedDc:false,recs:new Map(),loadedR:false,recL:new Map(),loadedRL:false,perfiles:new Map(),usuarios:new Map(),bit:[],loadedB:false,sugs:new Map(),loadedSg:false,trep:new Map(),trmov:[],loadedT:false,clis:new Map(),loadedC:false,peds:new Map(),loadedPd:false,products:new Map(),provs:new Map(),loadedV:false,movs:[],stock:new Map(),config:{baseUrl:"",origenes:[],destinos:[],categorias:[],personas:[]},loadedP:false,loadedM:false,names:{}};
 let stockFilter="all",histLimit=200,movTipo="ingreso",pendingHash=null;
 
 function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
@@ -1140,6 +1153,7 @@ const MENU=[
     {id:"nuevo",name:"Nuevo producto",view:"stock",title:"Stock de tripolifosfato",openNew:true,need:"admin"}]},
   {id:"admin",name:"Administración",ic:"admin",items:[
     {id:"ajustes",name:"Ajustes generales",view:"conf",need:"admin"},
+    {id:"agenda",name:"Agenda de correos",view:"agenda"},
     {id:"usuarios",name:"Usuarios y permisos",view:"users"},
     {id:"mapa",name:"Mapa de la aplicación",view:"map"},
     {id:"camara",name:"Prueba de cámara",view:"camtest"},
@@ -1200,6 +1214,7 @@ function enterView(view,r,opt){
   if(view==="camtest")renderCamTest();
   if(view==="backup")renderBackup();
   if(view==="migrar")renderMigrar();
+  if(view==="agenda"){AG_EDIT=null;renderAgenda()}
   if(view==="docs"){renderDocs();if(it.openNew)setTimeout(()=>openDocForm(null,{}),0)}
   else if(typeof ctStop==="function"&&CT.stream)ctStop();
   if(view==="rec"){if(!opt.keepRec)recLeave();renderRec()}
@@ -1951,6 +1966,7 @@ const BK_COLS=[
  ["trepanos","Trépanos",()=>Array.from(S.trep.values()),[]],
  ["trepanos_mov","Mov. trépanos",()=>S.trmov.slice(),[]],
  ["sugerencias","Sugerencias",()=>Array.from(S.sugs.values()),[]],
+ ["agenda","Agenda de correos",()=>agendaList(),["nombre","email","area","obs","creado","id"]],
  ["perfiles","Perfiles",()=>Array.from(S.perfiles.entries()).map(([id,v])=>Object.assign({id},v)),["id","perfil","asignadoPor","fecha"]],
  ["usuarios","Usuarios",()=>Array.from(S.usuarios.entries()).map(([id,v])=>Object.assign({id},v)),["id","firstSeen","lastSeen","acceso"]]];
 function bkCell(k,v){if(v==null)return"";if(typeof v==="number"||typeof v==="boolean")return v;
@@ -2047,7 +2063,8 @@ $("#mg-go").addEventListener("click",async()=>{if(!guardWrite("admin")||!MG.ops)
 /* ---------- export / labels ---------- */
 function csvCell(v){v=v==null?"":String(v);return /[";\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
 function toCsv(rows){return "﻿"+rows.map(r=>r.map(csvCell).join(";")).join("\r\n")}
-async function save(filename,data){
+async function save(filename,data,opt){
+  if(mailer&&!(opt&&opt.direct)&&!$("#modal-root").innerHTML){saveChoice(filename,data);return}
   if(!downloads){toast("La descarga de archivos no está disponible en esta vista.");return}
   try{await downloads.save({filename,data})}catch(e){if(e&&e.code==="declined")return;if(e&&e.code==="rate_limited"){toast("Ya hay una descarga pendiente de confirmar.");return}toast("No se pudo generar la descarga.")}
 }
@@ -2163,12 +2180,108 @@ function knownEmails(){
   let recent=[];try{recent=JSON.parse(lsGet("dep-mails")||"[]")}catch(e){}
   const out=[];const add=(e,l)=>{e=(e||"").trim();if(EMAIL_RE.test(e)&&!out.some(x=>x.e.toLowerCase()===e.toLowerCase()))out.push({e,l})};
   (S.config.comprasEmail||"").split(/[,;]/).forEach(e=>add(e,"Compras"));
+  agendaList().forEach(c=>add(c.email,[c.nombre,c.area].filter(Boolean).join(" · ")||"Agenda"));
   (S.config.contactos||[]).forEach(c=>c&&add(c.email,c.nombre));
   recent.forEach(e=>add(e,"Usado antes"));
   provList().forEach(v=>add(v.email,"Proveedor · "+v.razonSocial));
   return out;
 }
 function rememberEmails(list){let r=[];try{r=JSON.parse(lsGet("dep-mails")||"[]")}catch(e){}r=uniq(list.concat(r)).slice(0,30);lsSet("dep-mails",JSON.stringify(r))}
+/* ---------- correo (envío directo en la app de Google) y agenda ---------- */
+let mailer=null;
+const MAIL_MAX=20*1024*1024;
+const agendaList=()=>Array.from(S.agenda.values()).filter(c=>c&&c.email).sort((a,b)=>String(a.nombre||a.email).localeCompare(String(b.nombre||b.email),"es"));
+const agendaBy=e=>{e=String(e||"").toLowerCase();return agendaList().find(c=>c.email.toLowerCase()===e)||null};
+const blobOf=d=>d instanceof Blob?d:new Blob([d==null?"":d]);
+const fmtSize=n=>n>=1048576?(n/1048576).toFixed(1).replace(".",",")+" MB":Math.max(1,Math.round(n/1024))+" KB";
+function mailSubjectFrom(fn){const b=String(fn||"archivo").replace(/\.[a-z0-9]+$/i,"");const m=/^(.*?)[-_ ]?(\d{4}-\d{2}-\d{2})?$/.exec(b);let t=(m[1]||b).replace(/[-_]+/g," ").trim();t=t.charAt(0).toUpperCase()+t.slice(1);const d=m[2]?" al "+m[2].split("-").reverse().join("/"):"";return `${t}${d} · Depósito Hidroblan`}
+/* elegir: descargar o enviar por correo (solo si el envío está disponible) */
+function saveChoice(filename,data){
+  const size=blobOf(data).size,big=size>MAIL_MAX;
+  modal(`<div class="modal-h"><div><div class="meta">Exportar archivo</div><h3 style="overflow-wrap:anywhere">${esc(filename)}</h3><div class="meta">${fmtSize(size)}</div></div><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
+   <div style="padding:18px;display:grid;gap:12px">
+     <div style="display:flex;gap:8px;flex-wrap:wrap">
+       <button class="btn primary" id="sv-dl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Descargar</button>
+       <button class="btn" id="sv-mail"${big?" disabled":""}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16v12H4z"/><path d="M4 7l8 6 8-6"/></svg>Enviar por correo</button>
+     </div>
+     ${big?'<div class="meta">El archivo supera 20 MB: no se puede enviar por correo. Descargalo y compartilo por otro medio.</div>':'<div class="meta">El correo sale desde la cuenta de la empresa con el archivo adjunto. Las respuestas te llegan a vos.</div>'}
+   </div>`);
+  $("#sv-dl").onclick=()=>{closeModal();save(filename,data,{direct:true})};
+  $("#sv-mail").onclick=()=>openMailSend({files:[{name:filename,data}],subject:mailSubjectFrom(filename),body:`Hola,\n\nTe envío adjunto ${filename}.\n\nSaludos.`});
+}
+/* ventana de envío: destinatarios (agenda), asunto, mensaje y adjuntos */
+function openMailSend(o){
+  if(!mailer){toast("El envío por correo está disponible en la aplicación de Google.");return}
+  if(!guardWrite("deposito"))return;
+  const R=new Set((o.to||[]).map(e=>String(e).trim()).filter(e=>EMAIL_RE.test(e)));
+  const A=agendaList(),sug=knownEmails().filter(s=>!agendaBy(s.e));
+  const files=o.files||[],tot=files.reduce((s,f)=>s+blobOf(f.data).size,0);
+  modal(`<div class="modal-h"><div><div class="meta">${esc(o.sub||"Correo desde la cuenta de la empresa")}</div><h3>${esc(o.title||"Enviar por correo")}</h3></div><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
+   <form class="form" id="f-ms" autocomplete="off" style="padding:18px">
+     <div class="field full"><label class="lb" for="ms-in">Para <em>*</em></label>
+       <div class="chips" id="ms-chips"></div>
+       <div style="display:flex;gap:8px"><input type="text" id="ms-in" inputmode="email" list="dl-msall" placeholder="nombre@empresa.com · Enter para agregar (podés pegar varios)" style="flex:1"><button type="button" class="btn sm" id="ms-add">Agregar</button></div>
+       <datalist id="dl-msall">${A.map(c=>`<option value="${esc(c.email)}" label="${esc([c.nombre,c.area].filter(Boolean).join(" · "))}"></option>`).join("")}${sug.map(s=>`<option value="${esc(s.e)}" label="${esc(s.l)}"></option>`).join("")}</datalist>
+       ${A.length?`<div class="lb" style="margin-top:8px">Agenda</div><div style="display:flex;gap:6px;flex-wrap:wrap;max-height:120px;overflow:auto">${A.map(c=>`<button type="button" class="btn sm" data-msadd="${esc(c.email)}" title="${esc(c.email)}">+ ${esc(c.nombre||c.email)}${c.area?` <span class="meta">· ${esc(c.area)}</span>`:""}</button>`).join("")}</div>`:`<span class="hint">Las direcciones que uses se pueden guardar en la agenda (Administración › Agenda de correos).</span>`}
+     </div>
+     <div class="field full"><label class="lb" for="ms-cc">Con copia (CC)</label><input type="text" id="ms-cc" list="dl-msall" placeholder="Opcional, separadas por coma"></div>
+     <div class="field full"><label class="lb" for="ms-subj">Asunto <em>*</em></label><input type="text" id="ms-subj" value="${esc(o.subject||"")}"></div>
+     <div class="field full"><label class="lb" for="ms-body">Mensaje</label><textarea id="ms-body" rows="7">${esc(o.body||"")}</textarea></div>
+     <div class="field full"><div class="lb">Adjunto${files.length===1?"":"s"}</div>${files.length?files.map(f=>`<div class="meta">📎 ${esc(f.name)} · ${fmtSize(blobOf(f.data).size)}</div>`).join(""):'<div class="meta">Sin adjuntos</div>'}${tot>MAIL_MAX?'<div class="banner bad" style="margin:6px 0 0">Los adjuntos superan 20 MB: no se pueden enviar por correo.</div>':""}</div>
+     <label class="chk full" id="ms-save-w" hidden><input type="checkbox" id="ms-save" checked> <span id="ms-save-t">Guardar las direcciones nuevas en la agenda</span></label>
+     <div class="form-actions"><button type="button" class="btn" data-close>Cancelar</button><button type="submit" class="btn primary" id="ms-go"${tot>MAIL_MAX?" disabled":""}>Enviar</button></div>
+   </form>`,"wide");
+  const nuevos=()=>Array.from(R).concat(String($("#ms-cc").value).split(/[\s,;]+/).filter(e=>EMAIL_RE.test(e))).filter(e=>!agendaBy(e));
+  const upd=()=>{$("#ms-chips").innerHTML=Array.from(R).map(e=>{const c=agendaBy(e);return `<span class="chip"><span>${esc(c&&c.nombre?c.nombre+" · "+e:e)}</span><button type="button" data-msrm="${esc(e)}" aria-label="Quitar ${esc(e)}">✕</button></span>`}).join("");
+    const n=uniq(nuevos().map(e=>e.toLowerCase()));$("#ms-save-w").hidden=!n.length;$("#ms-save-t").textContent=`Guardar en la agenda: ${n.join(", ")}`;$("#ms-go").textContent=R.size?`Enviar a ${R.size} destinatario${R.size===1?"":"s"}`:"Enviar"};
+  const addRaw=v=>{const bad=[];String(v||"").split(/[\s,;]+/).map(x=>x.replace(/^<|>$/g,"").trim()).filter(Boolean).forEach(e=>{if(EMAIL_RE.test(e))R.add(e);else bad.push(e)});
+    if(bad.length)toast("No parece un email válido: "+bad.join(", "));$("#ms-in").value=bad.join(", ");upd()};
+  $("#ms-in").addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===","||e.key===";"){e.preventDefault();addRaw($("#ms-in").value)}});
+  $("#ms-in").addEventListener("change",()=>{if(EMAIL_RE.test($("#ms-in").value.trim()))addRaw($("#ms-in").value)});
+  $("#ms-in").addEventListener("paste",()=>setTimeout(()=>{if(/[,;\s]/.test($("#ms-in").value.trim()))addRaw($("#ms-in").value)},0));
+  $("#ms-add").onclick=()=>addRaw($("#ms-in").value);$("#ms-cc").addEventListener("input",upd);
+  $("#scrim").addEventListener("click",e=>{const a=e.target.closest("[data-msadd]");if(a){R.add(a.dataset.msadd);upd()}const r=e.target.closest("[data-msrm]");if(r){R.delete(r.dataset.msrm);upd()}});
+  upd();setTimeout(()=>{const i=R.size?$("#ms-subj"):$("#ms-in");if(i)i.focus()},50);
+  $("#f-ms").addEventListener("submit",async e=>{e.preventDefault();if(!guardWrite("deposito"))return;
+    if($("#ms-in").value.trim())addRaw($("#ms-in").value);
+    if(!R.size){toast("Agregá al menos un destinatario.");$("#ms-in").focus();return}
+    const subject=$("#ms-subj").value.trim();if(!subject){toast("Escribí el asunto.");$("#ms-subj").focus();return}
+    const cc=String($("#ms-cc").value).split(/[\s,;]+/).filter(Boolean);const badCc=cc.filter(x=>!EMAIL_RE.test(x));if(badCc.length){toast("CC no válido: "+badCc.join(", "));return}
+    const toSave=$("#ms-save-w").hidden||!$("#ms-save").checked?[]:uniq(nuevos().map(x=>x.toLowerCase()));
+    const b=$("#ms-go");b.disabled=true;b.textContent="Enviando…";
+    try{const r=await mailer.send({to:Array.from(R),cc,subject,body:$("#ms-body").value,files,guardar:o.guardar||""});
+      rememberEmails(Array.from(R).concat(cc));
+      for(const em of toSave){try{await db.collection("agenda").add({nombre:"",email:em,area:"",obs:"",creado:new Date().toISOString(),by:myId||""})}catch(err){}}
+      closeModal();toast(`Correo enviado a ${(r.to||[]).length+(r.cc||[]).length} destinatario${(r.to||[]).length+(r.cc||[]).length===1?"":"s"}${toSave.length?` · ${toSave.length} guardado${toSave.length===1?"":"s"} en la agenda`:""}`);
+      if(o.onSent)o.onSent(r)}
+    catch(err){b.disabled=false;upd();toast(err&&err.message?"No se pudo enviar: "+err.message:"No se pudo enviar el correo. Revisá la conexión.")}});
+}
+/* agenda de correos */
+let AG_EDIT=null;
+function renderAgenda(){
+  const box=$("#ag-list");if(!box)return;const L=agendaList(),q=norm($("#ag-q").value);
+  const old=(S.config.contactos||[]).filter(c=>c&&c.email&&!agendaBy(c.email));
+  $("#ag-old").innerHTML=old.length?`<div class="banner warn" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 12px">Hay ${old.length} contacto${old.length===1?"":"s"} en Ajustes generales que no está${old.length===1?"":"n"} en la agenda.<button class="btn sm need-dep" id="ag-mig">Pasarlos a la agenda</button></div>`:"";
+  const R=L.filter(c=>!q||norm([c.nombre,c.email,c.area,c.obs].join(" ")).includes(q));
+  $("#ag-count").textContent=`${L.length} ${L.length===1?"dirección":"direcciones"}`;
+  box.innerHTML=R.length?R.map(c=>AG_EDIT===c.id?`<tr><td><input type="text" id="age-n" value="${esc(c.nombre||"")}" placeholder="Nombre"></td><td><input type="email" id="age-e" value="${esc(c.email)}"></td><td><input type="text" id="age-a" value="${esc(c.area||"")}" list="dl-agarea" placeholder="Área o empresa"></td><td><input type="text" id="age-o" value="${esc(c.obs||"")}" placeholder="Notas"></td><td style="white-space:nowrap"><button class="btn sm primary" data-agok="${c.id}">Guardar</button> <button class="btn sm" data-agx>Cancelar</button></td></tr>`
+     :`<tr><td class="name">${esc(c.nombre||"—")}</td><td class="mono">${esc(c.email)}</td><td>${esc(c.area||"")}</td><td class="meta">${esc(c.obs||"")}</td><td style="white-space:nowrap"><button class="btn sm need-dep" data-aged="${c.id}">Editar</button> <button class="btn sm ghost need-dep" data-agdel="${c.id}" aria-label="Borrar">✕</button></td></tr>`).join("")
+    :`<tr><td colspan="5"><div class="empty" style="padding:16px">${L.length?"Ninguna dirección coincide.":"Todavía no hay direcciones. Agregalas arriba o al enviar un correo."}</div></td></tr>`;
+  trDl("dl-agarea",uniq(L.map(c=>c.area).filter(Boolean)).map(x=>`<option value="${esc(x)}"></option>`).join(""));
+  const mg=$("#ag-mig");if(mg)mg.onclick=async()=>{if(!guardWrite("deposito"))return;mg.disabled=true;let n=0;for(const c of old){try{await db.collection("agenda").add({nombre:c.nombre||"",email:c.email.toLowerCase(),area:"",obs:"",creado:new Date().toISOString(),by:myId||""});n++}catch(e){}}toast(`${n} contacto${n===1?"":"s"} pasado${n===1?"":"s"} a la agenda`)};
+}
+$("#f-ag").addEventListener("submit",async e=>{e.preventDefault();if(!guardWrite("deposito"))return;
+  const em=$("#ag-e").value.trim().toLowerCase();if(!EMAIL_RE.test(em)){toast("Escribí un email válido.");$("#ag-e").focus();return}
+  if(agendaBy(em)){toast("Esa dirección ya está en la agenda.");return}
+  try{await db.collection("agenda").add({nombre:$("#ag-n").value.trim(),email:em,area:$("#ag-a").value.trim(),obs:$("#ag-o").value.trim(),creado:new Date().toISOString(),by:myId||""});["#ag-n","#ag-e","#ag-a","#ag-o"].forEach(s=>$(s).value="");$("#ag-n").focus();toast("Dirección agregada")}catch(err){writeError(err)}});
+$("#ag-q").addEventListener("input",renderAgenda);
+$("#ag-list").addEventListener("click",async e=>{
+  const ed=e.target.closest("[data-aged]");if(ed){AG_EDIT=ed.dataset.aged;renderAgenda();return}
+  if(e.target.closest("[data-agx]")){AG_EDIT=null;renderAgenda();return}
+  const ok=e.target.closest("[data-agok]");if(ok){if(!guardWrite("deposito"))return;const c=S.agenda.get(ok.dataset.agok);if(!c)return;const em=$("#age-e").value.trim().toLowerCase();if(!EMAIL_RE.test(em)){toast("Email no válido.");return}const o=agendaBy(em);if(o&&o.id!==c.id){toast("Esa dirección ya está en la agenda.");return}
+    const d={nombre:$("#age-n").value.trim(),email:em,area:$("#age-a").value.trim(),obs:$("#age-o").value.trim(),actualizado:new Date().toISOString()};try{await db.doc("agenda/"+c.id).update(d);S.agenda.set(c.id,Object.assign({},c,d));AG_EDIT=null;renderAgenda();toast("Dirección guardada")}catch(err){writeError(err)}return}
+  const del=e.target.closest("[data-agdel]");if(del){if(!guardWrite("deposito"))return;if(del.dataset.ok!=="1"){del.dataset.ok="1";del.textContent="¿Borrar?";setTimeout(()=>{if(del.isConnected){del.dataset.ok="";del.textContent="✕"}},5000);return}
+    try{await db.doc("agenda/"+del.dataset.agdel).delete();S.agenda.delete(del.dataset.agdel);renderAgenda();toast("Dirección borrada")}catch(err){writeError(err)}}});
 function histMailText(sku,desde,hasta,msg){
   const p=S.products.get(sku),rows=prodHistory(sku,desde,hasta);
   const per=desde||hasta?`del ${desde?desde.split("-").reverse().join("/"):"inicio"} al ${hasta?hasta.split("-").reverse().join("/"):"hoy"}`:"completo";
@@ -2221,6 +2334,10 @@ function openHistMail(sku){
   $("#scrim").addEventListener("click",e=>{const s=e.target.closest("[data-sug]");if(s){R.add(s.dataset.sug);chips()}const r=e.target.closest("[data-rm]");if(r){R.delete(r.dataset.rm);chips()}});
   ["#hm-d","#hm-h","#hm-msg"].forEach(s=>$(s).addEventListener("input",upd));
   $("#hm-xls").onclick=async()=>{const [d,h]=range();await exportHist(sku,d,h)};
+  if(mailer){const card=$("#hm-xls").closest(".card");card.querySelector("ol").style.display="none";$("#hm-mail").style.display="none";$("#hm-copy").style.display="none";$("#hm-xls").classList.remove("primary");
+    $("#hm-xls").insertAdjacentHTML("beforebegin",'<button class="btn primary" id="hm-send">Continuar: enviar con el Excel adjunto</button>');
+    $("#hm-send").onclick=async()=>{if(!R.size){toast("Agregá al menos un destinatario.");return}const [d,h]=range();let r;try{r=await histXlsx(sku,d,h)}catch(e){toast("No se pudo generar el Excel.");return}if(!r.count){toast("No hay movimientos en ese período.");return}
+      const t=histMailText(sku,d,h,$("#hm-msg").value.trim());openMailSend({title:"Enviar historial por correo",sub:p.sku+" · "+p.nombre,to:Array.from(R),subject:t.subject,body:t.body,files:[{name:r.name,data:r.blob}]})}}
   $("#hm-mail").addEventListener("click",e=>{if(!R.size){e.preventDefault();toast("Agregá al menos un destinatario.");return}rememberEmails(Array.from(R))});
   $("#hm-copy").onclick=()=>{if(!R.size){toast("Agregá al menos un destinatario.");return}const [d,h]=range();const t=histMailText(sku,d,h,$("#hm-msg").value.trim());rememberEmails(Array.from(R));
     const txt=`Para: ${Array.from(R).join(", ")}\nAsunto: ${t.subject}\n\n${t.body}`;
@@ -2247,25 +2364,25 @@ function openHistExport(sku){
 /* ---------- trépanos ---------- */
 let CUR_TR=null;
 /* estados: nuevo · optimo · malo (malo: taller | descarte). Clave combinada k: nuevo | optimo | taller | descarte */
-const TR_EST={nuevo:["info","Nuevo"],optimo:["ok","Óptimo"],malo:["bad","Malo"]};
-const TR_K={nuevo:["info","Nuevo","Sin uso, en caja · código a asignar"],optimo:["ok","Óptimo","Usado y en buen estado para seguir perforando"],taller:["warn","Malo · taller","Dañado: en reparación en el taller"],descarte:["bad","Malo · descarte","Ya no es operativo"]};
+const TR_EST={nuevo:["info","Nuevo"],optimo:["ok","Operativo"],malo:["bad","Malo"]};
+const TR_K={nuevo:["info","Nuevo","Sin uso, en caja · código a asignar"],optimo:["ok","Operativo","En condiciones de seguir perforando"],taller:["warn","Araña","Con desgaste o rotura en rodillos: para reparación"],descarte:["bad","Descarte","Ya no es operativo"]};
 const TR_KS=["nuevo","optimo","taller","descarte"];
-const TR_ALIAS={usado:"optimo",arana:"malo",reparacion:"malo",baja:"malo",descarte:"malo",taller:"malo"};
+const TR_ALIAS={operativo:"optimo",usado:"optimo",arana:"malo",reparacion:"malo",baja:"malo",descarte:"malo",taller:"malo"};
 const trE=e=>TR_ALIAS[e]||e||"";
 function trKOf(e,malo,ubic){e=String(e||"");
   if(e==="nuevo"||e==="optimo"||e==="taller"||e==="descarte")return e;
-  if(e==="usado")return"optimo";if(e==="baja")return"descarte";if(e==="arana"||e==="reparacion")return"taller";
+  if(e==="usado"||e==="operativo")return"optimo";if(e==="baja")return"descarte";if(e==="arana"||e==="reparacion")return"taller";
   if(e==="malo")return malo==="descarte"||(!malo&&/^(descarte|no encontrado|faltante)/i.test(ubic||""))?"descarte":"taller";
   return""}
 const trK=t=>trKOf(t.estado,t.malo,t.ubicacion);
 const movK=m=>trKOf(m.estado,m.malo,m.hacia);
-const trKParts=k=>k==="taller"||k==="descarte"?{estado:"malo",malo:k}:{estado:k||"optimo",malo:""};
+const trKParts=k=>({estado:{nuevo:"nuevo",optimo:"operativo",taller:"arana",descarte:"descarte"}[k]||"operativo",malo:""});
 const trKN=k=>TR_K[k]?TR_K[k][1]:(k||"");
 const trPillK=k=>{const [c,t]=TR_K[k]||["",k||"—"];return `<span class="pill ${c}"${c==="info"?' style="background:var(--accent-soft);color:var(--accent)"':""}>${t}</span>`};
 const trPill=(e,malo)=>trPillK(trKOf(e,malo));
 const trEstN=(e,malo)=>trKN(trKOf(e,malo));
 const trDesc0=t=>trK(t)==="descarte";
-const TR_MOV={arqueo:"Ajuste por arqueo",alta:"Alta al sistema",baja:"Baja (descarte)",entrada:"Entrada",salida:"Salida",traspaso:"Traspaso",estado:"Cambio de estado",codigo:"Asignación de código",edicion:"Edición de datos"};
+const TR_MOV={arqueo:"Ajuste por arqueo",alta:"Alta al sistema",baja:"Baja (descarte)",entrada:"Entrada",salida:"Salida",traspaso:"Traspaso",estado:"Cambio de estado / ubicación",codigo:"Asignación de código",edicion:"Edición de datos"};
 const DEF_TR_TIPOS=["Dientes","Inserto Largo","Inserto Corto","PDC","Tricono","Martillo DTH"];
 const DEF_DIAM=['3 7/8"','4 3/4"','6"','6 1/8"','6 1/4"','7 7/8"','8 1/2"','8 3/4"','9 7/8"','10 5/8"','12 1/4"','14 3/4"','17 1/2"'];
 const TR_BASES_DEF=["Galpón","Playón","Taller"];
@@ -2281,6 +2398,7 @@ const equiposL=()=>uniq((S.config.equipos||[]).concat(trList().filter(t=>t.ubicT
 const trDiamFmt=d=>{d=String(d||"").trim().replace(/[”″]/g,'"').replace(/''$/,'"');return d&&/^\d+(\s+\d+\/\d+)?$/.test(d)?d+'"':d};
 const trByCreado=(a,b)=>String(a.creado||"").localeCompare(String(b.creado||""));
 function trByCode(c){c=String(c||"").trim().toLowerCase().replace(/\s+/g,"");if(!c)return null;return trList().find(t=>String(t.codigo||"").toLowerCase().replace(/\s+/g,"")===c)||null}
+const trMovsOf=t=>S.trmov.filter(m=>m.trepanoId===t.id||(t.codigo&&m.codigo&&String(m.codigo).toUpperCase().replace(/\s+/g,"")===String(t.codigo).toUpperCase().replace(/\s+/g,"")));
 function trLastMov(id){let b=null;for(const m of S.trmov)if(m.trepanoId===id&&(!b||String(m.fecha)>String(b.fecha)))b=m;return b}
 function trDl(id,html){let d=document.getElementById(id);if(!d){d=document.createElement("datalist");d.id=id;document.body.appendChild(d)}d.innerHTML=html}
 function trRenderLists(){
@@ -2350,9 +2468,10 @@ function renderTrIn(opt){
   const f=$("#f-tr-in");opt=opt||{};
   if(opt.reset)TRI.sc=false;
   if(opt.tr){const t=S.trep.get(opt.tr);if(t){TRI.k="optimo";TRI.sc=!t.codigo;TRI.pre=t.codigo||"";TRI.preT=t}}
-  const keep=opt.reset?{}:trKeep(f),k=TRI.k,nu=k==="nuevo";
+  if(!TR_K[TRI.k])TRI.k="optimo";
+  const keep=opt.reset?{}:trKeep(f),k=TRI.k,nu=k==="nuevo";if(TRI.ubReset){delete keep["ti-ub"];TRI.ubReset=false}
   f.innerHTML=`
-   <div class="field full"><label class="lb">Estado con el que entra <em>*</em></label>${trSeg("ti-k",[["nuevo","Nuevo"],["optimo","Óptimo"],["malo","Malo"]],k)}<span class="hint">${nu?"Trépanos nuevos en caja: se cargan por cantidad y quedan con <b>código a asignar</b> (el código se asigna en la salida).":k==="optimo"?"Trépano usado que vuelve en buen estado y queda disponible en la base.":"Trépano que vuelve dañado: va a reparación en el taller o a descarte."}</span></div>
+   <div class="field full"><label class="lb">Estado con el que entra <em>*</em></label>${trSeg("ti-k",[["nuevo","Nuevo"],["optimo","Operativo"],["taller","Araña"],["descarte","Descarte"]],k)}<span class="hint">${nu?"Trépanos nuevos en caja: se cargan por cantidad y quedan con <b>código a asignar</b> (el código se asigna en la salida).":k==="optimo"?"Trépano usado que vuelve en condiciones de seguir perforando.":k==="taller"?"Trépano con desgaste o rotura en rodillos, para reparación.":"Trépano que ya no es operativo."}</span></div>
    <div class="field"><label class="lb" for="ti-fecha">Fecha y hora</label><input type="datetime-local" id="ti-fecha" value="${nowLocal()}"></div>
    <div class="field"><label class="lb" for="ti-orig">Origen${nu?" / proveedor":""}</label><input type="text" id="ti-orig" list="${nu?"dl-origen":"dl-tror"}" placeholder="${nu?"Proveedor u origen":"Equipo del que vuelve"}"></div>
    ${nu?`<div class="field"><label class="lb" for="ti-n">Cantidad <em>*</em></label><input type="number" id="ti-n" min="1" max="100" value="1"></div>
@@ -2360,13 +2479,12 @@ function renderTrIn(opt){
     :`<div class="field"><label class="lb" for="ti-code">Código <em>*</em></label><input type="text" id="ti-code" list="dl-trep" placeholder="Ej.: 12I308" autocomplete="off"${TRI.sc?' disabled value="Código a asignar"':""}><label class="chk" style="margin-top:6px"><input type="checkbox" id="ti-sc"${TRI.sc?" checked":""}> <span>Sin código (código a asignar)</span></label><span class="hint" id="ti-info"></span></div>`}
    <div class="field"><label class="lb" for="ti-tipo">Tipo <em>*</em></label><input type="text" id="ti-tipo" list="dl-trtipo" placeholder="Dientes, Inserto Largo…"></div>
    <div class="field"><label class="lb" for="ti-diam">Diámetro <em>*</em></label><input type="text" id="ti-diam" list="dl-diam" placeholder='Ej.: 12"'></div>
-   ${k==="malo"?`<div class="field full"><label class="lb">Destino <em>*</em></label>${trSeg("ti-dest",[["taller","Reparación en taller"],["descarte","Descarte"]],TRI.dest)}</div>`
-     :`<div class="field"><label class="lb" for="ti-ub">Ubicación <em>*</em></label><select id="ti-ub">${trBases().map(x=>`<option>${esc(x)}</option>`).join("")}</select></div>`}
+   <div class="field"><label class="lb" for="ti-ub">Ubicación <em>*</em></label><select id="ti-ub">${taUbs().map(x=>`<option${x===(k==="descarte"?"Descarte":k==="taller"?"Taller":trBases()[0])?" selected":""}>${esc(x)}</option>`).join("")}</select></div>
    ${trOpt("ti")}
    <div class="form-actions"><button type="submit" class="btn in" id="ti-go">${ICON_IN}Registrar entrada</button></div>`;
   trRestore(f,keep);
   if(TRI.pre!=null){const c=$("#ti-code");if(c&&!TRI.sc)c.value=TRI.pre;if(TRI.sc&&TRI.preT){$("#ti-tipo").value=TRI.preT.tipo||"";$("#ti-diam").value=TRI.preT.diametro||""}if(TRI.preT&&TRI.preT.ubicTipo==="equipo")$("#ti-orig").value=TRI.preT.ubicacion||"";delete TRI.pre;delete TRI.preT}
-  trSegOn("ti-k",v=>{TRI.k=v;renderTrIn()});trSegOn("ti-dest",v=>{TRI.dest=v;renderTrIn()});
+  trSegOn("ti-k",v=>{TRI.k=v;TRI.ubReset=true;renderTrIn()});trSegOn("ti-dest",v=>{TRI.dest=v;renderTrIn()});
   const sc=$("#ti-sc");if(sc)sc.onchange=()=>{TRI.sc=sc.checked;renderTrIn()};
   $("#ti-orig").addEventListener("input",()=>{$("#ti-orig").dataset.touched="1"});
   const c=$("#ti-code");if(c&&!TRI.sc){c.addEventListener("input",tiInfo);tiInfo()}
@@ -2380,7 +2498,7 @@ function tiInfo(){const c=$("#ti-code");if(!c)return;const t=trByCode(c.value),i
   else{if(tp.readOnly){tp.value="";dm.value=""}tp.readOnly=dm.readOnly=false;inf.innerHTML=c.value.trim()?'<span style="color:var(--warn)">Código no registrado: se da de alta con el tipo y diámetro que indiques.</span>':""}}
 $("#f-tr-in").addEventListener("submit",async e=>{e.preventDefault();if(!guardWrite("deposito"))return;
   const k=TRI.k,base=trBase("ti"),orig=$("#ti-orig").value.trim(),tipo=$("#ti-tipo").value.trim(),diam=trDiamFmt($("#ti-diam").value);
-  const kk=k==="malo"?TRI.dest:k,ub=k==="malo"?(TRI.dest==="descarte"?"Descarte":"Taller"):$("#ti-ub").value,P=trKParts(kk),b=$("#ti-go");
+  const kk=k,ub=$("#ti-ub").value,P=trKParts(kk),b=$("#ti-go");
   if(k==="nuevo"){const n=clamp(Math.floor(+$("#ti-n").value||0),0,100);if(!n){toast("Indicá la cantidad.");$("#ti-n").focus();return}
     if(!tipo){toast("Indicá el tipo.");$("#ti-tipo").focus();return}if(!diam){toast("Indicá el diámetro.");$("#ti-diam").focus();return}
     b.disabled=true;
@@ -2406,7 +2524,7 @@ function renderTrOut(opt){
   const noN=nu&&!G.length;
   f.innerHTML=`
    <div class="field full"><label class="lb">Tipo de salida</label>${trSeg("to-mode",[["base","Desde la base a un equipo"],["tras","Traspaso entre equipos"]],TRO.mode)}</div>
-   ${tras?`<div class="field full"><span class="hint">El trépano pasa de un equipo a otro sin volver a la base. Mantiene su estado.</span></div>`:`<div class="field full"><label class="lb">Estado del trépano que sale <em>*</em></label>${trSeg("to-k",[["nuevo","Nuevo"],["optimo","Óptimo"]],TRO.k)}<span class="hint">${nu?"Se elige por tipo y diámetro entre los nuevos en caja y se le asigna el código al salir.":"Trépano usado en buen estado que está en una base."}</span></div>`}
+   ${tras?`<div class="field full"><span class="hint">El trépano pasa de un equipo a otro sin volver a la base. Mantiene su estado.</span></div>`:`<div class="field full"><label class="lb">Estado del trépano que sale <em>*</em></label>${trSeg("to-k",[["nuevo","Nuevo"],["optimo","Operativo"]],TRO.k)}<span class="hint">${nu?"Se elige por tipo y diámetro entre los nuevos en caja y se le asigna el código al salir.":"Trépano usado en buen estado que está en una base."}</span></div>`}
    ${noN?trEmpty("No hay trépanos nuevos en base. Cargalos con una <b>Entrada</b> como Nuevo."):`
    <div class="field"><label class="lb" for="to-fecha">Fecha y hora</label><input type="datetime-local" id="to-fecha" value="${nowLocal()}"></div>
    ${nu?`<div class="field full"><label class="lb" for="to-grp">Trépano nuevo (tipo · diámetro · ubicación) <em>*</em></label><select id="to-grp"><option value="">Elegí…</option>${G.map(g=>`<option value="${esc(g.key)}">${esc(g.tipo||"—")} · ${esc(g.diametro||"—")} · ${esc(g.ubic)} (${g.list.length} disponible${g.list.length===1?"":"s"})</option>`).join("")}</select></div>
@@ -2432,7 +2550,7 @@ function toInfo(){const tras=TRO.mode==="tras",nu=!tras&&TRO.k==="nuevo",inf=$("
   if(!t){set("","","");inf.innerHTML=c.value.trim()?'<span style="color:var(--bad)">No hay un trépano con ese código.</span>':"";return}
   set(t.tipo||"",t.diametro||"",t.ubicacion||"");
   const ok=tras?t.ubicTipo==="equipo":(trInBase(t)&&trK(t)==="optimo");
-  inf.innerHTML=ok?`${esc(trKN(trK(t)))} · ${esc(trUbic(t))}`:`<span style="color:var(--bad)">${tras?"No está en un equipo":"No está disponible en una base como Óptimo"}: figura en ${esc(trUbic(t))} · ${esc(trKN(trK(t)))}</span>`}
+  inf.innerHTML=ok?`${esc(trKN(trK(t)))} · ${esc(trUbic(t))}`:`<span style="color:var(--bad)">${tras?"No está en un equipo":"No está disponible en una base como Operativo"}: figura en ${esc(trUbic(t))} · ${esc(trKN(trK(t)))}</span>`}
 $("#f-tr-out").addEventListener("submit",async e=>{e.preventDefault();if(!guardWrite("deposito"))return;
   const tras=TRO.mode==="tras",nu=!tras&&TRO.k==="nuevo",c=$("#to-code");if(!c)return;
   const dest=normEq($("#to-dest").value),b=$("#to-go");
@@ -2440,22 +2558,22 @@ $("#f-tr-out").addEventListener("submit",async e=>{e.preventDefault();if(!guardW
     const code=c.value.trim().toUpperCase().replace(/\s+/g,"");if(!code){toast("Escribí el código que se le asigna.");c.focus();return}if(trByCode(code)){toast("Ese código ya está asignado a otro trépano.");c.focus();return}
     if(!dest){toast("Indicá el equipo de destino.");$("#to-dest").focus();return}
     const t=g.list[0],base=trBase("to");b.disabled=true;
-    try{await trWrite(t,{codigo:code,ubicTipo:"equipo",ubicacion:dest,estado:"optimo",malo:""},Object.assign(base,{tipo:"salida",codigo:code,desde:t.ubicacion||"",hacia:dest,estadoAntes:"nuevo",estado:"nuevo",malo:"",obs:["Código asignado al salir: "+code,base.obs].filter(Boolean).join(" · ")}));
+    try{await trWrite(t,{codigo:code,ubicTipo:"equipo",ubicacion:dest,estado:"operativo",malo:""},Object.assign(base,{tipo:"salida",codigo:code,desde:t.ubicacion||"",hacia:dest,estadoAntes:"nuevo",estado:"nuevo",malo:"",obs:["Código asignado al salir: "+code,base.obs].filter(Boolean).join(" · ")}));
       toast(`Salida registrada: ${code} (nuevo) hacia ${dest}`);renderTrOut({reset:true})}catch(err){b.disabled=false;writeError(err)}return}
   const t=trByCode(c.value);if(!t){toast("No hay un trépano con ese código.");c.focus();return}
   if(tras&&t.ubicTipo!=="equipo"){toast(`${t.codigo} no está en un equipo: figura en ${trUbic(t)}.`);return}
-  if(!tras&&!(trInBase(t)&&trK(t)==="optimo")){toast(`${t.codigo} no está disponible como Óptimo en una base (figura en ${trUbic(t)} · ${trKN(trK(t))}).`);return}
+  if(!tras&&!(trInBase(t)&&trK(t)==="optimo")){toast(`${t.codigo} no está disponible como Operativo en una base (figura en ${trUbic(t)} · ${trKN(trK(t))}).`);return}
   if(!dest){toast("Indicá el equipo de destino.");$("#to-dest").focus();return}
   if(tras&&norm(dest)===norm(t.ubicacion||"")){toast("El equipo de destino es el mismo en el que ya está.");return}
   const base=trBase("to"),P=trKParts(trK(t));b.disabled=true;
   try{if(tras)await trWrite(t,{ubicTipo:"equipo",ubicacion:dest},Object.assign(base,{tipo:"traspaso",desde:t.ubicacion||"",hacia:dest,estado:P.estado,malo:P.malo}));
-    else await trWrite(t,{ubicTipo:"equipo",ubicacion:dest,estado:"optimo",malo:""},Object.assign(base,{tipo:"salida",desde:t.ubicacion||"",hacia:dest,estado:"optimo"}));
+    else await trWrite(t,{ubicTipo:"equipo",ubicacion:dest,estado:"operativo",malo:""},Object.assign(base,{tipo:"salida",desde:t.ubicacion||"",hacia:dest,estado:"operativo"}));
     toast(tras?`Traspaso registrado: ${t.codigo} de ${t.ubicacion} a ${dest}`:`Salida registrada: ${t.codigo} hacia ${dest}`);renderTrOut({reset:true})}catch(err){b.disabled=false;writeError(err)}});
 
 /* ---------- ficha ---------- */
 function openTr(id){
   const t=S.trep.get(id);if(!t)return;const k=trK(t);
-  const ms=S.trmov.filter(m=>m.trepanoId===id).sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));
+  const ms=trMovsOf(t).sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));
   const kv=(a,v)=>v?`<dt>${a}</dt><dd>${esc(v)}</dd>`:"";
   modal(`<div class="modal-h"><div><div class="meta">${esc(trDesc(t))}</div><h3 class="${t.codigo?"mono":""}">${esc(trName(t))}</h3><div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap">${trPillK(k)}<span class="pill" style="background:var(--surface-2)">${esc(trUbic(t))}</span></div></div><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
    <div style="padding:18px;display:grid;gap:16px">
@@ -2465,7 +2583,7 @@ function openTr(id){
        ${trInBase(t)&&(k==="optimo"||k==="nuevo")?`<button class="btn out" data-trgo="trepanos/salida">${ICON_OUT}Salida a equipo</button>`:""}
        <button class="btn" data-trgo="trepanos/trepano">Historial del trépano</button>
      </div>
-     <div style="display:flex;gap:6px;flex-wrap:wrap">${k!=="nuevo"?`<button class="btn sm" id="trf-code">${t.codigo?"Cambiar código":"Asignar código"}</button>`:""}${trInBase(t)?`<button class="btn sm" id="trf-est">Cambiar estado / ubicación</button>`:""}<button class="btn sm need-adm" id="trf-edit">Editar datos</button>${ms.length<=1?`<button class="btn sm danger need-adm" id="trf-del">Eliminar (cargado por error)</button>`:""}</div>
+     <div style="display:flex;gap:6px;flex-wrap:wrap">${k!=="nuevo"?`<button class="btn sm" id="trf-code">${t.codigo?"Cambiar código":"Asignar código"}</button>`:""}<button class="btn sm need-dep" id="trf-est">Cambiar estado / ubicación</button><button class="btn sm need-adm" id="trf-edit">Editar datos</button>${ms.length<=1?`<button class="btn sm danger need-adm" id="trf-del">Eliminar (cargado por error)</button>`:""}</div>
      <div id="trf-panel"></div>
      <div><div class="lb" style="margin-bottom:6px">Últimos movimientos</div>
        ${ms.length?`<div class="card table-wrap"><table class="prev"><tbody>${ms.slice(0,8).map(m=>`<tr><td class="meta mono">${esc(fmtD(m.fecha))}</td><td>${esc(TR_MOV[m.tipo]||m.tipo)}</td><td class="wrap meta">${esc([m.desde,m.hacia].filter(Boolean).join(" → "))}</td><td>${movK(m)?trPillK(movK(m)):""}</td><td class="meta wrap">${esc(m.obs||"")}</td></tr>`).join("")}</tbody></table></div>`:'<div class="meta">Sin movimientos.</div>'}
@@ -2479,13 +2597,7 @@ function openTr(id){
     $("#trp-x").onclick=()=>panel.innerHTML="";$("#trp-code").focus();
     $("#trp-ok").onclick=async()=>{if(!guardWrite("deposito"))return;const c=$("#trp-code").value.trim().toUpperCase().replace(/\s+/g,"");if(!c){toast("Escribí el código.");return}const o=trByCode(c);if(o&&o.id!==t.id){toast("Ese código ya está asignado a otro trépano.");return}
       try{await trWrite(t,{codigo:c},{tipo:"codigo",autoriza:$("#trp-aut").value.trim(),obs:t.codigo?`Código anterior: ${t.codigo}`:"Asignación de código"});toast("Código guardado: "+c);openTr(t.id)}catch(e){writeError(e)}}};
-  const pe=$("#trf-est");if(pe)pe.onclick=()=>{const ubs=trBases().concat(["Descarte"]);if(t.ubicacion&&!ubs.includes(t.ubicacion))ubs.push(t.ubicacion);
-    panel.innerHTML=`<div class="card form" style="background:var(--surface-2)"><div class="field"><label class="lb" for="trp-est">Estado</label><select id="trp-est">${TR_KS.filter(x=>x!=="nuevo"||!t.codigo).map(x=>`<option value="${x}"${x===k?" selected":""}>${trKN(x)}</option>`).join("")}</select></div>
-      <div class="field"><label class="lb" for="trp-ub">Ubicación</label><select id="trp-ub">${ubs.map(x=>`<option${x===t.ubicacion?" selected":""}>${esc(x)}</option>`).join("")}</select></div>${autF}<div class="field full"><label class="lb" for="trp-obs">Motivo</label><input type="text" id="trp-obs" placeholder="Ej.: desgaste de conos, rotura, reubicación"></div><div class="form-actions"><button class="btn" id="trp-x">Cancelar</button><button class="btn primary" id="trp-ok">Guardar</button></div></div>`;
-    $("#trp-x").onclick=()=>panel.innerHTML="";
-    $("#trp-est").onchange=()=>{const v=$("#trp-est").value;if(v==="taller")$("#trp-ub").value="Taller";if(v==="descarte")$("#trp-ub").value="Descarte"};
-    $("#trp-ok").onclick=async()=>{if(!guardWrite("deposito"))return;const es=$("#trp-est").value,ub=$("#trp-ub").value;if(es===k&&ub===t.ubicacion){toast("No hay cambios.");return}const P=trKParts(es);
-      try{await trWrite(t,Object.assign({ubicTipo:"deposito",ubicacion:ub},P),{tipo:"estado",desde:t.ubicacion||"",hacia:ub,autoriza:$("#trp-aut").value.trim(),estado:P.estado,malo:P.malo,obs:$("#trp-obs").value.trim()});toast("Estado y ubicación actualizados");openTr(t.id)}catch(e){writeError(e)}}};
+  const pe=$("#trf-est");if(pe)pe.onclick=()=>openTrEstado(t.id);
   $("#trf-edit").onclick=()=>{panel.innerHTML=`<div class="card form" style="background:var(--surface-2)">
       <div class="field"><label class="lb" for="tre-tipo">Tipo</label><input type="text" id="tre-tipo" list="dl-trtipo" value="${esc(t.tipo||"")}"></div>
       <div class="field"><label class="lb" for="tre-diam">Diámetro</label><input type="text" id="tre-diam" list="dl-diam" value="${esc(t.diametro||"")}"></div>
@@ -2500,9 +2612,37 @@ function openTr(id){
       try{await trWrite(t,patch,{tipo:"edicion",obs:"Datos de la ficha actualizados"});toast("Datos guardados");openTr(t.id)}catch(e){writeError(e)}}};
   const del=$("#trf-del");if(del)del.onclick=()=>{panel.innerHTML=`<div class="banner bad" style="margin:0;display:flex;gap:10px;align-items:center;flex-wrap:wrap">Se borra el trépano y su registro de ingreso. No se puede deshacer.<button class="btn sm" id="trp-x">Cancelar</button><button class="btn sm" id="trp-ok" style="background:var(--bad);color:#fff;border-color:var(--bad)">Eliminar</button></div>`;
     $("#trp-x").onclick=()=>panel.innerHTML="";
-    $("#trp-ok").onclick=async()=>{if(!guardWrite("admin"))return;try{for(const m of ms)await db.doc("trepanos_mov/"+m.id).delete();await db.doc("trepanos/"+t.id).delete();S.trep.delete(t.id);toast("Trépano eliminado");closeModal();renderTrAll()}catch(e){writeError(e)}}};
+    $("#trp-ok").onclick=async()=>{if(!guardWrite("admin"))return;try{for(const m of ms.filter(x=>x.trepanoId===t.id))await db.doc("trepanos_mov/"+m.id).delete();await db.doc("trepanos/"+t.id).delete();S.trep.delete(t.id);toast("Trépano eliminado");closeModal();renderTrAll()}catch(e){writeError(e)}}};
 }
 
+/* cambiar estado o ubicación con motivo */
+function openTrEstado(id){
+  const t=S.trep.get(id);if(!t)return;if(!guardWrite("deposito"))return;const k=trK(t),eq=t.ubicTipo==="equipo";
+  const ubs=taUbs().slice();if(!eq&&t.ubicacion&&!ubs.includes(t.ubicacion))ubs.push(t.ubicacion);
+  modal(`<div class="modal-h"><div><div class="meta">${esc(trDesc(t))} · ${esc(trKN(k))} · ${esc(trUbic(t))}</div><h3 class="${t.codigo?"mono":""}">Cambiar estado o ubicación · ${esc(trName(t))}</h3></div><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
+   <form class="form" id="f-tre" autocomplete="off" style="padding:18px">
+     <div class="field"><label class="lb" for="tre-k">Estado</label><select id="tre-k">${TR_KS.filter(x=>x!=="nuevo"||!t.codigo).map(x=>`<option value="${x}"${x===k?" selected":""}>${trKN(x)}</option>`).join("")}</select></div>
+     <div class="field"><label class="lb" for="tre-f">Fecha y hora</label><input type="datetime-local" id="tre-f" value="${nowLocal()}"></div>
+     <div class="field full"><label class="lb">Ubicación</label>${trSeg("tre-ut",[["base","En una base"],["equipo","En un equipo"]],eq?"equipo":"base")}</div>
+     <div class="field" id="tre-bw"${eq?" hidden":""}><label class="lb" for="tre-b">Base</label><select id="tre-b">${ubs.map(x=>`<option${x===t.ubicacion?" selected":""}>${esc(x)}</option>`).join("")}</select></div>
+     <div class="field" id="tre-ew"${eq?"":" hidden"}><label class="lb" for="tre-e">Equipo</label><input type="text" id="tre-e" list="dl-eqtr" value="${eq?esc(t.ubicacion||""):""}" placeholder="Ej.: TEC51"></div>
+     <div class="field full"><label class="lb" for="tre-m">Motivo u observación <em>*</em></label><textarea id="tre-m" rows="3" placeholder="Por qué se cambia: rotura de rodillo, reubicación, corrección del listado…"></textarea></div>
+     <div class="field"><label class="lb" for="tre-a">Autorizó</label><input type="text" id="tre-a" list="dl-personas" placeholder="Opcional"></div>
+     <div class="form-actions"><button type="button" class="btn" data-close>Cancelar</button><button type="submit" class="btn primary" id="tre-go">Guardar cambio</button></div>
+   </form>`);
+  let ut=eq?"equipo":"base";
+  trSegOn("tre-ut",v=>{ut=v;$$("#tre-ut button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.k===v));$("#tre-bw").hidden=v!=="base";$("#tre-ew").hidden=v!=="equipo"});
+  $("#tre-k").onchange=()=>{const v=$("#tre-k").value;if(ut==="base"){if(v==="descarte")$("#tre-b").value="Descarte";else if(v==="taller"&&taUbs().includes("Taller"))$("#tre-b").value="Taller"}};
+  setTimeout(()=>$("#tre-m").focus(),50);
+  $("#f-tre").addEventListener("submit",async e=>{e.preventDefault();if(!guardWrite("deposito"))return;
+    const nk=$("#tre-k").value,ub=ut==="base"?$("#tre-b").value:normEq($("#tre-e").value),mot=$("#tre-m").value.trim();
+    if(!ub){toast("Indicá el equipo.");$("#tre-e").focus();return}
+    if(nk===k&&ub===(t.ubicacion||"")&&(ut==="equipo")===eq){toast("No hay cambios.");return}
+    if(!mot){toast("Escribí el motivo del cambio.");$("#tre-m").focus();return}
+    const P=trKParts(nk),f=$("#tre-f").value,b=$("#tre-go");b.disabled=true;
+    try{await trWrite(t,Object.assign({ubicTipo:ut==="base"?"deposito":"equipo",ubicacion:ub},P),{tipo:"estado",fecha:(!f||f===nowLocal())?new Date().toISOString():new Date(f).toISOString(),desde:t.ubicacion||"",hacia:ub,autoriza:$("#tre-a").value.trim(),estado:P.estado,malo:"",obs:mot});
+      closeModal();toast(`${trName(t)}: ${trKN(nk)} · ${ut==="equipo"?"Equipo ":""}${ub}`);renderTrAll()}catch(err){b.disabled=false;writeError(err)}});
+}
 /* ---------- arqueo de trépanos ---------- */
 let TA_CUR=null;const TA_IN={ub:"",k:"optimo",sc:false};
 const taCur=a=>S.trarq.get(a.id)||a;
@@ -2539,7 +2679,7 @@ function taLines(C){const L=[],kd=(k,tipo,d)=>`${trKN(k)} · ${[tipo,d].filter(B
   C.dif.forEach(o=>L.push({id:"dif:"+o.x.codigo,cat:"dif",ref:o.x.codigo,sis:`${trKN(trK(o.t))} · ${o.t.ubicacion||"—"}${o.ch.includes("tipo")||o.ch.includes("diámetro")?" · "+trDesc(o.t):""}`,con:`${trKN(o.x.k)} · ${o.x.ubicacion||"—"}${o.ch.includes("tipo")||o.ch.includes("diámetro")?" · "+[o.x.tipo||o.t.tipo,o.x.diametro||o.t.diametro].join(" · "):""}`,acc:"Asignar "+o.ch.join(", ")+" contados",def:true,o}));
   C.fuera.forEach(o=>L.push({id:"fuera:"+o.x.codigo,cat:"fuera",ref:o.x.codigo,sis:trUbic(o.t),con:`${trKN(o.x.k)} · ${o.x.ubicacion||"—"}`,acc:`Entrada a ${o.x.ubicacion||trBases()[0]} como ${trKN(o.x.k)}`,def:true,o}));
   C.nr.forEach(o=>{const g=taGuess(o.x.codigo);L.push({id:"nr:"+o.x.codigo,cat:"nr",ref:o.x.codigo,sis:"No figura",con:`${trKN(o.x.k)} · ${o.x.ubicacion||"—"}`,acc:`Dar de alta como ${[o.x.tipo||g.tipo,o.x.diametro||g.diametro].filter(Boolean).join(" ")||"trépano"} (editable después)`,def:true,o})});
-  C.falt.forEach(o=>L.push({id:"falt:"+o.t.id,cat:"falt",ref:o.t.codigo,sis:`${trKN(trK(o.t))} · ${o.t.ubicacion||"—"}`,con:"No contado",acc:"Pasar a Malo · descarte (no encontrado en arqueo)",def:false,o}));
+  C.falt.forEach(o=>L.push({id:"falt:"+o.t.id,cat:"falt",ref:o.t.codigo,sis:`${trKN(trK(o.t))} · ${o.t.ubicacion||"—"}`,con:"No contado",acc:"Pasar a Descarte (no encontrado en arqueo)",def:false,o}));
   C.sc.forEach(o=>L.push({id:o.id,cat:"sc",ref:kd(o.k,o.tipo,o.diametro),sis:o.kind==="mas"?"—":`${o.n} en ${o.from}`,con:o.kind==="menos"?"No contados":`${o.n} en ${o.to}`,acc:o.kind==="mov"?`Cambiar ubicación de ${o.n}: ${o.from} → ${o.to}`:o.kind==="mas"?`Ingresar ${o.n} en ${o.to}`:`Pasar ${o.n} a Malo · descarte (faltante${o.n>1?"s":""})`,def:o.kind!=="menos"||o.counted,o}));
   return L}
 function renderTrArq(){
@@ -2600,7 +2740,7 @@ function renderTrArq(){
   $("#ta-obs").addEventListener("change",async()=>{try{await taPatch(a,{obs:$("#ta-obs").value.trim()})}catch(err){writeError(err)}});
   $("#ta-imp").onclick=()=>$("#ta-file").click();
   $("#ta-file").onchange=()=>{const f=$("#ta-file").files[0];if(f)taImport(a,f)};
-  $("#ta-tpl").onclick=()=>loadXlsx().then(()=>{const ws=XLSX.utils.aoa_to_sheet([["Código","Tipo","Diámetro","Estado","Ubicación","Cantidad"],["12I308","Inserto Largo",'12"',"Óptimo",trBases()[0],1],["","Dientes",'17"',"Nuevo",trBases()[0],3],["13D246","Dientes",'13"',"Malo · taller","Taller",1]]);ws["!cols"]=[{wch:12},{wch:16},{wch:10},{wch:16},{wch:18},{wch:10}];const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Contados");save("plantilla-arqueo-trepanos.xlsx",new Blob([XLSX.write(wb,{bookType:"xlsx",type:"array"})]))}).catch(()=>toast("No se pudo cargar el generador de Excel."));
+  $("#ta-tpl").onclick=()=>loadXlsx().then(()=>{const ws=XLSX.utils.aoa_to_sheet([["Código","Tipo","Diámetro","Estado","Ubicación","Cantidad"],["12I308","Inserto Largo",'12"',"Operativo",trBases()[0],1],["","Dientes",'17"',"Nuevo",trBases()[0],3],["13D246","Dientes",'13"',"Malo · taller","Taller",1]]);ws["!cols"]=[{wch:12},{wch:16},{wch:10},{wch:16},{wch:18},{wch:10}];const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Contados");save("plantilla-arqueo-trepanos.xlsx",new Blob([XLSX.write(wb,{bookType:"xlsx",type:"array"})]))}).catch(()=>toast("No se pudo cargar el generador de Excel."));
   const an=$("#ta-anul");if(an)an.onclick=async()=>{if(!guardWrite("admin"))return;if(an.dataset.ok!=="1"){an.dataset.ok="1";an.textContent="Confirmar anulación";setTimeout(()=>{an.dataset.ok="";an.textContent="Anular"},6000);return}
     try{await taPatch(a,{estado:"anulado",cerrado:new Date().toISOString()});TA_CUR=null;toast("Arqueo anulado");renderTrArq()}catch(err){writeError(err)}};
   $("#ta-fin").onclick=()=>taFinalize(taCur(a));
@@ -2635,10 +2775,10 @@ async function taFinalize(a){
       if(l.cat==="dif"){const P=trKParts(o.x.k),ub=o.x.ubicacion||o.t.ubicacion||dep;await trWrite(o.t,Object.assign({ubicTipo:"deposito",ubicacion:ub},P,desc(o.t,o.x)),mv({desde:o.t.ubicacion||"",hacia:ub,estado:P.estado,malo:P.malo,obs:`${ref}: ${l.sis} → ${l.con}`}))}
       else if(l.cat==="fuera"){const P=trKParts(o.x.k),ub=o.x.ubicacion||dep;await trWrite(o.t,Object.assign({ubicTipo:"deposito",ubicacion:ub},P,desc(o.t,o.x)),mv({desde:o.t.ubicacion||"",hacia:ub,estado:P.estado,malo:P.malo,obs:`${ref}: encontrado en ${ub} (figuraba en ${trUbic(o.t)})`}))}
       else if(l.cat==="nr"){const g=taGuess(o.x.codigo),P=trKParts(o.x.k),ub=o.x.ubicacion||dep;await trCreate(Object.assign({codigo:o.x.codigo,tipo:o.x.tipo||g.tipo,diametro:o.x.diametro||g.diametro,ubicTipo:"deposito",ubicacion:ub,obs:o.x.tipo&&o.x.diametro?"Alta por arqueo":"Alta por arqueo: revisar tipo y diámetro"},P),mv({desde:"",hacia:ub,estado:P.estado,malo:P.malo,obs:`${ref}: encontrado en ${ub}, no figuraba en el sistema`}))}
-      else if(l.cat==="falt"){await trWrite(o.t,{estado:"malo",malo:"descarte",ubicTipo:"deposito",ubicacion:"No encontrado en arqueo"},mv({desde:o.t.ubicacion||"",hacia:"No encontrado en arqueo",estado:"malo",malo:"descarte",obs:`${ref}: no se encontró en las bases`}))}
+      else if(l.cat==="falt"){await trWrite(o.t,{estado:"descarte",malo:"",ubicTipo:"deposito",ubicacion:"No encontrado en arqueo"},mv({desde:o.t.ubicacion||"",hacia:"No encontrado en arqueo",estado:"descarte",malo:"",obs:`${ref}: no se encontró en las bases`}))}
       else if(o.kind==="mov"){for(const t of o.list)await trWrite(t,{ubicTipo:"deposito",ubicacion:o.to},mv({desde:t.ubicacion||"",hacia:o.to,estado:t.estado,malo:t.malo||"",obs:`${ref}: contado en ${o.to}`}))}
       else if(o.kind==="mas"){const P=trKParts(o.k);for(let i=0;i<o.n;i++)await trCreate(Object.assign({tipo:o.tipo,diametro:o.diametro,ubicTipo:"deposito",ubicacion:o.to,obs:"Alta por arqueo"},P),mv({desde:"",hacia:o.to,estado:P.estado,malo:P.malo,obs:`${ref}: contado de más (código a asignar)`}))}
-      else{for(const t of o.list)await trWrite(t,{estado:"malo",malo:"descarte",ubicacion:"Faltante en arqueo"},mv({desde:t.ubicacion||"",hacia:"Faltante en arqueo",estado:"malo",malo:"descarte",obs:`${ref}: faltante (código a asignar)`}))}
+      else{for(const t of o.list)await trWrite(t,{estado:"descarte",malo:"",ubicacion:"Faltante en arqueo"},mv({desde:t.ubicacion||"",hacia:"Faltante en arqueo",estado:"descarte",malo:"",obs:`${ref}: faltante (código a asignar)`}))}
       done.push(l.id)}catch(e){console.error(e);fail.push(l.id)}}
   const resultado={nOk:C.ok.length+C.uok,nDif:C.nDif,lines:lines.map(l=>({id:l.id,cat:l.cat,ref:l.ref,sis:l.sis,con:l.con,acc:l.acc})),aplicadas:done,fallidas:fail};
   try{await taPatch(a,{estado:"cerrado",cerrado:now,cerradoPor:aut,cerradoPorId:myId||"",obs:($("#ta-obs")||{}).value||a.obs||"",resultado});toast(`Arqueo finalizado: ${done.length} ${done.length===1?"corrección aplicada":"correcciones aplicadas"}${fail.length?`, ${fail.length} con error`:""}`);renderTrArq()}catch(err){writeError(err);b.disabled=false}
@@ -2672,26 +2812,26 @@ function trStockFilter(){const q=norm($("#tr-q").value),es=TR_KPI||$("#tr-est").
 function renderTrStock(){
   const T=trList(),act=T.filter(t=>!trDesc0(t)),cnt=k=>T.filter(t=>trK(t)===k).length;
   $("#tr-sub").textContent=T.length?`${act.length} trépanos (sin contar descarte) · ${act.filter(trInBase).length} en base · ${act.filter(t=>t.ubicTipo==="equipo").length} en equipos`:"Todavía no hay trépanos cargados.";
-  const K=[["nuevo","Nuevos",cnt("nuevo"),""],["optimo","Óptimos",cnt("optimo"),""],["taller","Malos · taller",cnt("taller"),"warn"],["descarte","Malos · descarte",cnt("descarte"),"bad"],["base","En base",act.filter(trInBase).length,""],["eq","En equipos",act.filter(t=>t.ubicTipo==="equipo").length,""]];
+  const K=[["nuevo","Nuevos",cnt("nuevo"),""],["optimo","Operativos",cnt("optimo"),""],["taller","Araña",cnt("taller"),"warn"],["descarte","Descarte",cnt("descarte"),"bad"],["base","En base",act.filter(trInBase).length,""],["eq","En equipos",act.filter(t=>t.ubicTipo==="equipo").length,""]];
   $("#tr-kpis").innerHTML=K.map(([id,l,n,c])=>`<button class="kpi${c?" "+c:""}" data-trk="${id}" aria-pressed="${TR_KPI===id}" title="${esc(TR_K[id]?TR_K[id][2]:"")}"><small>${l}</small><b>${n}</b></button>`).join("");
   const ub=$("#tr-ub"),cur=ub.value,bs=uniq(T.filter(trInBase).map(t=>t.ubicacion||"")).filter(Boolean).sort(),eqs=uniq(T.filter(t=>t.ubicTipo==="equipo").map(t=>t.ubicacion||"")).filter(Boolean).sort((a,b)=>a.localeCompare(b,"es",{numeric:true}));
   ub.innerHTML='<option value="">Todas las ubicaciones</option>'+(bs.length?`<optgroup label="Bases">${bs.map(x=>`<option value="b:${esc(x)}">${esc(x)}</option>`).join("")}</optgroup>`:"")+(eqs.length?`<optgroup label="Equipos">${eqs.map(x=>`<option value="eq:${esc(x)}">${esc(x)}</option>`).join("")}</optgroup>`:"");
   if(Array.from(ub.options).some(o=>o.value===cur))ub.value=cur;
   const rows=T.filter(trStockFilter()),tb=$("#t-tr tbody");
-  const row=t=>{const m=trLastMov(t.id);return `<tr class="click" data-tr="${t.id}"><td class="${t.codigo?"mono name":"meta"}">${t.codigo?esc(t.codigo):"Código a asignar"}</td><td class="r-m">${esc(t.tipo||"")}</td><td class="mono">${esc(t.diametro||"")}</td><td class="span">${esc(trUbic(t))}</td><td>${trPillK(trK(t))}</td><td class="hide-m meta mono">${m?esc(fmtD(m.fecha)):"—"}</td></tr>`};
+  const row=t=>{const m=trLastMov(t.id);return `<tr class="click" data-tr="${t.id}"><td class="${t.codigo?"mono name":"meta"}">${t.codigo?esc(t.codigo):"Código a asignar"}</td><td class="r-m">${esc(t.tipo||"")}</td><td class="mono">${esc(t.diametro||"")}</td><td class="span">${esc(trUbic(t))}</td><td>${trPillK(trK(t))}</td><td class="hide-m meta mono">${m?esc(fmtD(m.fecha)):"—"}</td><td class="need-dep" style="text-align:right"><button type="button" class="btn sm" data-tredit="${t.id}" title="Cambiar estado o ubicación (con motivo)">✎ Estado / ubicación</button></td></tr>`};
   if(!S.loadedT)tb.innerHTML=`<tr><td class="span" colspan="6"><div class="empty">Cargando…</div></td></tr>`;
   else if(!T.length)tb.innerHTML=`<tr><td class="span" colspan="6"><div class="empty"><b>Todavía no hay trépanos cargados</b>Usá <em>Entrada</em> para cargar los que llegan.</div></td></tr>`;
   else if(!rows.length)tb.innerHTML=`<tr><td class="span" colspan="6"><div class="empty">Ningún trépano coincide con el filtro.</div></td></tr>`;
   else tb.innerHTML=TR_KS.map(k=>{const L=rows.filter(t=>trK(t)===k);if(!L.length)return"";
       L.sort((a,b)=>(trInBase(a)===trInBase(b)?0:trInBase(a)?-1:1)||(k==="nuevo"?String(a.tipo+a.diametro+a.ubicacion).localeCompare(b.tipo+b.diametro+b.ubicacion,"es",{numeric:true})||trByCreado(a,b):String(a.codigo||"~").localeCompare(String(b.codigo||"~"),"es",{numeric:true})));
-      return `<tr class="tr-grp"><td colspan="6">${trPillK(k)} <b>${L.length}</b> <span class="meta">${esc(TR_K[k][2])}</span></td></tr>`+L.map(row).join("")}).join("");
+      return `<tr class="tr-grp"><td colspan="7">${trPillK(k)} <b>${L.length}</b> <span class="meta">${esc(TR_K[k][2])}</span></td></tr>`+L.map(row).join("")}).join("");
   const G={};T.forEach(t=>{const key=(t.tipo||"—")+"|"+(t.diametro||"—");const g=G[key]=G[key]||{tipo:t.tipo||"—",diam:t.diametro||"—",nuevo:0,optimo:0,taller:0,descarte:0,base:0,eq:0};const k=trK(t);g[k]=(g[k]||0)+1;if(k!=="descarte"){if(trInBase(t))g.base++;else g.eq++}});
   const gl=Object.values(G).sort((a,b)=>a.tipo.localeCompare(b.tipo)||a.diam.localeCompare(b.diam,"es",{numeric:true}));
   $("#t-tr-res tbody").innerHTML=gl.length?gl.map(g=>`<tr><td>${esc(g.tipo)}</td><td class="mono">${esc(g.diam)}</td>${["nuevo","optimo","taller","descarte","base","eq"].map(k=>`<td class="r num">${g[k]||"—"}</td>`).join("")}</tr>`).join(""):`<tr><td colspan="8" class="meta" style="text-align:center;padding:16px">Sin datos todavía.</td></tr>`;
 }
 $("#tr-kpis").addEventListener("click",e=>{const b=e.target.closest("[data-trk]");if(!b)return;TR_KPI=TR_KPI===b.dataset.trk?"":b.dataset.trk;$("#tr-est").value="";renderTrStock()});
 ["#tr-q","#tr-est","#tr-ub"].forEach(s=>$(s).addEventListener("input",()=>{if(s==="#tr-est")TR_KPI="";renderTrStock()}));
-$("#t-tr").addEventListener("click",e=>{const r=e.target.closest("tr[data-tr]");if(r)openTr(r.dataset.tr)});
+$("#t-tr").addEventListener("click",e=>{const x=e.target.closest("[data-tredit]");if(x){openTrEstado(x.dataset.tredit);return}const r=e.target.closest("tr[data-tr]");if(r)openTr(r.dataset.tr)});
 $("#tr-xls-list").addEventListener("click",async()=>{try{await loadXlsx()}catch(e){toast("No se pudo cargar el generador de Excel. Revisá la conexión.");return}
   const L=trList().filter(trStockFilter());if(!L.length){toast("No hay trépanos para exportar.");return}
   const rows=[["Código","Tipo","Diámetro","Ubicación","En","Estado","Marca","Modelo","Alta","Último movimiento","Notas"]].concat(L.map(t=>{const m=trLastMov(t.id);return[t.codigo||"Código a asignar",t.tipo||"",t.diametro||"",t.ubicacion||"",t.ubicTipo==="equipo"?"Equipo":"Base",trKN(trK(t)),t.marca||"",t.modelo||"",fmtD(t.creado),m?fmtD(m.fecha):"",t.obs||""]}));
@@ -2710,7 +2850,7 @@ async function trHistXls(L,name){if(!L.length){toast("No hay movimientos para ex
   await save(`${name}-${localDay(new Date().toISOString())}.xlsx`,new Blob([XLSX.write(wb,{bookType:"xlsx",type:"array"})]))}
 const trAsc=(a,b)=>String(a.fecha).localeCompare(String(b.fecha));
 function trhFiltered(){const q=norm($("#trh-q").value),mv=$("#trh-mov").value,es=$("#trh-est").value,d1=$("#trh-d1").value,d2=$("#trh-d2").value;
-  const L=S.trmov.filter(m=>{if(mv!=="todos"){if(mv?m.tipo!==mv:!["entrada","salida","traspaso"].includes(m.tipo))return false}
+  const L=S.trmov.filter(m=>{if(mv!=="todos"){if(mv?m.tipo!==mv:!["entrada","salida","traspaso","estado"].includes(m.tipo))return false}
     if(es){const k=movK(m);if(es==="malo"?!(k==="taller"||k==="descarte"):k!==es)return false}
     const d=localDay(m.fecha);if(d1&&d<d1)return false;if(d2&&d>d2)return false;
     if(q){const t=S.trep.get(m.trepanoId)||{};if(!norm([m.codigo,t.codigo,t.tipo,t.diametro,m.desc,m.desde,m.hacia,m.obs,m.autoriza].join(" ")).includes(q))return false}return true}).sort(trAsc);
@@ -2730,12 +2870,12 @@ function renderTrOne(){
   $("#tro-card").innerHTML=t?`<div class="card" style="padding:14px 16px;margin-bottom:12px;display:flex;gap:14px;align-items:center;flex-wrap:wrap"><div style="min-width:0;flex:1 1 220px"><div class="${t.codigo?"mono":""} name" style="font-size:18px">${esc(trName(t))}</div><div class="meta">${esc(trDesc(t))}${t.marca?" · "+esc(t.marca):""}</div></div>${trPillK(trK(t))}<span class="pill" style="background:var(--surface-2)">${esc(trUbic(t))}</span><button class="btn sm" id="tro-open">Abrir ficha</button></div>`:"";
   const o=$("#tro-open");if(o)o.onclick=()=>openTr(t.id);
   if(!t){tb.innerHTML=`<tr><td class="span" colspan="7"><div class="empty"><b>${$("#tro-q").value.trim()?"No hay un trépano con ese código":"Ingresá un código"}</b>Escribí o elegí el código del trépano para ver su historial completo.</div></td></tr>`;return}
-  const L=S.trmov.filter(m=>m.trepanoId===t.id).sort(trAsc);
+  const L=trMovsOf(t).sort(trAsc);
   tb.innerHTML=L.length?L.map(m=>trMovRow(m,{noTr:true,aut:true,edit:true})).join(""):`<tr><td class="span" colspan="7"><div class="empty">Este trépano no tiene movimientos registrados.</div></td></tr>`;
 }
 $("#tro-q").addEventListener("input",()=>{const t=trByCode($("#tro-q").value);TRO_ID=t?t.id:"";renderTrOne()});
 $("#tro-xls").addEventListener("click",()=>{const t=TRO_ID?S.trep.get(TRO_ID):null;if(!t){toast("Primero elegí un trépano.");$("#tro-q").focus();return}
-  trHistXls(S.trmov.filter(m=>m.trepanoId===t.id).sort(trAsc),"historial-trepano-"+(t.codigo||"codigo-a-asignar"))});
+  trHistXls(trMovsOf(t).sort(trAsc),"historial-trepano-"+(t.codigo||"codigo-a-asignar"))});
 function renderTrView(view,opt){
   opt=opt||{};trRenderLists();
   if(view==="tr-stock")renderTrStock();
@@ -2945,7 +3085,7 @@ function tiTipo(v){const t=norm(v).replace(/\./g," ").replace(/\s+/g," ").trim()
   if(/dient/.test(t))return"Dientes";if(/inserto (l|largo)\b/.test(t))return"Inserto Largo";if(/inserto (c|corto)\b/.test(t))return"Inserto Corto";if(/inserto/.test(t))return"Inserto";if(/pdc/.test(t))return"PDC";if(/tapon|cemento/.test(t))return"P/ tapón cemento";
   return String(v).trim().replace(/^./,c=>c.toUpperCase())}
 const tiTipoGen=t=>!t||t==="Inserto";
-function tiEstado(v){const t=norm(v);if(!t)return"";if(/nuev/.test(t))return"nuevo";if(/descart|rot|baja|chatarr/.test(t))return"descarte";if(/arana|repar|taller|malo/.test(t))return"taller";if(/usad|optim|bueno/.test(t))return"optimo";return""}
+function tiEstado(v){const t=norm(v);if(!t)return"";if(/nuev/.test(t))return"nuevo";if(/descart|rot|baja|chatarr/.test(t))return"descarte";if(/arana|repar|taller|malo/.test(t))return"taller";if(/usad|optim|bueno|operativ/.test(t))return"optimo";return""}
 function tiCode(v){let c=String(v==null?"":v).trim().toUpperCase().replace(/\s+/g," ");if(!c)return{code:"",sc:false,diam:""};
   const sc=/S\s*\/\s*C|SIN COD|A ASIGNAR/.test(c);const dm=/^(\d{1,2})/.exec(c);return{code:sc?"":c.replace(/\s+/g,""),sc,diam:dm?dm[1]:""}}
 function tiDiam(n,raw){if(raw){const r=String(raw).trim();return /"$/.test(r)?r:r+'"'}if(!n)return"";const L=(S.config.diametros&&S.config.diametros.length?S.config.diametros:DEF_DIAM);
@@ -3055,9 +3195,9 @@ function tiRender(){
      <div class="lb">Cómo se interpreta</div>
      <ul class="steps" style="list-style:disc;margin:0">
        <li><b>Salida:</b> del depósito al equipo de "Destino" (T25 = TEC25).</li>
-       <li><b>Entrada:</b> vuelve a la base (${esc(depositos()[0]||"Depósito Central")}, o la indicada en Destino) desde el equipo de Origen. Si el destino es <i>Taller</i> queda <b>Malo · taller</b>; si es <i>Descarte</i> o el estado es <i>roto</i>, queda <b>Malo · descarte</b>.</li>
+       <li><b>Entrada:</b> vuelve a la base (${esc(depositos()[0]||"Depósito Central")}, o la indicada en Destino) desde el equipo de Origen. Si el destino es <i>Taller</i> queda como <b>Araña</b>; si es <i>Descarte</i> o el estado es <i>roto</i>, queda en <b>Descarte</b>.</li>
        <li><b>Traspaso:</b> de un equipo a otro.</li>
-       <li>Estados: <i>Nuevo</i>, <i>Óptimo</i> (o usado), <i>Malo · taller</i> (también araña o reparación) y <i>Malo · descarte</i> (roto, baja). Estado vacío: se mantiene el anterior; un trépano con código que sale a un equipo queda Óptimo. "Código a asignar" o "S/C" = sin código.</li>
+       <li>Estados: <i>Nuevo</i>, <i>Operativo</i> (u óptimo, usado), <i>Araña</i> (también reparación o taller) y <i>Descarte</i> (roto, baja). Estado vacío: se mantiene el anterior; un trépano con código que sale a un equipo queda Operativo. "Código a asignar" o "S/C" = sin código.</li>
      </ul>
      <label class="chk"><input type="checkbox" id="ti-fill"${TI.fill?" checked":""}> <span>Si una salida no tiene destino, usar el de la fila anterior del mismo día</span></label>
    </div>
@@ -3790,6 +3930,10 @@ function openShMail(){
   $("#sm-msg").addEventListener("input",upd);
   $("#scrim").addEventListener("click",e=>{const a=e.target.closest("[data-ct]");if(a){R.add(a.dataset.ct);upd()}const r=e.target.closest("[data-rm]");if(r){R.delete(r.dataset.rm);upd()}});
   $("#sm-xls").onclick=async()=>{try{await save(shFileName(),await shXlsx(shFiltered().slice().reverse()))}catch(e){toast("No se pudo generar el Excel.")}};
+  if(mailer){const card=$("#sm-xls").closest(".card");card.querySelector("ol").style.display="none";$("#sm-mail").style.display="none";$("#sm-copy").style.display="none";$("#sm-xls").classList.remove("primary");
+    $("#sm-xls").insertAdjacentHTML("beforebegin",'<button class="btn primary" id="sm-send">Continuar: enviar con el Excel adjunto</button>');
+    $("#sm-send").onclick=async()=>{if(!R.size){toast("Agregá al menos un destinatario.");return}let blob;try{blob=await shXlsx(shFiltered().slice().reverse())}catch(e){toast("No se pudo generar el Excel.");return}
+      const t=shMailText($("#sm-msg").value.trim());openMailSend({title:"Compartir historial por correo",sub:name,to:Array.from(R),subject:t.subject,body:t.body,files:[{name:shFileName(),data:blob}]})}}
   $("#sm-mail").addEventListener("click",e=>{if(!R.size){e.preventDefault();toast("Agregá al menos un destinatario.");return}rememberEmails(Array.from(R))});
   $("#sm-copy").onclick=()=>{if(!R.size){toast("Agregá al menos un destinatario.");return}const t=shMailText($("#sm-msg").value.trim());rememberEmails(Array.from(R));
     const txt=`Para: ${Array.from(R).join(", ")}\nAsunto: ${t.subject}\n\n${t.body}`;try{navigator.clipboard.writeText(txt).then(()=>toast("Copiado: pegalo en un mail nuevo"),()=>toast("No se pudo copiar. Usá Abrir en el correo."))}catch(e){toast("No se pudo copiar.")}};
@@ -4464,6 +4608,7 @@ function openPed(id){
      ${p.estado==="anulado"?"":`<div class="card" style="padding:14px;display:grid;gap:10px;background:var(--surface-2)">
        <div class="lb">Enviar a Compras</div>
        ${to?`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="meta">Para:</span><span class="mono">${esc(to)}</span><button type="button" class="btn ghost sm" id="pd-cto">Copiar</button></div>`:`<div class="banner warn" style="margin:0">Cargá el email del área de Compras en la pestaña Ajustes para que aparezca como destinatario.</div>`}
+       ${mailer?`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="pd-send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16v12H4z"/><path d="M4 7l8 6 8-6"/></svg>Enviar por correo con el PDF</button><button class="btn" id="pd-pdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Descargar PDF</button></div><span class="hint">Sale desde la cuenta de la empresa con el PDF adjunto; podés agregar o cambiar destinatarios. Al enviarla, la nota queda marcada como enviada y el PDF se guarda en Drive.</span>`:`
        <ol class="steps" style="margin:0">
          <li>Descargá la nota en PDF.</li>
          <li>Abrí el correo: el asunto y el texto ya vienen escritos. Si no se abre tu programa de correo, copiá el texto y pegalo en un mail nuevo.</li>
@@ -4474,7 +4619,7 @@ function openPed(id){
          <a class="btn" id="pd-mail" href="#" target="_blank" rel="noopener">Abrir en el correo</a>
          <button class="btn" id="pd-copy">Copiar asunto y texto</button>
        </div>
-       <details><summary class="meta" style="cursor:pointer">Ver el texto del mail</summary><pre id="pd-txt" style="white-space:pre-wrap;font-family:var(--f-body);font-size:13px;margin:8px 0 0;user-select:all">${esc(pedSubject(p)+"\n\n"+pedText(p))}</pre></details>
+       <details><summary class="meta" style="cursor:pointer">Ver el texto del mail</summary><pre id="pd-txt" style="white-space:pre-wrap;font-family:var(--f-body);font-size:13px;margin:8px 0 0;user-select:all">${esc(pedSubject(p)+"\n\n"+pedText(p))}</pre></details>`}
      </div>`}
      ${p.enviado?`<div class="meta">Enviada el ${esc(fmtD(p.enviado))}${p.enviadoA?" a "+esc(p.enviadoA):""}.${p.recibido?" Recibida el "+esc(fmtD(p.recibido))+".":""}</div>`:""}
      <div class="form-actions" style="display:flex">
@@ -4492,6 +4637,10 @@ function openPed(id){
   const bc=$("#pd-copy");if(bc)bc.onclick=()=>cp(pedSubject(p)+"\n\n"+pedText(p),"Asunto y texto copiados");
   const bt=$("#pd-cto");if(bt)bt.onclick=()=>cp(to,"Email copiado");
   const bp=$("#pd-pdf");if(bp)bp.onclick=()=>pedPdf(p);
+  const bsd=$("#pd-send");if(bsd)bsd.onclick=async()=>{const blob=await pedPdf(p,{blob:true});if(!blob)return;
+    openMailSend({title:"Enviar nota de pedido "+pedNum(p.numero),sub:"Nota de pedido con el PDF adjunto",to:to.split(/[,;]/).map(x=>x.trim()).filter(Boolean),subject:pedSubject(p),body:pedText(p),files:[{name:`Nota de pedido ${pedNum(p.numero)}.pdf`,data:blob}],guardar:"np",
+      onSent:async r=>{const all=(r.to||[]).concat(r.cc||[]).join(", "),now=new Date().toISOString(),cur=S.peds.get(p.id)||p,ex={enviado:now,enviadoA:all,enviadoPor:myId||"",actualizado:now};if(cur.estado==="pendiente")ex.estado="enviado";
+        try{await db.doc("pedidos/"+p.id).update(ex);S.peds.set(p.id,Object.assign({},cur,ex))}catch(e){writeError(e)}openPed(p.id)}})};
   const setEst=async(est,extra)=>{if(!guardWrite("deposito"))return;try{await db.doc("pedidos/"+p.id).update(Object.assign({estado:est,actualizado:new Date().toISOString()},extra||{}));S.peds.set(p.id,Object.assign({},p,{estado:est},extra||{}));toast("Nota "+pedNum(p.numero)+": "+PED_EST[est][1].toLowerCase());openPed(p.id)}catch(e){writeError(e)}};
   const b=(i,f)=>{const el=$(i);if(el)el.onclick=f};
   b("#pd-sent",()=>setEst("enviado",{enviado:new Date().toISOString(),enviadoA:to}));
@@ -4503,7 +4652,7 @@ function openPed(id){
 /* PDF con el formato R-COM-01 del Sistema de Gestión Integrado (planilla "Nota Pedido base.xlsx") */
 const NP_FMT={codigo:"R - COM - 01",revision:"00",fecha:"04/01/2024",realizado:"Analista de Compras",aprobado:"Pablo Diaz Telli"};
 const NP_LOGO="data:image/jpeg;base64,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";
-async function pedPdf(p){
+async function pedPdf(p,opt){
   try{await loadJsPdf()}catch(e){toast("No se pudo cargar el generador de PDF. Revisá la conexión.");return}
   const F=Object.assign({},NP_FMT,S.config.npForm||{});
   const {jsPDF}=window.jspdf,doc=new jsPDF({unit:"mm",format:"a4"});
@@ -4556,7 +4705,8 @@ async function pedPdf(p){
   }
   if(p.obs){const t=doc.splitTextToSize(p.obs,W-2);if(y+t.length*3.8+9>BOT){header()}y+=5;doc.setFont("helvetica","bold");doc.setFontSize(8.5);doc.text("Observaciones generales:",cx[0],y);doc.setFont("helvetica","normal");doc.text(t,cx[0],y+4.2);y+=t.length*3.8+4}
   const tp=doc.getNumberOfPages();for(let i=1;i<=tp;i++){doc.setPage(i);doc.setFontSize(6.5);doc.setTextColor(130);doc.text(`${pedNum(p.numero)} · generada el ${fmtD(new Date().toISOString())} desde Depósito Hidroblan${tp>1?` · hoja ${i} de ${tp}`:""}`,M,292);doc.setTextColor(0)}
-  await save(`Nota de pedido ${pedNum(p.numero)}.pdf`,doc.output("blob"));
+  const pdfBlob=doc.output("blob");if(opt&&opt.blob)return pdfBlob;
+  await save(`Nota de pedido ${pedNum(p.numero)}.pdf`,pdfBlob);
 }
 
 /* ---------- etiquetas (PDF) ---------- */
@@ -4761,6 +4911,7 @@ pendingHash=decodeURIComponent((location.hash||"").slice(1))||null;if(pendingHas
   if(!window.claude||!window.claude.use){banner("No se pudo cargar el adaptador de la aplicación. Recargá la página.","bad");return}
   const [d,u,dl]=await Promise.all([claude.use("db"),claude.use("user"),claude.use("downloads")]);
   db=d;user=u;downloads=dl;
+  claude.use("mail").then(m=>{mailer=m||null},()=>{});
   claude.use("assets").then(a=>{assets=a;ASSETS_READY=true;attUi();mAttUi()},()=>{ASSETS_READY=true;attUi();mAttUi()});
   if(!db){banner("No se pudo conectar con el servidor. Revisá la conexión y recargá la página.","bad");S.loadedP=true;S.loadedM=true;renderAll();return}
   if(user){try{myId=await user.id()}catch(e){}}
@@ -4775,6 +4926,7 @@ pendingHash=decodeURIComponent((location.hash||"").slice(1))||null;if(pendingHas
   db.collection("trepanos").onSnapshot(s=>{S.trep=new Map(s.docs.map(x=>[x.id,Object.assign({},x.data(),{id:x.id})]));S.loadedT=true;renderTrAll();renderHome()},onErr);
   db.collection("trepanos_mov").orderBy("fecha","desc").onSnapshot(s=>{S.trmov=s.docs.map(x=>Object.assign({id:x.id},x.data()));renderTrAll();if(CUR_TR&&$("#trf-panel")&&!$("#trf-panel").innerHTML&&S.trep.has(CUR_TR)){const sc=$("#scrim").scrollTop;openTr(CUR_TR);$("#scrim").scrollTop=sc}},onErr);
   db.collection("documentos").onSnapshot(s=>{S.docs=new Map(s.docs.map(x=>[x.id,Object.assign({},x.data(),{id:x.id})]));S.loadedDc=true;renderDocs();if(!$("#v-hist").hidden||!$("#v-shist").hidden)renderAll()},onErr);
+  db.collection("agenda").onSnapshot(s=>{S.agenda=new Map(s.docs.map(x=>[x.id,Object.assign({},x.data(),{id:x.id})]));if(ROUTE.it&&ROUTE.it.view==="agenda"&&!AG_EDIT)renderAgenda()},()=>{});
   db.collection("trarqueos").onSnapshot(s=>{S.trarq=new Map(s.docs.map(x=>[x.id,Object.assign({},x.data(),{id:x.id})]));S.loadedTA=true;if(ROUTE.it&&ROUTE.it.view==="tr-arq"&&!$("#v-tr-arq").contains(document.activeElement))renderTrArq()},onErr);
   db.collection("recuentos").onSnapshot(s=>{S.recs=new Map(s.docs.map(x=>[x.id,Object.assign({},x.data(),{id:x.id})]));S.loadedR=true;renderRec()},onErr);
   db.collection("pedidos").onSnapshot(s=>{S.peds=new Map(s.docs.map(x=>[x.id,Object.assign({},x.data(),{id:x.id})]));S.loadedPd=true;renderPed()},onErr);
