@@ -802,7 +802,7 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
     <div class="kpis" id="tr-kpis" style="grid-template-columns:repeat(auto-fill,minmax(130px,1fr))"></div>
     <div class="toolbar">
       <input class="grow" type="search" id="tr-q" placeholder="Buscar por código, tipo, diámetro o ubicación">
-      <select id="tr-est" style="width:auto"><option value="">Todos menos descarte</option><option value="nuevo">Nuevo</option><option value="optimo">Operativo</option><option value="taller">Araña</option><option value="descarte">Descarte</option><option value="todos">Todos (con descarte)</option></select>
+      <select id="tr-est" style="width:auto"><option value="">En existencia (sin descarte ni vendidos)</option><option value="nuevo">Nuevo</option><option value="optimo">Operativo</option><option value="taller">Araña</option><option value="descarte">Descarte</option><option value="vendido">Vendidos</option><option value="todos">Todos (incluye descarte y vendidos)</option></select>
       <select id="tr-ub" style="width:auto"><option value="">Todas las ubicaciones</option></select>
     </div>
     <div class="card"><div class="table-wrap"><table class="cards" id="t-tr">
@@ -810,7 +810,7 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
       <tbody></tbody>
     </table></div></div>
     <div class="lb" style="margin:22px 0 8px">Resumen por tipo y diámetro</div>
-    <div class="card"><div class="table-wrap"><table id="t-tr-res"><thead><tr><th>Tipo</th><th>Diámetro</th><th class="r">Nuevos</th><th class="r">Operativos</th><th class="r">Araña</th><th class="r">Descarte</th><th class="r">En base</th><th class="r">En equipos</th></tr></thead><tbody></tbody></table></div></div>
+    <div class="card"><div class="table-wrap"><table id="t-tr-res"><thead><tr><th>Tipo</th><th>Diámetro</th><th class="r">Nuevos</th><th class="r">Operativos</th><th class="r">Araña</th><th class="r">Descarte</th><th class="r">Vendidos</th><th class="r">En base</th><th class="r">En equipos</th></tr></thead><tbody></tbody></table></div></div>
   </section>
   <section id="v-tr-in" data-view="tr-in" hidden>
     <div class="section-head"><div><h2>Entrada de trépanos</h2><p class="sub">Ingreso al stock: <b>Nuevo</b> (llega en caja, se carga por cantidad y con código a asignar), <b>Operativo</b>, <b>Araña</b> o <b>Descarte</b>, con la ubicación donde queda.</p></div></div>
@@ -831,14 +831,21 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
   <section id="v-tr-hist" data-view="tr-hist" hidden>
     <div class="section-head">
       <div><h2>Historial de movimientos</h2><p class="sub">Entradas, salidas y traspasos de todos los trépanos en orden cronológico. Tocá ✎ en una fila para agregar o corregir una observación.</p></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn need-adm" data-trimp>Importar Excel</button><button class="btn" data-trhxls>Exportar Excel</button></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn need-dep" data-goto="trepanos/omitidos">+ Movimiento omitido</button><button class="btn need-adm" data-trimp>Importar Excel</button><button class="btn" data-trhxls>Exportar Excel</button></div>
     </div>
-    <div class="toolbar"><input class="grow" type="search" id="trh-q" placeholder="Buscar por código, tipo, origen o destino"><select id="trh-mov" style="width:auto"><option value="">Entradas, salidas, traspasos y cambios</option><option value="entrada">Entradas</option><option value="salida">Salidas</option><option value="traspaso">Traspasos</option><option value="estado">Cambios de estado / ubicación</option><option value="todos">Todos (incluye ajustes y cambios)</option></select><select id="trh-est" style="width:auto"><option value="">Todos los estados</option><option value="nuevo">Nuevo</option><option value="optimo">Operativo</option><option value="taller">Araña</option><option value="descarte">Descarte</option></select><input type="date" id="trh-d1" title="Desde" style="width:auto"><input type="date" id="trh-d2" title="Hasta" style="width:auto"><select id="trh-ord" style="width:auto"><option value="asc">Más antiguos primero</option><option value="desc">Más recientes primero</option></select><button class="btn" id="trh-clear">Limpiar</button></div>
+    <div class="toolbar"><input class="grow" type="search" id="trh-q" placeholder="Buscar por código, tipo, origen o destino"><select id="trh-mov" style="width:auto"><option value="">Entradas, salidas, traspasos y cambios</option><option value="entrada">Entradas</option><option value="salida">Salidas</option><option value="traspaso">Traspasos</option><option value="estado">Cambios de estado / ubicación</option><option value="venta">Ventas</option><option value="todos">Todos (incluye ajustes y cambios)</option></select><select id="trh-est" style="width:auto"><option value="">Todos los estados</option><option value="nuevo">Nuevo</option><option value="optimo">Operativo</option><option value="taller">Araña</option><option value="descarte">Descarte</option><option value="vendido">Vendido</option></select><input type="date" id="trh-d1" title="Desde" style="width:auto"><input type="date" id="trh-d2" title="Hasta" style="width:auto"><select id="trh-ord" style="width:auto"><option value="asc">Más antiguos primero</option><option value="desc">Más recientes primero</option></select><button class="btn" id="trh-clear">Limpiar</button></div>
     <p class="hint" id="trh-count" style="margin:0 0 8px"></p>
     <div class="card"><div class="table-wrap"><table class="cards" id="t-trh">
       <thead><tr><th>Fecha</th><th>Movimiento</th><th>Código</th><th>Tipo · diám.</th><th>Origen</th><th>Destino</th><th>Estado</th><th>Observaciones</th></tr></thead>
       <tbody></tbody>
     </table></div></div>
+  </section>
+  <section id="v-tr-late" data-view="tr-late" hidden>
+    <div class="section-head"><div><h2>Movimientos omitidos</h2><p class="sub">Agregá salidas, entradas, traspasos o cambios de estado que no se registraron en su momento, con la fecha real. Se suman al historial general y al de cada trépano. Si el movimiento es el más reciente del trépano, también actualiza su ubicación y estado en el listado.</p></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn need-dep" data-tlimp><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3M7 8l5-5 5 5M4 21h16"/></svg>Importar desde Excel</button></div></div>
+    <form class="card form" id="f-tr-late" autocomplete="off"></form>
+    <div class="lb" style="margin:20px 0 8px">Últimos movimientos cargados después</div>
+    <div class="card"><div class="table-wrap"><table class="cards" id="t-tr-late"><tbody></tbody></table></div></div>
   </section>
   <section id="v-tr-one" data-view="tr-one" hidden>
     <div class="section-head">
@@ -1130,6 +1137,7 @@ const MENU=[
     {id:"stock",name:"Listado de stock",view:"tr-stock"},
     {id:"entrada",name:"Entrada",view:"tr-in",need:"deposito"},
     {id:"salida",name:"Salida / traspaso",view:"tr-out",need:"deposito"},
+    {id:"omitidos",name:"Movimientos omitidos",view:"tr-late",need:"deposito"},
     {id:"arqueo",name:"Arqueo",view:"tr-arq",need:"deposito"},
     {id:"historial",name:"Historial de movimientos",view:"tr-hist"},
     {id:"trepano",name:"Historial de trépano",view:"tr-one"}]},
@@ -2365,24 +2373,26 @@ function openHistExport(sku){
 let CUR_TR=null;
 /* estados: nuevo · optimo · malo (malo: taller | descarte). Clave combinada k: nuevo | optimo | taller | descarte */
 const TR_EST={nuevo:["info","Nuevo"],optimo:["ok","Operativo"],malo:["bad","Malo"]};
-const TR_K={nuevo:["info","Nuevo","Sin uso, en caja · código a asignar"],optimo:["ok","Operativo","En condiciones de seguir perforando"],taller:["warn","Araña","Con desgaste o rotura en rodillos: para reparación"],descarte:["bad","Descarte","Ya no es operativo"]};
-const TR_KS=["nuevo","optimo","taller","descarte"];
+const TR_K={nuevo:["info","Nuevo","Sin uso, en caja · código a asignar"],optimo:["ok","Operativo","En condiciones de seguir perforando"],taller:["warn","Araña","Con desgaste o rotura en rodillos: para reparación"],descarte:["bad","Descarte","Ya no es operativo"],vendido:["","Vendido","Vendido o entregado a terceros: fuera de existencia (queda solo para el historial)"]};
+const TR_KS=["nuevo","optimo","taller","descarte","vendido"];
+const TR_VENTA="Gitanos/otros";
 const TR_ALIAS={operativo:"optimo",usado:"optimo",arana:"malo",reparacion:"malo",baja:"malo",descarte:"malo",taller:"malo"};
 const trE=e=>TR_ALIAS[e]||e||"";
 function trKOf(e,malo,ubic){e=String(e||"");
-  if(e==="nuevo"||e==="optimo"||e==="taller"||e==="descarte")return e;
+  if(e==="nuevo"||e==="optimo"||e==="taller"||e==="descarte"||e==="vendido")return e;
   if(e==="usado"||e==="operativo")return"optimo";if(e==="baja")return"descarte";if(e==="arana"||e==="reparacion")return"taller";
   if(e==="malo")return malo==="descarte"||(!malo&&/^(descarte|no encontrado|faltante)/i.test(ubic||""))?"descarte":"taller";
   return""}
 const trK=t=>trKOf(t.estado,t.malo,t.ubicacion);
 const movK=m=>trKOf(m.estado,m.malo,m.hacia);
-const trKParts=k=>({estado:{nuevo:"nuevo",optimo:"operativo",taller:"arana",descarte:"descarte"}[k]||"operativo",malo:""});
+const trKParts=k=>({estado:{nuevo:"nuevo",optimo:"operativo",taller:"arana",descarte:"descarte",vendido:"vendido"}[k]||"operativo",malo:""});
 const trKN=k=>TR_K[k]?TR_K[k][1]:(k||"");
-const trPillK=k=>{const [c,t]=TR_K[k]||["",k||"—"];return `<span class="pill ${c}"${c==="info"?' style="background:var(--accent-soft);color:var(--accent)"':""}>${t}</span>`};
+const trPillK=k=>{const [c,t]=TR_K[k]||["",k||"—"];return `<span class="pill ${c}"${c==="info"?' style="background:var(--accent-soft);color:var(--accent)"':!c?' style="background:var(--surface-2);color:var(--muted)"':""}>${t}</span>`};
 const trPill=(e,malo)=>trPillK(trKOf(e,malo));
 const trEstN=(e,malo)=>trKN(trKOf(e,malo));
-const trDesc0=t=>trK(t)==="descarte";
-const TR_MOV={arqueo:"Ajuste por arqueo",alta:"Alta al sistema",baja:"Baja (descarte)",entrada:"Entrada",salida:"Salida",traspaso:"Traspaso",estado:"Cambio de estado / ubicación",codigo:"Asignación de código",edicion:"Edición de datos"};
+const trDesc0=t=>{const k=trK(t);return k==="descarte"||k==="vendido"};
+const trFuera=t=>trK(t)==="vendido"||t.ubicTipo==="fuera";
+const TR_MOV={arqueo:"Ajuste por arqueo",alta:"Alta al sistema",baja:"Baja (descarte)",entrada:"Entrada",salida:"Salida",traspaso:"Traspaso",estado:"Cambio de estado / ubicación",venta:"Venta (sale de existencia)",codigo:"Código",edicion:"Edición de datos"};
 const DEF_TR_TIPOS=["Dientes","Inserto Largo","Inserto Corto","PDC","Tricono","Martillo DTH"];
 const DEF_DIAM=['3 7/8"','4 3/4"','6"','6 1/8"','6 1/4"','7 7/8"','8 1/2"','8 3/4"','9 7/8"','10 5/8"','12 1/4"','14 3/4"','17 1/2"'];
 const TR_BASES_DEF=["Galpón","Playón","Taller"];
@@ -2392,18 +2402,18 @@ const trDesc=t=>[t.tipo,t.diametro].filter(Boolean).join(" · ");
 const trShort=t=>`${trName(t)} — ${trDesc(t)}`;
 const depositos=()=>uniq((S.config.depositos&&S.config.depositos.length?S.config.depositos:["Deposito Central"]));
 const trBases=()=>{const L=depositos().slice();TR_BASES_DEF.forEach(x=>{if(!L.some(y=>norm(y)===norm(x)))L.push(x)});return L};
-const trInBase=t=>t.ubicTipo!=="equipo";
+const trInBase=t=>t.ubicTipo!=="equipo"&&t.ubicTipo!=="fuera";
 const trUbic=t=>t.ubicTipo==="equipo"?"Equipo "+(t.ubicacion||""):(t.ubicacion||(t.ubicTipo==="reparacion"?"Taller":""));
 const equiposL=()=>uniq((S.config.equipos||[]).concat(trList().filter(t=>t.ubicTipo==="equipo").map(t=>t.ubicacion)));
 const trDiamFmt=d=>{d=String(d||"").trim().replace(/[”″]/g,'"').replace(/''$/,'"');return d&&/^\d+(\s+\d+\/\d+)?$/.test(d)?d+'"':d};
 const trByCreado=(a,b)=>String(a.creado||"").localeCompare(String(b.creado||""));
-function trByCode(c){c=String(c||"").trim().toLowerCase().replace(/\s+/g,"");if(!c)return null;return trList().find(t=>String(t.codigo||"").toLowerCase().replace(/\s+/g,"")===c)||null}
-const trMovsOf=t=>S.trmov.filter(m=>m.trepanoId===t.id||(t.codigo&&m.codigo&&String(m.codigo).toUpperCase().replace(/\s+/g,"")===String(t.codigo).toUpperCase().replace(/\s+/g,"")));
+function trByCode(c){c=String(c||"").trim().toLowerCase().replace(/\s+/g,"");if(!c)return null;return trList().find(t=>!t.codigoLiberado&&String(t.codigo||"").toLowerCase().replace(/\s+/g,"")===c)||null}
+const trMovsOf=t=>S.trmov.filter(m=>m.trepanoId===t.id||(!S.trep.has(m.trepanoId)&&!t.codigoLiberado&&t.codigo&&m.codigo&&String(m.codigo).toUpperCase().replace(/\s+/g,"")===String(t.codigo).toUpperCase().replace(/\s+/g,"")));
 function trLastMov(id){let b=null;for(const m of S.trmov)if(m.trepanoId===id&&(!b||String(m.fecha)>String(b.fecha)))b=m;return b}
 function trDl(id,html){let d=document.getElementById(id);if(!d){d=document.createElement("datalist");d.id=id;document.body.appendChild(d)}d.innerHTML=html}
 function trRenderLists(){
   const opt=t=>`<option value="${esc(t.codigo)}" label="${esc(trDesc(t))} · ${esc(trKN(trK(t)))} · ${esc(trUbic(t))}"></option>`;
-  $("#dl-trep").innerHTML=trList().filter(t=>t.codigo).map(opt).join("");
+  $("#dl-trep").innerHTML=trList().filter(t=>t.codigo&&!t.codigoLiberado).map(opt).join("");
   trDl("dl-tr-opt",trList().filter(t=>t.codigo&&trInBase(t)&&trK(t)==="optimo").map(opt).join(""));
   trDl("dl-tr-eqc",trList().filter(t=>t.codigo&&t.ubicTipo==="equipo").map(opt).join(""));
   $("#dl-trtipo").innerHTML=uniq((S.config.trTipos&&S.config.trTipos.length?S.config.trTipos:DEF_TR_TIPOS).concat(trList().map(t=>t.tipo))).map(x=>`<option value="${esc(x)}"></option>`).join("");
@@ -2426,22 +2436,22 @@ const trSeg=(id,list,cur)=>`<div class="seg" id="${id}">${list.map(([v,l])=>`<bu
 const trSegOn=(id,fn)=>{const s=$("#"+id);if(s)s.onclick=e=>{const b=e.target.closest("button[data-k]");if(b)fn(b.dataset.k)}};
 async function trWrite(t,patch,mov){
   const now=new Date().toISOString();
-  const doc=Object.assign({},t,patch,{actualizado:now});delete doc.id;
+  const doc=Object.assign({},t,patch,{actualizado:now,estadoDesde:(mov&&mov.fecha)||now});delete doc.id;
   await withRetry(()=>db.doc("trepanos/"+t.id).set(doc));
   S.trep.set(t.id,Object.assign({id:t.id},doc));
   await withRetry(()=>db.collection("trepanos_mov").add(Object.assign({trepanoId:t.id,codigo:doc.codigo||"",desc:trDesc(doc),desde:"",hacia:"",estadoAntes:trK(t),estado:doc.estado||"",malo:doc.malo||"",autoriza:"",responsable:"",remito:"",obs:"",fecha:now,by:myId||""},mov)));
 }
 async function trCreate(body,mov){
   const now=new Date().toISOString();
-  const b=Object.assign({codigo:"",tipo:"",diametro:"",marca:"",modelo:"",serie:"",estado:"nuevo",malo:"",ubicTipo:"deposito",ubicacion:"",obs:"",creado:mov.fecha||now,actualizado:now,by:myId||""},body);
+  const b=Object.assign({codigo:"",tipo:"",diametro:"",marca:"",modelo:"",serie:"",estado:"nuevo",malo:"",ubicTipo:"deposito",ubicacion:"",obs:"",creado:mov.fecha||now,actualizado:now,estadoDesde:mov.fecha||now,by:myId||""},body);
   const r=await withRetry(()=>db.collection("trepanos").add(b));S.trep.set(r.id,Object.assign({id:r.id},b));
   await withRetry(()=>db.collection("trepanos_mov").add(Object.assign({trepanoId:r.id,codigo:b.codigo,desc:trDesc(b),desde:"",hacia:b.ubicacion,estadoAntes:"",estado:b.estado,malo:b.malo||"",autoriza:"",responsable:"",remito:"",obs:"",fecha:now,by:myId||""},mov)));
   return r.id;
 }
 function trMovRow(m,o){o=o||{};const t=S.trep.get(m.trepanoId),k=movK(m);
-  const col=m.tipo==="entrada"||m.tipo==="alta"?"in":m.tipo==="salida"?"out":"adj";
-  return `<tr class="click" data-tr="${esc(m.trepanoId)}"><td class="meta mono">${esc(fmtD(m.fecha))}</td><td><span class="tipo" style="color:var(--${col})">${esc(TR_MOV[m.tipo]||m.tipo)}</span></td>
-    ${o.noTr?"":`<td class="name mono">${esc(m.codigo||(t&&t.codigo)||"Código a asignar")}</td><td class="meta">${esc((t?trDesc(t):m.desc)||"")}</td>`}
+  const col=m.tipo==="entrada"||m.tipo==="alta"?"in":m.tipo==="salida"||m.tipo==="venta"?"out":"adj";
+  return `<tr class="click" data-tr="${esc(m.trepanoId)}"><td class="meta mono">${esc(fmtD(m.fecha))}</td><td><span class="tipo" style="color:var(--${col})">${esc(TR_MOV[m.tipo]||m.tipo)}</span>${m.cargaTardia?`<div class="meta" title="Cargado el ${esc(fmtD(m.cargado))}">carga posterior</div>`:""}</td>
+    ${o.noTr?"":`<td class="name mono">${esc(m.codigo||(t&&t.codigo)||"Código a asignar")}${t&&t.codigoLiberado?' <span class="meta" title="Este código se reasignó a otro trépano">(anterior)</span>':""}</td><td class="meta">${esc((t?trDesc(t):m.desc)||"")}</td>`}
     <td class="meta">${esc(m.desde||"—")}</td><td>${m.hacia?`<span class="meta">→</span> ${esc(m.hacia)}`:"—"}</td><td>${k?trPillK(k):""}</td>
     ${o.aut?`<td class="meta">${esc(m.autoriza||"")}</td>`:""}
     <td class="span meta">${esc(m.obs||"")}${m.remito?`<div>Remito: ${esc(m.remito)}</div>`:""}${o.edit?` <button type="button" class="btn sm ghost" data-trobs="${esc(m.id)}" title="Agregar o editar observación" aria-label="Editar observación">✎</button>`:""}</td></tr>`}
@@ -2449,7 +2459,7 @@ function trRecent(sel,tipos){
   const L=S.trmov.filter(m=>tipos.includes(m.tipo)).sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha))).slice(0,15),tb=$(sel+" tbody");
   tb.innerHTML=L.length?L.map(m=>trMovRow(m,{edit:true})).join(""):`<tr><td class="span"><div class="empty" style="padding:20px">Todavía no hay registros.</div></td></tr>`;
 }
-["#t-tr-in","#t-tr-out","#t-trh","#t-tro"].forEach(s=>$(s).addEventListener("click",e=>{if(e.target.closest("[data-trobs]"))return;const r=e.target.closest("tr[data-tr]");if(r&&S.trep.has(r.dataset.tr))openTr(r.dataset.tr)}));
+["#t-tr-in","#t-tr-out","#t-trh","#t-tro","#t-tr-late"].forEach(s=>$(s).addEventListener("click",e=>{if(e.target.closest("[data-trobs]"))return;const r=e.target.closest("tr[data-tr]");if(r&&S.trep.has(r.dataset.tr))openTr(r.dataset.tr)}));
 /* observación de un movimiento */
 function openTrObs(id){
   const m=S.trmov.find(x=>x.id===id);if(!m)return;if(!guardWrite("deposito"))return;const t=S.trep.get(m.trepanoId);
@@ -2575,15 +2585,17 @@ function openTr(id){
   const t=S.trep.get(id);if(!t)return;const k=trK(t);
   const ms=trMovsOf(t).sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));
   const kv=(a,v)=>v?`<dt>${a}</dt><dd>${esc(v)}</dd>`:"";
-  modal(`<div class="modal-h"><div><div class="meta">${esc(trDesc(t))}</div><h3 class="${t.codigo?"mono":""}">${esc(trName(t))}</h3><div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap">${trPillK(k)}<span class="pill" style="background:var(--surface-2)">${esc(trUbic(t))}</span></div></div><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
+  modal(`<div class="modal-h"><div><div class="meta">${esc(trDesc(t))}</div><h3 class="${t.codigo?"mono":""}">${esc(trName(t))}${t.codigoLiberado?' <span class="meta" style="font-family:var(--f-body)">(código reasignado)</span>':""}</h3><div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap">${trPillK(k)}<span class="pill" style="background:var(--surface-2)">${esc(trUbic(t))}</span></div></div><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
    <div style="padding:18px;display:grid;gap:16px">
+     ${t.codigoLiberado?`<div class="banner warn" style="margin:0;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span>Este trépano salió de existencia (${esc(trKN(k))}). Su código <b class="mono">${esc(t.codigo)}</b> se reasignó a otro elemento el ${esc(fmtD(t.codigoReasignadoFecha))}. Queda en el sistema solo para el historial.</span>${t.codigoReasignadoA&&S.trep.has(t.codigoReasignadoA)?`<button class="btn sm" data-tropen="${esc(t.codigoReasignadoA)}">Ver el trépano que tiene el código ahora</button>`:""}</div>`:k==="vendido"?`<div class="banner" style="margin:0">Vendido: está fuera de existencia y no se cuenta en el stock. Queda en el sistema para mantener su historial.</div>`:""}
+     ${t.codigoAnteriorDe?`<div class="banner" style="margin:0;display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--accent-soft)"><span><b>Código reutilizado:</b> <span class="mono">${esc(t.codigo)}</span> perteneció antes a otro trépano que dejó de existir; este elemento lo usa desde el ${esc(fmtD(t.codigoAnteriorFecha))}.</span>${S.trep.has(t.codigoAnteriorDe)?`<button class="btn sm" data-tropen="${esc(t.codigoAnteriorDe)}">Ver la ficha del trépano anterior</button>`:""}</div>`:""}
      <dl class="kv">${kv("Código",t.codigo||"Código a asignar")}${kv("Tipo",t.tipo)}${kv("Diámetro",t.diametro)}${kv("Ubicación",trUbic(t))}${kv("Estado",trKN(k))}${kv("Marca",t.marca)}${kv("Modelo",t.modelo)}${kv("Nº de serie",t.serie)}${kv("Alta",fmtD(t.creado))}${kv("Notas",t.obs)}</dl>
      <div style="display:flex;gap:8px;flex-wrap:wrap">
        ${t.ubicTipo==="equipo"?`<button class="btn in" data-trgo="trepanos/entrada">${ICON_IN}Entrada a base</button><button class="btn primary" data-trgo="trepanos/salida">Traspaso a otro equipo</button>`:""}
        ${trInBase(t)&&(k==="optimo"||k==="nuevo")?`<button class="btn out" data-trgo="trepanos/salida">${ICON_OUT}Salida a equipo</button>`:""}
        <button class="btn" data-trgo="trepanos/trepano">Historial del trépano</button>
      </div>
-     <div style="display:flex;gap:6px;flex-wrap:wrap">${k!=="nuevo"?`<button class="btn sm" id="trf-code">${t.codigo?"Cambiar código":"Asignar código"}</button>`:""}<button class="btn sm need-dep" id="trf-est">Cambiar estado / ubicación</button><button class="btn sm need-adm" id="trf-edit">Editar datos</button>${ms.length<=1?`<button class="btn sm danger need-adm" id="trf-del">Eliminar (cargado por error)</button>`:""}</div>
+     <div style="display:flex;gap:6px;flex-wrap:wrap">${trDesc0(t)&&t.codigo&&!t.codigoLiberado?`<button class="btn sm need-dep" id="trf-reas">Reasignar código a otro elemento</button>`:""}${k!=="nuevo"&&!t.codigoLiberado?`<button class="btn sm" id="trf-code">${t.codigo?"Cambiar código":"Asignar código"}</button>`:""}<button class="btn sm need-dep" id="trf-est">Cambiar estado / ubicación</button><button class="btn sm need-adm" id="trf-edit">Editar datos</button>${ms.length<=1?`<button class="btn sm danger need-adm" id="trf-del">Eliminar (cargado por error)</button>`:""}</div>
      <div id="trf-panel"></div>
      <div><div class="lb" style="margin-bottom:6px">Últimos movimientos</div>
        ${ms.length?`<div class="card table-wrap"><table class="prev"><tbody>${ms.slice(0,8).map(m=>`<tr><td class="meta mono">${esc(fmtD(m.fecha))}</td><td>${esc(TR_MOV[m.tipo]||m.tipo)}</td><td class="wrap meta">${esc([m.desde,m.hacia].filter(Boolean).join(" → "))}</td><td>${movK(m)?trPillK(movK(m)):""}</td><td class="meta wrap">${esc(m.obs||"")}</td></tr>`).join("")}</tbody></table></div>`:'<div class="meta">Sin movimientos.</div>'}
@@ -2598,6 +2610,8 @@ function openTr(id){
     $("#trp-ok").onclick=async()=>{if(!guardWrite("deposito"))return;const c=$("#trp-code").value.trim().toUpperCase().replace(/\s+/g,"");if(!c){toast("Escribí el código.");return}const o=trByCode(c);if(o&&o.id!==t.id){toast("Ese código ya está asignado a otro trépano.");return}
       try{await trWrite(t,{codigo:c},{tipo:"codigo",autoriza:$("#trp-aut").value.trim(),obs:t.codigo?`Código anterior: ${t.codigo}`:"Asignación de código"});toast("Código guardado: "+c);openTr(t.id)}catch(e){writeError(e)}}};
   const pe=$("#trf-est");if(pe)pe.onclick=()=>openTrEstado(t.id);
+  const pr=$("#trf-reas");if(pr)pr.onclick=()=>openTrReasignar(t.id);
+  $$("[data-tropen]").forEach(b=>b.onclick=()=>openTr(b.dataset.tropen));
   $("#trf-edit").onclick=()=>{panel.innerHTML=`<div class="card form" style="background:var(--surface-2)">
       <div class="field"><label class="lb" for="tre-tipo">Tipo</label><input type="text" id="tre-tipo" list="dl-trtipo" value="${esc(t.tipo||"")}"></div>
       <div class="field"><label class="lb" for="tre-diam">Diámetro</label><input type="text" id="tre-diam" list="dl-diam" value="${esc(t.diametro||"")}"></div>
@@ -2615,33 +2629,191 @@ function openTr(id){
     $("#trp-ok").onclick=async()=>{if(!guardWrite("admin"))return;try{for(const m of ms.filter(x=>x.trepanoId===t.id))await db.doc("trepanos_mov/"+m.id).delete();await db.doc("trepanos/"+t.id).delete();S.trep.delete(t.id);toast("Trépano eliminado");closeModal();renderTrAll()}catch(e){writeError(e)}}};
 }
 
+/* ---------- movimientos omitidos (carga posterior) ---------- */
+const TL_TIPOS=[["salida","Salida a equipo"],["entrada","Entrada a base"],["traspaso","Traspaso entre equipos"],["estado","Cambio de estado / ubicación"],["venta","Venta (sale de existencia)"]];
+let TL={tipo:"salida",codes:[]};
+const tlClean=c=>String(c==null?"":c).trim().toUpperCase().replace(/^[.\-\s]+/,"").replace(/\s+/g,"");
+const tlEq=tipo=>tipo==="salida"||tipo==="traspaso";
+function tlLast(t){let f=String(t.estadoDesde||"");for(const m of trMovsOf(t))if(String(m.fecha)>f)f=String(m.fecha);return f}
+function tlIso(d,h){if(!h&&d===todayStr())return new Date().toISOString();const [y,mo,da]=d.split("-").map(Number);const [hh,mm]=(h||"12:00").split(":").map(Number);return new Date(y,mo-1,da,hh||0,mm||0).toISOString()}
+/* aplica movimientos: [{fecha, tipo, t, desde, hacia, k, autoriza, remito, obs}] (en orden por fecha) */
+async function tlApply(items,ref,tick){
+  const now=new Date().toISOString(),last=new Map();let nH=0,nU=0;
+  items.sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha)));
+  for(const it of items){const t=S.trep.get(it.t.id)||it.t;
+    const prev=last.has(t.id)?last.get(t.id):tlLast(t);
+    const k=it.k||trK(t),P=trKParts(k),eq=tlEq(it.tipo);
+    await withRetry(()=>db.collection("trepanos_mov").add({trepanoId:t.id,codigo:t.codigo||"",desc:trDesc(t),tipo:it.tipo,fecha:it.fecha,desde:it.desde||"",hacia:it.hacia,estadoAntes:"",estado:P.estado,malo:"",autoriza:it.autoriza||"",responsable:"",remito:it.remito||"",obs:it.obs||"",by:myId||"",cargaTardia:true,cargado:now,ref:ref||""}));
+    nH++;
+    if(String(it.fecha)>String(prev)){const patch=Object.assign({ubicTipo:it.tipo==="venta"||it.k==="vendido"?"fuera":eq?"equipo":"deposito",ubicacion:it.hacia,actualizado:now,estadoDesde:it.fecha},it.k?P:{});
+      await withRetry(()=>db.doc("trepanos/"+t.id).update(patch));S.trep.set(t.id,Object.assign({},t,patch));nU++}
+    last.set(t.id,String(it.fecha)>String(prev)?String(it.fecha):prev);
+    if(tick)tick()}
+  return{nH,nU};
+}
+function renderTrLate(opt){
+  const f=$("#f-tr-late");opt=opt||{};if(opt.reset)TL.codes=[];
+  const keep=opt.reset?{}:trKeep(f),eq=tlEq(TL.tipo);if(TL.tipoCambio){delete keep["tl-dest"];delete keep["tl-k"];TL.tipoCambio=false}
+  f.innerHTML=`
+   <div class="field full"><label class="lb">Movimiento <em>*</em></label>${trSeg("tl-tipo",TL_TIPOS,TL.tipo)}</div>
+   <div class="field"><label class="lb" for="tl-d">Fecha del movimiento <em>*</em></label><input type="date" id="tl-d" max="${todayStr()}"></div>
+   <div class="field"><label class="lb" for="tl-h">Hora</label><input type="time" id="tl-h" placeholder="Opcional"><span class="hint">Si no la sabés, dejala vacía (se toma 12:00).</span></div>
+   <div class="field full"><label class="lb" for="tl-in">Trépanos (uno o varios códigos) <em>*</em></label>
+     <div class="chips" id="tl-chips"></div>
+     <div style="display:flex;gap:8px"><input type="text" id="tl-in" list="dl-trep" placeholder="Escribí un código y Enter · podés pegar varios separados por coma o espacio" autocomplete="off" style="flex:1"><button type="button" class="btn sm" id="tl-add">Agregar</button></div></div>
+   <div class="field"><label class="lb" for="tl-o">Origen</label><input type="text" id="tl-o" list="${TL.tipo==="entrada"||TL.tipo==="traspaso"?"dl-eqtr":"dl-depos"}" placeholder="${TL.tipo==="entrada"||TL.tipo==="traspaso"?"Equipo del que vino":"Base de la que salió"}"></div>
+   <div class="field"><label class="lb" for="tl-dest">Destino <em>*</em></label>${TL.tipo==="venta"?`<input type="text" id="tl-dest" value="${esc(TR_VENTA)}">`:eq?`<input type="text" id="tl-dest" list="dl-eqtr" placeholder="Equipo, ej.: TEC51">`:`<select id="tl-dest">${taUbs().map(x=>`<option>${esc(x)}</option>`).join("")}</select>`}</div>
+   ${TL.tipo==="venta"?`<div class="field"><label class="lb">Estado</label><div>${trPillK("vendido")}</div><span class="hint">Sale de existencia: deja de contarse en el stock pero queda en el sistema con su historial.</span></div>`:`<div class="field"><label class="lb" for="tl-k">Estado</label><select id="tl-k"><option value="">${TL.tipo==="estado"?"Elegí…":"Sin cambio (el que tenga)"}</option>${TR_KS.filter(x=>x!=="nuevo").map(x=>`<option value="${x}">${trKN(x)}</option>`).join("")}</select></div>`}
+   ${trOpt("tl")}
+   <div class="field full" id="tl-prev"></div>
+   <div class="form-actions"><button type="submit" class="btn primary" id="tl-go">Agregar al historial</button></div>`;
+  trRestore(f,keep);
+  trSegOn("tl-tipo",v=>{TL.tipo=v;TL.tipoCambio=true;renderTrLate()});
+  const tk=$("#tl-k");if(tk)tk.onchange=()=>{if(tk.value==="vendido"){TL.tipo="venta";TL.tipoCambio=true;renderTrLate()}};
+  const draw=()=>{const d=$("#tl-d").value;
+    $("#tl-chips").innerHTML=TL.codes.map(c=>{const t=trByCode(c);return `<span class="chip"${t?"":' style="background:var(--bad-soft,#fde8e6);color:var(--bad)"'}><span>${esc(c)}${t?` <span class="meta">· ${esc(trDesc(t))}</span>`:" · no existe"}</span><button type="button" data-tlrm="${esc(c)}" aria-label="Quitar ${esc(c)}">✕</button></span>`}).join("");
+    const T=TL.codes.map(trByCode).filter(Boolean),iso=d?tlIso(d,$("#tl-h").value):"";
+    $("#tl-prev").innerHTML=T.length&&iso?`<div class="card" style="padding:10px 14px;background:var(--surface-2)"><div class="lb" style="margin-bottom:4px">Qué va a pasar</div>${T.map(t=>{const l=tlLast(t),nw=iso>l;return `<div class="meta"><b class="mono">${esc(t.codigo)}</b> · última actualización ${l?esc(fmtD(l)):"—"} → ${nw?(TL.tipo==="venta"?"<b>es el más reciente: pasa a Vendido y sale del stock</b>":"<b>es el más reciente: actualiza el listado</b>"):"queda solo en el historial (el trépano tiene datos más recientes)"}</div>`}).join("")}</div>`:"";
+    $("#tl-go").textContent=T.length>1?`Agregar al historial de ${T.length} trépanos`:"Agregar al historial"};
+  const addRaw=v=>{String(v||"").split(/[\s,;\/]+/).map(tlClean).filter(Boolean).forEach(c=>{if(!TL.codes.includes(c))TL.codes.push(c)});$("#tl-in").value="";draw()};
+  $("#tl-in").addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===","||e.key===";"){e.preventDefault();addRaw($("#tl-in").value)}});
+  $("#tl-in").addEventListener("change",()=>{if(trByCode($("#tl-in").value))addRaw($("#tl-in").value)});
+  $("#tl-in").addEventListener("paste",()=>setTimeout(()=>{if(/[\s,;]/.test($("#tl-in").value.trim()))addRaw($("#tl-in").value)},0));
+  $("#tl-add").onclick=()=>addRaw($("#tl-in").value);
+  $("#tl-chips").onclick=e=>{const b=e.target.closest("[data-tlrm]");if(b){TL.codes=TL.codes.filter(c=>c!==b.dataset.tlrm);draw()}};
+  ["#tl-d","#tl-h"].forEach(s=>$(s).addEventListener("input",draw));
+  draw();
+  const L=S.trmov.filter(m=>m.cargaTardia).sort((a,b)=>String(b.cargado||"").localeCompare(String(a.cargado||""))||String(b.fecha).localeCompare(String(a.fecha))).slice(0,30),tb=$("#t-tr-late tbody");
+  tb.innerHTML=L.length?L.map(m=>trMovRow(m,{edit:true})).join(""):`<tr><td class="span"><div class="empty" style="padding:20px">Todavía no se cargaron movimientos omitidos.</div></td></tr>`;
+}
+$("#f-tr-late").addEventListener("submit",async e=>{e.preventDefault();if(!guardWrite("deposito"))return;
+  if($("#tl-in").value.trim()){String($("#tl-in").value).split(/[\s,;\/]+/).map(tlClean).filter(Boolean).forEach(c=>{if(!TL.codes.includes(c))TL.codes.push(c)});$("#tl-in").value=""}
+  const d=$("#tl-d").value;if(!d){toast("Indicá la fecha del movimiento.");$("#tl-d").focus();return}
+  const iso=tlIso(d,$("#tl-h").value);if(iso>new Date().toISOString()){toast("La fecha no puede ser futura.");return}
+  if(!TL.codes.length){toast("Agregá al menos un código.");$("#tl-in").focus();return}
+  const bad=TL.codes.filter(c=>!trByCode(c));if(bad.length){toast("No existen en el listado: "+bad.join(", ")+". Quitalos o cargalos antes con una Entrada.");return}
+  const eq=tlEq(TL.tipo),hacia=eq?normEq($("#tl-dest").value):$("#tl-dest").value;if(!hacia){toast("Indicá el destino.");$("#tl-dest").focus();return}
+  const k=TL.tipo==="venta"?"vendido":$("#tl-k").value;if(TL.tipo==="estado"&&!k){toast("Elegí el estado.");$("#tl-k").focus();return}
+  const base={autoriza:$("#tl-aut").value.trim(),remito:$("#tl-doc").value.trim(),obs:$("#tl-obs").value.trim()},desde=$("#tl-o").value.trim(),b=$("#tl-go");b.disabled=true;
+  try{const r=await tlApply(TL.codes.map(c=>({fecha:iso,tipo:TL.tipo,t:trByCode(c),desde:eq&&TL.tipo==="traspaso"?normEq(desde):desde,hacia,k,autoriza:base.autoriza,remito:base.remito,obs:base.obs})),"Carga manual");
+    toast(`${r.nH} movimiento${r.nH===1?"":"s"} agregado${r.nH===1?"":"s"} al historial${r.nU?` · ${r.nU} actualizado${r.nU===1?"":"s"} en el listado`:""}`);renderTrLate({reset:true})}
+  catch(err){b.disabled=false;writeError(err)}});
+/* importar movimientos omitidos desde Excel */
+function tlMov(v){const t=norm(v);if(!t)return null;if(/vend|venta|gitano/.test(t))return"venta";if(/estado|cambio de ubic|reubic/.test(t))return"estado";return tiMov(v)}
+function tlKOf(v){const t=norm(v);if(!t)return"";if(/vend/.test(t))return"vendido";if(/descart|rot|baja|chatarr/.test(t))return"descarte";if(/arana|repar|taller|malo/.test(t))return"taller";if(/operativ|optim|usad|bueno/.test(t))return"optimo";return""}
+function openTlImport(){
+  if(!guardWrite("deposito"))return;
+  modal(`<div class="modal-h"><div><h3>Importar movimientos omitidos</h3><div class="meta">Cada fila es un movimiento: fecha, tipo (salida, entrada, traspaso o cambio de estado), uno o varios códigos, origen, destino y estado.</div></div><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
+   <div style="padding:18px;display:grid;gap:14px" id="tl-body">
+     <label class="drop" for="tl-file"><b>Elegí el Excel con los movimientos</b><span class="meta">Columnas: Fecha · Movimiento · Código(s) · Origen · Destino · Estado · Autorizó · Remito · Observaciones. En "Código(s)" podés poner varios separados por coma. Para una venta poné "Venta" en Movimiento o "Vendido" en Estado (destino por defecto: Gitanos/otros).</span><input type="file" id="tl-file" accept=".xlsx,.xls,.csv,.ods" hidden></label>
+     <button class="btn sm" id="tl-tpl" style="justify-self:start">Descargar plantilla</button>
+   </div>`,"wide");
+  $("#tl-tpl").onclick=()=>loadXlsx().then(()=>{const ws=XLSX.utils.aoa_to_sheet([["Fecha","Movimiento","Código(s)","Origen","Destino","Estado","Autorizó","Remito","Observaciones"],[new Date(2026,8,15),"Salida","12I88, 12I218","Depósito Central","TEC51","","","",""],[new Date(2026,8,30),"Entrada","12I88","TEC51","Depósito Central","Araña","","","Rodillo trabado"]]);ws["!cols"]=[{wch:11},{wch:14},{wch:22},{wch:18},{wch:18},{wch:12},{wch:16},{wch:10},{wch:30}];const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Movimientos");save("plantilla-movimientos-trepanos.xlsx",new Blob([XLSX.write(wb,{bookType:"xlsx",type:"array"})]),{direct:true})}).catch(()=>toast("No se pudo cargar el generador de Excel."));
+  $("#tl-file").onchange=()=>{const f=$("#tl-file").files[0];if(f)tlRead(f)};
+}
+async function tlRead(file){
+  const box=$("#tl-body");box.innerHTML=`<div class="empty">Leyendo ${esc(file.name)}…</div>`;
+  try{await loadXlsx()}catch(e){box.innerHTML='<div class="banner bad">No se pudo cargar el lector de Excel.</div>';return}
+  let rows;try{const wb=XLSX.read(await file.arrayBuffer(),{type:"array",cellDates:true});rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:"",raw:true})}catch(e){box.innerHTML=`<div class="banner bad">No se pudo leer ${esc(file.name)}.</div>`;return}
+  const F={fecha:/^(fecha|dia)/,mov:/^(mov|tipo de mov|entrada.?salida|operacion|e.?s$)/,codigo:/^(cod|trepano|nro|numero)/,origen:/^(origen|desde)/,destino:/^(destino|hacia|equipo)/,estado:/^(estado|condicion)/,autoriza:/^(autoriz|responsable)/,remito:/^(remito|parte|comprobante)/,obs:/^(obs|nota|coment|motivo)/};
+  let hi=-1,map={};for(let i=0;i<Math.min(rows.length,15);i++){const m={};rows[i].forEach((c,j)=>{const n=norm(c);for(const k in F)if(m[k]==null&&F[k].test(n))m[k]=j});if(m.fecha!=null&&m.codigo!=null){hi=i;map=m;break}}
+  if(hi<0){box.innerHTML='<div class="banner bad">No encontré las columnas Fecha y Código. Usá la plantilla.</div>';return}
+  const g=(r,k)=>map[k]==null?"":r[map[k]];const items=[],errs=[];let prevMov=null;
+  rows.slice(hi+1).forEach((r,ix)=>{const line=hi+2+ix;if(!r.some(c=>String(c).trim()))return;
+    const d=hiParseDate(g(r,"fecha"));const k=tlKOf(g(r,"estado"));let tipo=map.mov!=null?tlMov(g(r,"mov")):prevMov;if(k==="vendido")tipo="venta";
+    const codes=String(g(r,"codigo")).split(/[\s,;\/]+/).map(tlClean).filter(Boolean);
+    const e=[];if(!d)e.push("fecha no reconocida");else if(d>new Date())e.push("fecha futura");if(!tipo)e.push("movimiento no reconocido");if(!codes.length)e.push("sin código");
+    const miss=codes.filter(c=>!trByCode(c));if(miss.length)e.push("no existen: "+miss.join(", "));
+    const dr=String(g(r,"destino")).trim();let hacia="";if(tipo){if(tipo==="venta")hacia=dr||TR_VENTA;else if(tlEq(tipo))hacia=normEq(dr);else hacia=taUbs().find(x=>norm(x)===norm(dr))||dr}
+    if(!hacia)e.push("sin destino");if(tipo==="estado"&&!k)e.push("cambio de estado sin estado");
+    if(e.length){errs.push(`Fila ${line}: ${e.join(" · ")}`);return}
+    const fd=new Date(d);if(fd.getHours()===0&&fd.getMinutes()===0)fd.setHours(12,0,0,0);
+    const o=String(g(r,"origen")).trim();
+    codes.forEach(c=>items.push({line,fecha:fd.toISOString(),tipo,t:trByCode(c),desde:tipo==="traspaso"||tipo==="entrada"?(o?normEq(o):""):o,hacia,k:tipo==="venta"?"vendido":k,autoriza:String(g(r,"autoriza")||"").trim(),remito:String(g(r,"remito")||"").trim(),obs:String(g(r,"obs")||"").trim()}))});
+  const key=m=>m.trepanoId+"|"+String(m.fecha).slice(0,10)+"|"+m.tipo+"|"+norm(m.hacia||"");const ex=new Set(S.trmov.map(key));
+  const dup=items.filter(it=>ex.has(key({trepanoId:it.t.id,fecha:it.fecha,tipo:it.tipo,hacia:it.hacia}))),ok=items.filter(it=>!dup.includes(it));
+  const latest=new Map();ok.forEach(it=>{const l=latest.get(it.t.id);if(!l||it.fecha>l)latest.set(it.t.id,it.fecha)});const nUpd=Array.from(latest.entries()).filter(([id,f])=>f>tlLast(S.trep.get(id))).length;
+  box.innerHTML=`<div class="imp-sum"><span class="pill ok">${ok.length} movimiento${ok.length===1?"":"s"} para agregar</span><span class="pill" style="background:var(--surface)">${latest.size} trépano${latest.size===1?"":"s"}</span><span class="pill" style="background:var(--surface)">${nUpd} actualizan el listado</span>${dup.length?`<span class="pill warn">${dup.length} ya estaban cargados (se omiten)</span>`:""}${errs.length?`<span class="pill bad">${errs.length} filas con errores (no se cargan)</span>`:""}</div>
+   ${errs.length?`<div class="banner bad">${errs.map(esc).join("<br>")}</div>`:""}
+   <div class="card table-wrap" style="max-height:320px;overflow:auto"><table class="prev"><thead><tr><th>Fila</th><th>Fecha</th><th>Movimiento</th><th>Código</th><th>Origen</th><th>Destino</th><th>Estado</th></tr></thead><tbody>${ok.map(it=>`<tr><td class="meta num">${it.line}</td><td class="mono meta">${esc(fmtD(it.fecha).split(" ")[0])}</td><td>${esc(TR_MOV[it.tipo])}</td><td class="mono">${esc(it.t.codigo)}</td><td class="meta">${esc(it.desde||"—")}</td><td>${esc(it.hacia)}</td><td>${it.k?trPillK(it.k):'<span class="meta">sin cambio</span>'}</td></tr>`).join("")}</tbody></table></div>
+   <div class="form-actions" style="display:flex"><button class="btn" data-close>Cancelar</button><button class="btn primary" id="tl-imp-go"${ok.length?"":" disabled"}>Agregar ${ok.length} movimiento${ok.length===1?"":"s"}</button></div>`;
+  const go=$("#tl-imp-go");if(go)go.onclick=async()=>{if(!guardWrite("deposito"))return;let n=0;box.innerHTML=`<div style="display:grid;gap:10px;padding:20px 0"><div class="name" id="tl-st">Cargando…</div><div class="bar"><i id="tl-bar"></i></div></div>`;
+    try{const r=await tlApply(ok,("Importación "+file.name).slice(0,120),()=>{n++;const s=$("#tl-st"),b=$("#tl-bar");if(s)s.textContent=`Cargando ${n} de ${ok.length}…`;if(b)b.style.width=(100*n/ok.length)+"%"});
+      box.innerHTML=`<div class="empty"><b>Movimientos agregados</b>${r.nH} movimientos en el historial · ${r.nU} actualizaciones del listado de stock.</div><div class="form-actions" style="display:flex"><button class="btn primary" data-close>Listo</button></div>`;renderTrAll()}
+    catch(e){console.error(e);box.innerHTML=`<div class="banner bad">La carga se cortó (${n} de ${ok.length}). Podés volver a importar el mismo archivo: los ya cargados se omiten.</div><div class="form-actions" style="display:flex"><button class="btn" data-close>Cerrar</button></div>`}};
+}
+document.addEventListener("click",e=>{if(e.target.closest("[data-tlimp]"))openTlImport()});
 /* cambiar estado o ubicación con motivo */
 function openTrEstado(id){
-  const t=S.trep.get(id);if(!t)return;if(!guardWrite("deposito"))return;const k=trK(t),eq=t.ubicTipo==="equipo";
-  const ubs=taUbs().slice();if(!eq&&t.ubicacion&&!ubs.includes(t.ubicacion))ubs.push(t.ubicacion);
+  const t=S.trep.get(id);if(!t)return;if(!guardWrite("deposito"))return;const k=trK(t),eq=t.ubicTipo==="equipo",fu=trFuera(t);
+  const ubs=taUbs().slice();if(trInBase(t)&&t.ubicacion&&!ubs.includes(t.ubicacion))ubs.push(t.ubicacion);
   modal(`<div class="modal-h"><div><div class="meta">${esc(trDesc(t))} · ${esc(trKN(k))} · ${esc(trUbic(t))}</div><h3 class="${t.codigo?"mono":""}">Cambiar estado o ubicación · ${esc(trName(t))}</h3></div><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
    <form class="form" id="f-tre" autocomplete="off" style="padding:18px">
      <div class="field"><label class="lb" for="tre-k">Estado</label><select id="tre-k">${TR_KS.filter(x=>x!=="nuevo"||!t.codigo).map(x=>`<option value="${x}"${x===k?" selected":""}>${trKN(x)}</option>`).join("")}</select></div>
      <div class="field"><label class="lb" for="tre-f">Fecha y hora</label><input type="datetime-local" id="tre-f" value="${nowLocal()}"></div>
-     <div class="field full"><label class="lb">Ubicación</label>${trSeg("tre-ut",[["base","En una base"],["equipo","En un equipo"]],eq?"equipo":"base")}</div>
-     <div class="field" id="tre-bw"${eq?" hidden":""}><label class="lb" for="tre-b">Base</label><select id="tre-b">${ubs.map(x=>`<option${x===t.ubicacion?" selected":""}>${esc(x)}</option>`).join("")}</select></div>
-     <div class="field" id="tre-ew"${eq?"":" hidden"}><label class="lb" for="tre-e">Equipo</label><input type="text" id="tre-e" list="dl-eqtr" value="${eq?esc(t.ubicacion||""):""}" placeholder="Ej.: TEC51"></div>
-     <div class="field full"><label class="lb" for="tre-m">Motivo u observación <em>*</em></label><textarea id="tre-m" rows="3" placeholder="Por qué se cambia: rotura de rodillo, reubicación, corrección del listado…"></textarea></div>
+     <div class="field full" id="tre-uw"${k==="vendido"?" hidden":""}><label class="lb">Ubicación</label>${trSeg("tre-ut",[["base","En una base"],["equipo","En un equipo"]],eq?"equipo":"base")}</div>
+     <div class="field" id="tre-bw"${eq||k==="vendido"?" hidden":""}><label class="lb" for="tre-b">Base</label><select id="tre-b">${ubs.map(x=>`<option${x===t.ubicacion?" selected":""}>${esc(x)}</option>`).join("")}</select></div>
+     <div class="field" id="tre-ew"${eq&&k!=="vendido"?"":" hidden"}><label class="lb" for="tre-e">Equipo</label><input type="text" id="tre-e" list="dl-eqtr" value="${eq?esc(t.ubicacion||""):""}" placeholder="Ej.: TEC51"></div>
+     <div class="field full" id="tre-vw"${k==="vendido"?"":" hidden"}><label class="lb" for="tre-v">Destino final (fuera de la empresa)</label><input type="text" id="tre-v" value="${esc(fu&&t.ubicacion?t.ubicacion:TR_VENTA)}"><span class="hint">Sale de existencia: deja de contarse en el stock, pero queda en el sistema con todo su historial.</span></div>
+     <div class="field full"><label class="lb" for="tre-m">Motivo u observación <em>*</em></label><textarea id="tre-m" rows="3" placeholder="Por qué se cambia: rotura de rodillo, reubicación, venta, corrección del listado…"></textarea></div>
      <div class="field"><label class="lb" for="tre-a">Autorizó</label><input type="text" id="tre-a" list="dl-personas" placeholder="Opcional"></div>
      <div class="form-actions"><button type="button" class="btn" data-close>Cancelar</button><button type="submit" class="btn primary" id="tre-go">Guardar cambio</button></div>
    </form>`);
   let ut=eq?"equipo":"base";
-  trSegOn("tre-ut",v=>{ut=v;$$("#tre-ut button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.k===v));$("#tre-bw").hidden=v!=="base";$("#tre-ew").hidden=v!=="equipo"});
-  $("#tre-k").onchange=()=>{const v=$("#tre-k").value;if(ut==="base"){if(v==="descarte")$("#tre-b").value="Descarte";else if(v==="taller"&&taUbs().includes("Taller"))$("#tre-b").value="Taller"}};
+  const vis=()=>{const vend=$("#tre-k").value==="vendido";$("#tre-uw").hidden=vend;$("#tre-bw").hidden=vend||ut!=="base";$("#tre-ew").hidden=vend||ut!=="equipo";$("#tre-vw").hidden=!vend};
+  trSegOn("tre-ut",v=>{ut=v;$$("#tre-ut button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.k===v));vis()});
+  $("#tre-k").onchange=()=>{const v=$("#tre-k").value;if(ut==="base"){if(v==="descarte")$("#tre-b").value="Descarte";else if(v==="taller"&&taUbs().includes("Taller"))$("#tre-b").value="Taller"}vis()};
   setTimeout(()=>$("#tre-m").focus(),50);
   $("#f-tre").addEventListener("submit",async e=>{e.preventDefault();if(!guardWrite("deposito"))return;
-    const nk=$("#tre-k").value,ub=ut==="base"?$("#tre-b").value:normEq($("#tre-e").value),mot=$("#tre-m").value.trim();
+    const nk=$("#tre-k").value,vend=nk==="vendido",ub=vend?($("#tre-v").value.trim()||TR_VENTA):ut==="base"?$("#tre-b").value:normEq($("#tre-e").value),mot=$("#tre-m").value.trim();
+    const nut=vend?"fuera":ut==="base"?"deposito":"equipo";
     if(!ub){toast("Indicá el equipo.");$("#tre-e").focus();return}
-    if(nk===k&&ub===(t.ubicacion||"")&&(ut==="equipo")===eq){toast("No hay cambios.");return}
+    if(nk===k&&ub===(t.ubicacion||"")&&nut===(t.ubicTipo==="equipo"?"equipo":t.ubicTipo==="fuera"?"fuera":"deposito")){toast("No hay cambios.");return}
     if(!mot){toast("Escribí el motivo del cambio.");$("#tre-m").focus();return}
     const P=trKParts(nk),f=$("#tre-f").value,b=$("#tre-go");b.disabled=true;
-    try{await trWrite(t,Object.assign({ubicTipo:ut==="base"?"deposito":"equipo",ubicacion:ub},P),{tipo:"estado",fecha:(!f||f===nowLocal())?new Date().toISOString():new Date(f).toISOString(),desde:t.ubicacion||"",hacia:ub,autoriza:$("#tre-a").value.trim(),estado:P.estado,malo:"",obs:mot});
-      closeModal();toast(`${trName(t)}: ${trKN(nk)} · ${ut==="equipo"?"Equipo ":""}${ub}`);renderTrAll()}catch(err){b.disabled=false;writeError(err)}});
+    try{await trWrite(t,Object.assign({ubicTipo:nut,ubicacion:ub},P),{tipo:vend&&k!=="vendido"?"venta":"estado",fecha:(!f||f===nowLocal())?new Date().toISOString():new Date(f).toISOString(),desde:t.ubicacion||"",hacia:ub,autoriza:$("#tre-a").value.trim(),estado:P.estado,malo:"",obs:mot});
+      closeModal();toast(`${trName(t)}: ${trKN(nk)} · ${nut==="equipo"?"Equipo ":""}${ub}`);renderTrAll()}catch(err){b.disabled=false;writeError(err)}});
+}
+/* reasignar el código de un trépano que salió de existencia a otro elemento */
+function openTrReasignar(id){
+  const t=S.trep.get(id);if(!t||!t.codigo||t.codigoLiberado)return;if(!guardWrite("deposito"))return;
+  const C=trList().filter(x=>!x.codigo&&x.id!==id&&!trDesc0(x)).sort((a,b)=>(trK(a)==="nuevo"?0:1)-(trK(b)==="nuevo"?0:1)||String(a.tipo+a.diametro).localeCompare(b.tipo+b.diametro,"es",{numeric:true})||trByCreado(a,b));
+  const G={};C.forEach(x=>{const key=[trK(x),x.tipo||"",x.diametro||"",x.ubicacion||""].join("|");(G[key]=G[key]||[]).push(x)});
+  modal(`<div class="modal-h"><div><div class="meta">${esc(trDesc(t))} · ${esc(trKN(trK(t)))} · ${esc(trUbic(t))}</div><h3>Reasignar el código <span class="mono">${esc(t.codigo)}</span></h3></div><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
+   <form class="form" id="f-trr" autocomplete="off" style="padding:18px">
+     <div class="field full"><div class="banner warn" style="margin:0">Este trépano queda en el sistema con su historial, pero su código pasa a otro elemento. En las dos fichas queda escrito el traspaso del código.</div></div>
+     <div class="field full"><label class="lb">El código pasa a</label>${trSeg("trr-m",[["exist","Un trépano sin código que ya está en el listado"],["nuevo","Un trépano usado sin identificar (se da de alta)"]],C.length?"exist":"nuevo")}</div>
+     <div class="field full" id="trr-xw"${C.length?"":" hidden"}><label class="lb" for="trr-x">Trépano sin código</label><select id="trr-x"><option value="">Elegí…</option>${Object.entries(G).map(([key,L])=>`<option value="${esc(L[0].id)}">${esc(trKN(trK(L[0])))} · ${esc(L[0].tipo||"—")} · ${esc(L[0].diametro||"—")} · ${esc(trUbic(L[0]))} (${L.length} disponible${L.length===1?"":"s"})</option>`).join("")}</select><span class="hint">Si es Nuevo, al recibir el código pasa a Operativo.</span></div>
+     <div class="field" data-trrn hidden><label class="lb" for="trr-t">Tipo <em>*</em></label><input type="text" id="trr-t" list="dl-trtipo" value="${esc(t.tipo||"")}"></div>
+     <div class="field" data-trrn hidden><label class="lb" for="trr-d">Diámetro <em>*</em></label><input type="text" id="trr-d" list="dl-diam" value="${esc(t.diametro||"")}"></div>
+     <div class="field" data-trrn hidden><label class="lb" for="trr-k">Estado</label><select id="trr-k">${["optimo","taller","descarte"].map(x=>`<option value="${x}">${trKN(x)}</option>`).join("")}</select></div>
+     <div class="field" data-trrn hidden><label class="lb" for="trr-u">Ubicación</label><select id="trr-u">${taUbs().map(x=>`<option>${esc(x)}</option>`).join("")}</select></div>
+     <div class="field"><label class="lb" for="trr-f">Fecha</label><input type="datetime-local" id="trr-f" value="${nowLocal()}"></div>
+     <div class="field"><label class="lb" for="trr-a">Autorizó</label><input type="text" id="trr-a" list="dl-personas" placeholder="Opcional"></div>
+     <div class="field full"><label class="lb" for="trr-o">Motivo <em>*</em></label><textarea id="trr-o" rows="2" placeholder="Ej.: se reutiliza la chapa del código en un trépano sin identificar"></textarea></div>
+     <div class="form-actions"><button type="button" class="btn" data-close>Cancelar</button><button type="submit" class="btn primary" id="trr-go">Reasignar código</button></div>
+   </form>`,"wide");
+  let mode=C.length?"exist":"nuevo";
+  const vis=()=>{$("#trr-xw").hidden=mode!=="exist";$$("[data-trrn]").forEach(x=>x.hidden=mode!=="nuevo");$$("#trr-m button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.k===mode))};
+  trSegOn("trr-m",v=>{if(v==="exist"&&!C.length){toast("No hay trépanos sin código en el listado.");return}mode=v;vis()});vis();
+  $("#f-trr").addEventListener("submit",async e=>{e.preventDefault();if(!guardWrite("deposito"))return;
+    const mot=$("#trr-o").value.trim();if(!mot){toast("Escribí el motivo.");$("#trr-o").focus();return}
+    const f=$("#trr-f").value,fecha=(!f||f===nowLocal())?new Date().toISOString():new Date(f).toISOString(),aut=$("#trr-a").value.trim(),code=t.codigo,b=$("#trr-go");
+    const ant=`${trKN(trK(t))}${t.ubicacion?" · "+t.ubicacion:""}`;
+    let nid;b.disabled=true;
+    try{
+      if(mode==="exist"){const x=S.trep.get($("#trr-x").value);if(!x){b.disabled=false;toast("Elegí el trépano que recibe el código.");return}nid=x.id;
+        const patch=Object.assign({codigo:code,codigoAnteriorDe:t.id,codigoAnteriorFecha:fecha},trK(x)==="nuevo"?trKParts("optimo"):{});
+        await withRetry(()=>db.doc("trepanos/"+t.id).update({codigoLiberado:true,codigoReasignadoA:x.id,codigoReasignadoFecha:fecha}));S.trep.set(t.id,Object.assign({},t,{codigoLiberado:true,codigoReasignadoA:x.id,codigoReasignadoFecha:fecha}));
+        await trWrite(x,patch,{tipo:"codigo",fecha,autoriza:aut,codigo:code,obs:`Recibe el código ${code}, que pertenecía a otro trépano (${ant}). ${mot}`})}
+      else{const tipo=$("#trr-t").value.trim(),d=trDiamFmt($("#trr-d").value);if(!tipo||!d){b.disabled=false;toast("Indicá tipo y diámetro.");return}
+        const P=trKParts($("#trr-k").value),u=$("#trr-u").value;
+        await withRetry(()=>db.doc("trepanos/"+t.id).update({codigoLiberado:true,codigoReasignadoFecha:fecha}));S.trep.set(t.id,Object.assign({},t,{codigoLiberado:true,codigoReasignadoFecha:fecha}));
+        nid=await trCreate(Object.assign({codigo:code,tipo,diametro:d,ubicTipo:"deposito",ubicacion:u,obs:"Trépano usado sin identificar: recibe un código reutilizado",codigoAnteriorDe:t.id,codigoAnteriorFecha:fecha},P),{tipo:"codigo",fecha,autoriza:aut,desde:"",hacia:u,obs:`Alta de trépano usado sin identificar con el código ${code}, que pertenecía a otro trépano (${ant}). ${mot}`});
+        await withRetry(()=>db.doc("trepanos/"+t.id).update({codigoReasignadoA:nid}));S.trep.set(t.id,Object.assign({},S.trep.get(t.id),{codigoReasignadoA:nid}))}
+      await withRetry(()=>db.collection("trepanos_mov").add({trepanoId:t.id,codigo:code,desc:trDesc(t),tipo:"codigo",fecha,desde:"",hacia:"",estadoAntes:trK(t),estado:t.estado||"",malo:"",autoriza:aut,responsable:"",remito:"",obs:`El código ${code} se reasignó a otro elemento. Este trépano queda fuera de existencia y solo para el historial. ${mot}`,by:myId||""}));
+      toast(`Código ${code} reasignado`);closeModal();openTr(nid)}
+    catch(err){b.disabled=false;writeError(err)}});
 }
 /* ---------- arqueo de trépanos ---------- */
 let TA_CUR=null;const TA_IN={ub:"",k:"optimo",sc:false};
@@ -2704,7 +2876,7 @@ function renderTrArq(){
      ${closed?"":`<div class="lb">1 · Cargar los trépanos contados</div>
      <div class="form" style="padding:0;gap:10px">
        <div class="field"><label class="lb" for="ta-ub">Ubicación</label><select id="ta-ub">${taUbs().map(x=>`<option${x===TA_IN.ub?" selected":""}>${esc(x)}</option>`).join("")}</select></div>
-       <div class="field"><label class="lb" for="ta-k">Estado</label><select id="ta-k">${TR_KS.map(x=>`<option value="${x}"${x===TA_IN.k?" selected":""}>${trKN(x)}</option>`).join("")}</select></div>
+       <div class="field"><label class="lb" for="ta-k">Estado</label><select id="ta-k">${TR_KS.filter(x=>x!=="vendido").map(x=>`<option value="${x}"${x===TA_IN.k?" selected":""}>${trKN(x)}</option>`).join("")}</select></div>
        <div class="field full"><label class="lb" for="ta-code">Código</label><input type="text" id="ta-code" list="dl-trep" placeholder="${TA_IN.sc?"Código a asignar":"Escribí y Enter"}" autocomplete="off"${TA_IN.sc?" disabled":""}><label class="chk" style="margin-top:6px"><input type="checkbox" id="ta-sc"${TA_IN.sc?" checked":""}> <span>Sin código (código a asignar) · se cuentan por cantidad</span></label><span class="hint" id="ta-hint"></span></div>
        <div class="field"><label class="lb" for="ta-tipo">Tipo</label><input type="text" id="ta-tipo" list="dl-trtipo"></div>
        <div class="field"><label class="lb" for="ta-diam">Diámetro</label><input type="text" id="ta-diam" list="dl-diam"></div>
@@ -2804,30 +2976,30 @@ $("#ta-new").addEventListener("click",()=>{if(!guardWrite("deposito"))return;
 let TR_KPI="";
 function trStockFilter(){const q=norm($("#tr-q").value),es=TR_KPI||$("#tr-est").value,u=$("#tr-ub").value;
   return t=>{const k=trK(t);
-    if(!es&&k==="descarte")return false;
+    if(!es&&(k==="descarte"||k==="vendido"))return false;
     if(TR_K[es]&&k!==es)return false;if(es==="malo"&&k!=="taller"&&k!=="descarte")return false;
     if(es==="base"&&(!trInBase(t)||k==="descarte"))return false;if(es==="eq"&&t.ubicTipo!=="equipo")return false;
     if(u&&(t.ubicTipo==="equipo"?"eq:":"b:")+(t.ubicacion||"")!==u)return false;
     if(q&&!norm([t.codigo||"código a asignar",t.tipo,t.diametro,t.marca,t.ubicacion,trUbic(t),trKN(k)].join(" ")).includes(q))return false;return true}}
 function renderTrStock(){
   const T=trList(),act=T.filter(t=>!trDesc0(t)),cnt=k=>T.filter(t=>trK(t)===k).length;
-  $("#tr-sub").textContent=T.length?`${act.length} trépanos (sin contar descarte) · ${act.filter(trInBase).length} en base · ${act.filter(t=>t.ubicTipo==="equipo").length} en equipos`:"Todavía no hay trépanos cargados.";
-  const K=[["nuevo","Nuevos",cnt("nuevo"),""],["optimo","Operativos",cnt("optimo"),""],["taller","Araña",cnt("taller"),"warn"],["descarte","Descarte",cnt("descarte"),"bad"],["base","En base",act.filter(trInBase).length,""],["eq","En equipos",act.filter(t=>t.ubicTipo==="equipo").length,""]];
+  $("#tr-sub").textContent=T.length?`${act.length} trépanos en existencia (sin descarte ni vendidos) · ${act.filter(trInBase).length} en base · ${act.filter(t=>t.ubicTipo==="equipo").length} en equipos`:"Todavía no hay trépanos cargados.";
+  const K=[["nuevo","Nuevos",cnt("nuevo"),""],["optimo","Operativos",cnt("optimo"),""],["taller","Araña",cnt("taller"),"warn"],["descarte","Descarte",cnt("descarte"),"bad"],["vendido","Vendidos",cnt("vendido"),""],["base","En base",act.filter(trInBase).length,""],["eq","En equipos",act.filter(t=>t.ubicTipo==="equipo").length,""]];
   $("#tr-kpis").innerHTML=K.map(([id,l,n,c])=>`<button class="kpi${c?" "+c:""}" data-trk="${id}" aria-pressed="${TR_KPI===id}" title="${esc(TR_K[id]?TR_K[id][2]:"")}"><small>${l}</small><b>${n}</b></button>`).join("");
   const ub=$("#tr-ub"),cur=ub.value,bs=uniq(T.filter(trInBase).map(t=>t.ubicacion||"")).filter(Boolean).sort(),eqs=uniq(T.filter(t=>t.ubicTipo==="equipo").map(t=>t.ubicacion||"")).filter(Boolean).sort((a,b)=>a.localeCompare(b,"es",{numeric:true}));
   ub.innerHTML='<option value="">Todas las ubicaciones</option>'+(bs.length?`<optgroup label="Bases">${bs.map(x=>`<option value="b:${esc(x)}">${esc(x)}</option>`).join("")}</optgroup>`:"")+(eqs.length?`<optgroup label="Equipos">${eqs.map(x=>`<option value="eq:${esc(x)}">${esc(x)}</option>`).join("")}</optgroup>`:"");
   if(Array.from(ub.options).some(o=>o.value===cur))ub.value=cur;
   const rows=T.filter(trStockFilter()),tb=$("#t-tr tbody");
-  const row=t=>{const m=trLastMov(t.id);return `<tr class="click" data-tr="${t.id}"><td class="${t.codigo?"mono name":"meta"}">${t.codigo?esc(t.codigo):"Código a asignar"}</td><td class="r-m">${esc(t.tipo||"")}</td><td class="mono">${esc(t.diametro||"")}</td><td class="span">${esc(trUbic(t))}</td><td>${trPillK(trK(t))}</td><td class="hide-m meta mono">${m?esc(fmtD(m.fecha)):"—"}</td><td class="need-dep" style="text-align:right"><button type="button" class="btn sm" data-tredit="${t.id}" title="Cambiar estado o ubicación (con motivo)">✎ Estado / ubicación</button></td></tr>`};
+  const row=t=>{const m=trLastMov(t.id);return `<tr class="click" data-tr="${t.id}"><td class="${t.codigo?"mono name":"meta"}">${t.codigo?esc(t.codigo):"Código a asignar"}${t.codigoLiberado?' <span class="meta">(reasignado)</span>':t.codigoAnteriorDe?' <span class="meta" title="Código reutilizado">♻</span>':""}</td><td class="r-m">${esc(t.tipo||"")}</td><td class="mono">${esc(t.diametro||"")}</td><td class="span">${esc(trUbic(t))}</td><td>${trPillK(trK(t))}</td><td class="hide-m meta mono">${m?esc(fmtD(m.fecha)):"—"}</td><td class="need-dep" style="text-align:right"><button type="button" class="btn sm" data-tredit="${t.id}" title="Cambiar estado o ubicación (con motivo)">✎ Estado / ubicación</button></td></tr>`};
   if(!S.loadedT)tb.innerHTML=`<tr><td class="span" colspan="6"><div class="empty">Cargando…</div></td></tr>`;
   else if(!T.length)tb.innerHTML=`<tr><td class="span" colspan="6"><div class="empty"><b>Todavía no hay trépanos cargados</b>Usá <em>Entrada</em> para cargar los que llegan.</div></td></tr>`;
   else if(!rows.length)tb.innerHTML=`<tr><td class="span" colspan="6"><div class="empty">Ningún trépano coincide con el filtro.</div></td></tr>`;
   else tb.innerHTML=TR_KS.map(k=>{const L=rows.filter(t=>trK(t)===k);if(!L.length)return"";
       L.sort((a,b)=>(trInBase(a)===trInBase(b)?0:trInBase(a)?-1:1)||(k==="nuevo"?String(a.tipo+a.diametro+a.ubicacion).localeCompare(b.tipo+b.diametro+b.ubicacion,"es",{numeric:true})||trByCreado(a,b):String(a.codigo||"~").localeCompare(String(b.codigo||"~"),"es",{numeric:true})));
       return `<tr class="tr-grp"><td colspan="7">${trPillK(k)} <b>${L.length}</b> <span class="meta">${esc(TR_K[k][2])}</span></td></tr>`+L.map(row).join("")}).join("");
-  const G={};T.forEach(t=>{const key=(t.tipo||"—")+"|"+(t.diametro||"—");const g=G[key]=G[key]||{tipo:t.tipo||"—",diam:t.diametro||"—",nuevo:0,optimo:0,taller:0,descarte:0,base:0,eq:0};const k=trK(t);g[k]=(g[k]||0)+1;if(k!=="descarte"){if(trInBase(t))g.base++;else g.eq++}});
+  const G={};T.forEach(t=>{const key=(t.tipo||"—")+"|"+(t.diametro||"—");const g=G[key]=G[key]||{tipo:t.tipo||"—",diam:t.diametro||"—",nuevo:0,optimo:0,taller:0,descarte:0,vendido:0,base:0,eq:0};const k=trK(t);g[k]=(g[k]||0)+1;if(k!=="descarte"&&k!=="vendido"){if(trInBase(t))g.base++;else g.eq++}});
   const gl=Object.values(G).sort((a,b)=>a.tipo.localeCompare(b.tipo)||a.diam.localeCompare(b.diam,"es",{numeric:true}));
-  $("#t-tr-res tbody").innerHTML=gl.length?gl.map(g=>`<tr><td>${esc(g.tipo)}</td><td class="mono">${esc(g.diam)}</td>${["nuevo","optimo","taller","descarte","base","eq"].map(k=>`<td class="r num">${g[k]||"—"}</td>`).join("")}</tr>`).join(""):`<tr><td colspan="8" class="meta" style="text-align:center;padding:16px">Sin datos todavía.</td></tr>`;
+  $("#t-tr-res tbody").innerHTML=gl.length?gl.map(g=>`<tr><td>${esc(g.tipo)}</td><td class="mono">${esc(g.diam)}</td>${["nuevo","optimo","taller","descarte","vendido","base","eq"].map(k=>`<td class="r num">${g[k]||"—"}</td>`).join("")}</tr>`).join(""):`<tr><td colspan="9" class="meta" style="text-align:center;padding:16px">Sin datos todavía.</td></tr>`;
 }
 $("#tr-kpis").addEventListener("click",e=>{const b=e.target.closest("[data-trk]");if(!b)return;TR_KPI=TR_KPI===b.dataset.trk?"":b.dataset.trk;$("#tr-est").value="";renderTrStock()});
 ["#tr-q","#tr-est","#tr-ub"].forEach(s=>$(s).addEventListener("input",()=>{if(s==="#tr-est")TR_KPI="";renderTrStock()}));
@@ -2840,7 +3012,7 @@ $("#tr-xls-list").addEventListener("click",async()=>{try{await loadXlsx()}catch(
   await save("stock-trepanos-"+localDay(new Date().toISOString())+".xlsx",new Blob([XLSX.write(wb,{bookType:"xlsx",type:"array"})]))});
 
 /* ---------- historial (general y por trépano) ---------- */
-const TR_MOVX={entrada:"entrada",salida:"salida",traspaso:"traspaso",baja:"baja",alta:"alta al sistema",estado:"cambio de estado",codigo:"asignación de código",edicion:"edición",arqueo:"ajuste por arqueo"};
+const TR_MOVX={venta:"venta",entrada:"entrada",salida:"salida",traspaso:"traspaso",baja:"baja",alta:"alta al sistema",estado:"cambio de estado",codigo:"asignación de código",edicion:"edición",arqueo:"ajuste por arqueo"};
 async function trHistXls(L,name){if(!L.length){toast("No hay movimientos para exportar.");return}
   try{await loadXlsx()}catch(e){toast("No se pudo cargar el generador de Excel. Revisá la conexión.");return}
   const rows=[["Fecha","Entrada/Salida","Origen","Destino","Tipo","Diámetro","Estado","Codigo","Autorizó","Remito","Observaciones"]].concat(L.map(m=>{const tr=S.trep.get(m.trepanoId)||{};const d=new Date(m.fecha);return[isNaN(d)?m.fecha:new Date(d.getFullYear(),d.getMonth(),d.getDate()),TR_MOVX[m.tipo]||m.tipo,m.desde||"",m.hacia||"",tr.tipo||String(m.desc||"").split(" · ")[0]||"",tr.diametro||"",trKN(movK(m)),m.codigo||tr.codigo||"Código a asignar",m.autoriza||"",m.remito||"",m.obs||""]}));
@@ -2850,7 +3022,7 @@ async function trHistXls(L,name){if(!L.length){toast("No hay movimientos para ex
   await save(`${name}-${localDay(new Date().toISOString())}.xlsx`,new Blob([XLSX.write(wb,{bookType:"xlsx",type:"array"})]))}
 const trAsc=(a,b)=>String(a.fecha).localeCompare(String(b.fecha));
 function trhFiltered(){const q=norm($("#trh-q").value),mv=$("#trh-mov").value,es=$("#trh-est").value,d1=$("#trh-d1").value,d2=$("#trh-d2").value;
-  const L=S.trmov.filter(m=>{if(mv!=="todos"){if(mv?m.tipo!==mv:!["entrada","salida","traspaso","estado"].includes(m.tipo))return false}
+  const L=S.trmov.filter(m=>{if(mv!=="todos"){if(mv?m.tipo!==mv:!["entrada","salida","traspaso","estado","venta"].includes(m.tipo))return false}
     if(es){const k=movK(m);if(es==="malo"?!(k==="taller"||k==="descarte"):k!==es)return false}
     const d=localDay(m.fecha);if(d1&&d<d1)return false;if(d2&&d>d2)return false;
     if(q){const t=S.trep.get(m.trepanoId)||{};if(!norm([m.codigo,t.codigo,t.tipo,t.diametro,m.desc,m.desde,m.hacia,m.obs,m.autoriza].join(" ")).includes(q))return false}return true}).sort(trAsc);
@@ -2863,12 +3035,13 @@ function renderTrHist(){
 ["#trh-q","#trh-mov","#trh-est","#trh-d1","#trh-d2","#trh-ord"].forEach(s=>$(s).addEventListener("input",renderTrHist));
 $("#trh-clear").addEventListener("click",()=>{["#trh-q","#trh-mov","#trh-est","#trh-d1","#trh-d2"].forEach(s=>$(s).value="");$("#trh-ord").value="asc";renderTrHist()});
 document.addEventListener("click",e=>{if(!e.target.closest("[data-trhxls]"))return;const v=ROUTE.it&&ROUTE.it.view;
-  trHistXls(v==="tr-hist"?trhFiltered().slice().sort(trAsc):S.trmov.filter(m=>["entrada","salida","traspaso"].includes(m.tipo)).sort(trAsc),"historial-trepanos")});
+  trHistXls(v==="tr-hist"?trhFiltered().slice().sort(trAsc):S.trmov.filter(m=>["entrada","salida","traspaso","estado","venta"].includes(m.tipo)).sort(trAsc),"historial-trepanos")});
 let TRO_ID="";
 function renderTrOne(){
   const t=TRO_ID?S.trep.get(TRO_ID):null,tb=$("#t-tro tbody");
-  $("#tro-card").innerHTML=t?`<div class="card" style="padding:14px 16px;margin-bottom:12px;display:flex;gap:14px;align-items:center;flex-wrap:wrap"><div style="min-width:0;flex:1 1 220px"><div class="${t.codigo?"mono":""} name" style="font-size:18px">${esc(trName(t))}</div><div class="meta">${esc(trDesc(t))}${t.marca?" · "+esc(t.marca):""}</div></div>${trPillK(trK(t))}<span class="pill" style="background:var(--surface-2)">${esc(trUbic(t))}</span><button class="btn sm" id="tro-open">Abrir ficha</button></div>`:"";
+  $("#tro-card").innerHTML=t?`<div class="card" style="padding:14px 16px;margin-bottom:12px;display:flex;gap:14px;align-items:center;flex-wrap:wrap"><div style="min-width:0;flex:1 1 220px"><div class="${t.codigo?"mono":""} name" style="font-size:18px">${esc(trName(t))}</div><div class="meta">${esc(trDesc(t))}${t.marca?" · "+esc(t.marca):""}</div></div>${trPillK(trK(t))}<span class="pill" style="background:var(--surface-2)">${esc(trUbic(t))}</span><button class="btn sm" id="tro-open">Abrir ficha</button></div>${t.codigoAnteriorDe&&S.trep.has(t.codigoAnteriorDe)?`<div class="banner" style="margin:0 0 12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--accent-soft)"><span><b>Código reutilizado</b> desde el ${esc(fmtD(t.codigoAnteriorFecha))}: antes perteneció a otro trépano.</span><button class="btn sm" data-troid="${esc(t.codigoAnteriorDe)}">Ver el historial anterior</button></div>`:""}${t.codigoLiberado?`<div class="banner warn" style="margin:0 0 12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span>Historial del trépano anterior: el código se reasignó el ${esc(fmtD(t.codigoReasignadoFecha))}.</span>${t.codigoReasignadoA&&S.trep.has(t.codigoReasignadoA)?`<button class="btn sm" data-troid="${esc(t.codigoReasignadoA)}">Ver el trépano actual</button>`:""}</div>`:""}`:"";
   const o=$("#tro-open");if(o)o.onclick=()=>openTr(t.id);
+  $$("#tro-card [data-troid]").forEach(b=>b.onclick=()=>{TRO_ID=b.dataset.troid;renderTrOne()});
   if(!t){tb.innerHTML=`<tr><td class="span" colspan="7"><div class="empty"><b>${$("#tro-q").value.trim()?"No hay un trépano con ese código":"Ingresá un código"}</b>Escribí o elegí el código del trépano para ver su historial completo.</div></td></tr>`;return}
   const L=trMovsOf(t).sort(trAsc);
   tb.innerHTML=L.length?L.map(m=>trMovRow(m,{noTr:true,aut:true,edit:true})).join(""):`<tr><td class="span" colspan="7"><div class="empty">Este trépano no tiene movimientos registrados.</div></td></tr>`;
@@ -2882,6 +3055,7 @@ function renderTrView(view,opt){
   if(view==="tr-in")renderTrIn({reset:true,tr:opt.tr});
   if(view==="tr-out")renderTrOut({reset:true,tr:opt.tr});
   if(view==="tr-arq")renderTrArq();
+  if(view==="tr-late")renderTrLate({reset:true});
   if(view==="tr-hist")renderTrHist();
   if(view==="tr-one"){if(opt.tr){TRO_ID=opt.tr;const t=S.trep.get(opt.tr);$("#tro-q").value=t&&t.codigo?t.codigo:""}else setTimeout(()=>$("#tro-q").focus(),50);renderTrOne()}
 }
@@ -2889,6 +3063,7 @@ function renderTrAll(){trRenderLists();const v=ROUTE.it&&ROUTE.it.view;if(!v||!v
   if(v==="tr-stock")renderTrStock();if(v==="tr-hist")renderTrHist();if(v==="tr-one")renderTrOne();
   if(v==="tr-arq"&&!$("#v-tr-arq").contains(document.activeElement))renderTrArq();
   if(v==="tr-in"){if($("#f-tr-in").contains(document.activeElement))trRecent("#t-tr-in",["entrada"]);else renderTrIn()}
+  if(v==="tr-late"&&!$("#f-tr-late").contains(document.activeElement))renderTrLate();
   if(v==="tr-out"){if($("#f-tr-out").contains(document.activeElement))trRecent("#t-tr-out",["salida","traspaso"]);else renderTrOut()}
 }
 
