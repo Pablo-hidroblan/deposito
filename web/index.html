@@ -2631,15 +2631,22 @@ function openTr(id){
 
 /* ---------- movimientos omitidos (carga posterior) ---------- */
 const TL_TIPOS=[["salida","Salida a equipo"],["entrada","Entrada a base"],["traspaso","Traspaso entre equipos"],["estado","Cambio de estado / ubicación"],["venta","Venta (sale de existencia)"]];
-let TL={tipo:"salida",codes:[]};
+let TL={tipo:"salida",codes:[],nuevo:{}};
 const tlClean=c=>String(c==null?"":c).trim().toUpperCase().replace(/^[.\-\s]+/,"").replace(/\s+/g,"");
 const tlEq=tipo=>tipo==="salida"||tipo==="traspaso";
 function tlLast(t){let f=String(t.estadoDesde||"");for(const m of trMovsOf(t))if(String(m.fecha)>f)f=String(m.fecha);return f}
 function tlIso(d,h){if(!h&&d===todayStr())return new Date().toISOString();const [y,mo,da]=d.split("-").map(Number);const [hh,mm]=(h||"12:00").split(":").map(Number);return new Date(y,mo-1,da,hh||0,mm||0).toISOString()}
 /* aplica movimientos: [{fecha, tipo, t, desde, hacia, k, autoriza, remito, obs}] (en orden por fecha) */
 async function tlApply(items,ref,tick){
-  const now=new Date().toISOString(),last=new Map();let nH=0,nU=0;
+  const now=new Date().toISOString(),last=new Map();let nH=0,nU=0,nN=0;
   items.sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha)));
+  /* códigos que no existen: se crean con el estado y el destino del primer movimiento */
+  const made=new Map();
+  for(const it of items){if(it.t)continue;let id=made.get(it.code);
+    if(!id){const t0=trByCode(it.code);if(t0)id=t0.id;else{const P=trKParts(it.k||"optimo"),body={codigo:it.code,tipo:(it.nd&&it.nd.tipo)||"",diametro:(it.nd&&it.nd.diametro)||"",marca:"",modelo:"",serie:"",estado:P.estado,malo:"",ubicTipo:it.tipo==="venta"||it.k==="vendido"?"fuera":tlEq(it.tipo)?"equipo":"deposito",ubicacion:it.hacia,obs:"Alta por movimiento omitido: el código no estaba registrado",creado:it.fecha,actualizado:now,estadoDesde:"",by:myId||"",altaPorOmitido:ref||""};
+        const r=await withRetry(()=>db.collection("trepanos").add(body));id=r.id;S.trep.set(id,Object.assign({id},body));nN++}
+      made.set(it.code,id)}
+    it.t=S.trep.get(id)}
   for(const it of items){const t=S.trep.get(it.t.id)||it.t;
     const prev=last.has(t.id)?last.get(t.id):tlLast(t);
     const k=it.k||trK(t),P=trKParts(k),eq=tlEq(it.tipo);
@@ -2649,7 +2656,7 @@ async function tlApply(items,ref,tick){
       await withRetry(()=>db.doc("trepanos/"+t.id).update(patch));S.trep.set(t.id,Object.assign({},t,patch));nU++}
     last.set(t.id,String(it.fecha)>String(prev)?String(it.fecha):prev);
     if(tick)tick()}
-  return{nH,nU};
+  return{nH,nU,nN};
 }
 function renderTrLate(opt){
   const f=$("#f-tr-late");opt=opt||{};if(opt.reset)TL.codes=[];
@@ -2665,16 +2672,20 @@ function renderTrLate(opt){
    <div class="field"><label class="lb" for="tl-dest">Destino <em>*</em></label>${TL.tipo==="venta"?`<input type="text" id="tl-dest" value="${esc(TR_VENTA)}">`:eq?`<input type="text" id="tl-dest" list="dl-eqtr" placeholder="Equipo, ej.: TEC51">`:`<select id="tl-dest">${taUbs().map(x=>`<option>${esc(x)}</option>`).join("")}</select>`}</div>
    ${TL.tipo==="venta"?`<div class="field"><label class="lb">Estado</label><div>${trPillK("vendido")}</div><span class="hint">Sale de existencia: deja de contarse en el stock pero queda en el sistema con su historial.</span></div>`:`<div class="field"><label class="lb" for="tl-k">Estado</label><select id="tl-k"><option value="">${TL.tipo==="estado"?"Elegí…":"Sin cambio (el que tenga)"}</option>${TR_KS.filter(x=>x!=="nuevo").map(x=>`<option value="${x}">${trKN(x)}</option>`).join("")}</select></div>`}
    ${trOpt("tl")}
+   <div class="field full" id="tl-new"></div>
    <div class="field full" id="tl-prev"></div>
    <div class="form-actions"><button type="submit" class="btn primary" id="tl-go">Agregar al historial</button></div>`;
   trRestore(f,keep);
   trSegOn("tl-tipo",v=>{TL.tipo=v;TL.tipoCambio=true;renderTrLate()});
   const tk=$("#tl-k");if(tk)tk.onchange=()=>{if(tk.value==="vendido"){TL.tipo="venta";TL.tipoCambio=true;renderTrLate()}};
   const draw=()=>{const d=$("#tl-d").value;
-    $("#tl-chips").innerHTML=TL.codes.map(c=>{const t=trByCode(c);return `<span class="chip"${t?"":' style="background:var(--bad-soft,#fde8e6);color:var(--bad)"'}><span>${esc(c)}${t?` <span class="meta">· ${esc(trDesc(t))}</span>`:" · no existe"}</span><button type="button" data-tlrm="${esc(c)}" aria-label="Quitar ${esc(c)}">✕</button></span>`}).join("");
+    $("#tl-chips").innerHTML=TL.codes.map(c=>{const t=trByCode(c);return `<span class="chip"${t?"":' style="background:var(--warn-soft);color:var(--warn)"'}><span>${esc(c)}${t?` <span class="meta">· ${esc(trDesc(t))}</span>`:" · nuevo: se registra"}</span><button type="button" data-tlrm="${esc(c)}" aria-label="Quitar ${esc(c)}">✕</button></span>`}).join("");
+    const N=TL.codes.filter(c=>!trByCode(c));N.forEach(c=>{if(!TL.nuevo[c]){const g=taGuess(c);TL.nuevo[c]={tipo:g.tipo,diametro:g.diametro}}});
+    const kk=TL.tipo==="venta"?"vendido":(($("#tl-k")||{}).value||"optimo");
+    $("#tl-new").innerHTML=N.length?`<div class="card" style="padding:10px 14px;background:var(--warn-soft)"><div class="lb" style="margin-bottom:6px">Códigos que no están en el sistema: se registran con este movimiento</div><div class="meta" style="margin-bottom:6px">Quedan dados de alta con estado <b>${esc(trKN(kk))}</b> y la ubicación del destino. Revisá el tipo y el diámetro (se proponen según el código).</div>${N.map(c=>`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px"><b class="mono" style="min-width:80px">${esc(c)}</b><input type="text" list="dl-trtipo" data-tlnt="${esc(c)}" value="${esc(TL.nuevo[c].tipo)}" placeholder="Tipo" style="flex:1 1 140px"><input type="text" list="dl-diam" data-tlnd="${esc(c)}" value="${esc(TL.nuevo[c].diametro)}" placeholder='Diám.' style="width:90px"></div>`).join("")}</div>`:"";
     const T=TL.codes.map(trByCode).filter(Boolean),iso=d?tlIso(d,$("#tl-h").value):"";
     $("#tl-prev").innerHTML=T.length&&iso?`<div class="card" style="padding:10px 14px;background:var(--surface-2)"><div class="lb" style="margin-bottom:4px">Qué va a pasar</div>${T.map(t=>{const l=tlLast(t),nw=iso>l;return `<div class="meta"><b class="mono">${esc(t.codigo)}</b> · última actualización ${l?esc(fmtD(l)):"—"} → ${nw?(TL.tipo==="venta"?"<b>es el más reciente: pasa a Vendido y sale del stock</b>":"<b>es el más reciente: actualiza el listado</b>"):"queda solo en el historial (el trépano tiene datos más recientes)"}</div>`}).join("")}</div>`:"";
-    $("#tl-go").textContent=T.length>1?`Agregar al historial de ${T.length} trépanos`:"Agregar al historial"};
+    const nT=TL.codes.length;$("#tl-go").textContent=nT>1?`Agregar al historial de ${nT} trépanos`:"Agregar al historial"};
   const addRaw=v=>{String(v||"").split(/[\s,;\/]+/).map(tlClean).filter(Boolean).forEach(c=>{if(!TL.codes.includes(c))TL.codes.push(c)});$("#tl-in").value="";draw()};
   $("#tl-in").addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===","||e.key===";"){e.preventDefault();addRaw($("#tl-in").value)}});
   $("#tl-in").addEventListener("change",()=>{if(trByCode($("#tl-in").value))addRaw($("#tl-in").value)});
@@ -2682,6 +2693,8 @@ function renderTrLate(opt){
   $("#tl-add").onclick=()=>addRaw($("#tl-in").value);
   $("#tl-chips").onclick=e=>{const b=e.target.closest("[data-tlrm]");if(b){TL.codes=TL.codes.filter(c=>c!==b.dataset.tlrm);draw()}};
   ["#tl-d","#tl-h"].forEach(s=>$(s).addEventListener("input",draw));
+  $("#tl-new").addEventListener("input",e=>{const a=e.target.dataset.tlnt,b=e.target.dataset.tlnd;if(a)TL.nuevo[a].tipo=e.target.value;if(b)TL.nuevo[b].diametro=e.target.value});
+  if($("#tl-k"))$("#tl-k").addEventListener("change",draw);
   draw();
   const L=S.trmov.filter(m=>m.cargaTardia).sort((a,b)=>String(b.cargado||"").localeCompare(String(a.cargado||""))||String(b.fecha).localeCompare(String(a.fecha))).slice(0,30),tb=$("#t-tr-late tbody");
   tb.innerHTML=L.length?L.map(m=>trMovRow(m,{edit:true})).join(""):`<tr><td class="span"><div class="empty" style="padding:20px">Todavía no se cargaron movimientos omitidos.</div></td></tr>`;
@@ -2691,12 +2704,12 @@ $("#f-tr-late").addEventListener("submit",async e=>{e.preventDefault();if(!guard
   const d=$("#tl-d").value;if(!d){toast("Indicá la fecha del movimiento.");$("#tl-d").focus();return}
   const iso=tlIso(d,$("#tl-h").value);if(iso>new Date().toISOString()){toast("La fecha no puede ser futura.");return}
   if(!TL.codes.length){toast("Agregá al menos un código.");$("#tl-in").focus();return}
-  const bad=TL.codes.filter(c=>!trByCode(c));if(bad.length){toast("No existen en el listado: "+bad.join(", ")+". Quitalos o cargalos antes con una Entrada.");return}
+  const nue=TL.codes.filter(c=>!trByCode(c));for(const c of nue){const n=TL.nuevo[c]||{};if(!String(n.tipo||"").trim()||!String(n.diametro||"").trim()){toast(`Indicá tipo y diámetro del código nuevo ${c}.`);return}}
   const eq=tlEq(TL.tipo),hacia=eq?normEq($("#tl-dest").value):$("#tl-dest").value;if(!hacia){toast("Indicá el destino.");$("#tl-dest").focus();return}
   const k=TL.tipo==="venta"?"vendido":$("#tl-k").value;if(TL.tipo==="estado"&&!k){toast("Elegí el estado.");$("#tl-k").focus();return}
   const base={autoriza:$("#tl-aut").value.trim(),remito:$("#tl-doc").value.trim(),obs:$("#tl-obs").value.trim()},desde=$("#tl-o").value.trim(),b=$("#tl-go");b.disabled=true;
-  try{const r=await tlApply(TL.codes.map(c=>({fecha:iso,tipo:TL.tipo,t:trByCode(c),desde:eq&&TL.tipo==="traspaso"?normEq(desde):desde,hacia,k,autoriza:base.autoriza,remito:base.remito,obs:base.obs})),"Carga manual");
-    toast(`${r.nH} movimiento${r.nH===1?"":"s"} agregado${r.nH===1?"":"s"} al historial${r.nU?` · ${r.nU} actualizado${r.nU===1?"":"s"} en el listado`:""}`);renderTrLate({reset:true})}
+  try{const r=await tlApply(TL.codes.map(c=>({fecha:iso,tipo:TL.tipo,code:c,t:trByCode(c),nd:TL.nuevo[c]?{tipo:TL.nuevo[c].tipo.trim(),diametro:trDiamFmt(TL.nuevo[c].diametro)}:null,desde:eq&&TL.tipo==="traspaso"?normEq(desde):desde,hacia,k,autoriza:base.autoriza,remito:base.remito,obs:base.obs})),"Carga manual");
+    toast(`${r.nH} movimiento${r.nH===1?"":"s"} agregado${r.nH===1?"":"s"} al historial${r.nN?` · ${r.nN} código${r.nN===1?"":"s"} nuevo${r.nN===1?"":"s"} registrado${r.nN===1?"":"s"}`:""}${r.nU?` · ${r.nU} actualizado${r.nU===1?"":"s"} en el listado`:""}`);TL.nuevo={};renderTrLate({reset:true})}
   catch(err){b.disabled=false;writeError(err)}});
 /* importar movimientos omitidos desde Excel */
 function tlMov(v){const t=norm(v);if(!t)return null;if(/vend|venta|gitano/.test(t))return"venta";if(/estado|cambio de ubic|reubic/.test(t))return"estado";return tiMov(v)}
@@ -2705,17 +2718,17 @@ function openTlImport(){
   if(!guardWrite("deposito"))return;
   modal(`<div class="modal-h"><div><h3>Importar movimientos omitidos</h3><div class="meta">Cada fila es un movimiento: fecha, tipo (salida, entrada, traspaso o cambio de estado), uno o varios códigos, origen, destino y estado.</div></div><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
    <div style="padding:18px;display:grid;gap:14px" id="tl-body">
-     <label class="drop" for="tl-file"><b>Elegí el Excel con los movimientos</b><span class="meta">Columnas: Fecha · Movimiento · Código(s) · Origen · Destino · Estado · Autorizó · Remito · Observaciones. En "Código(s)" podés poner varios separados por coma. Para una venta poné "Venta" en Movimiento o "Vendido" en Estado (destino por defecto: Gitanos/otros).</span><input type="file" id="tl-file" accept=".xlsx,.xls,.csv,.ods" hidden></label>
+     <label class="drop" for="tl-file"><b>Elegí el Excel con los movimientos</b><span class="meta">Columnas: Fecha · Movimiento · Código(s) · Origen · Destino · Estado · Autorizó · Remito · Observaciones. En "Código(s)" podés poner varios separados por coma. Si un código no está registrado, se da de alta con el estado de ese movimiento (Tipo y Diámetro opcionales: si faltan se toman del código). Para una venta poné "Venta" en Movimiento o "Vendido" en Estado (destino por defecto: Gitanos/otros).</span><input type="file" id="tl-file" accept=".xlsx,.xls,.csv,.ods" hidden></label>
      <button class="btn sm" id="tl-tpl" style="justify-self:start">Descargar plantilla</button>
    </div>`,"wide");
-  $("#tl-tpl").onclick=()=>loadXlsx().then(()=>{const ws=XLSX.utils.aoa_to_sheet([["Fecha","Movimiento","Código(s)","Origen","Destino","Estado","Autorizó","Remito","Observaciones"],[new Date(2026,8,15),"Salida","12I88, 12I218","Depósito Central","TEC51","","","",""],[new Date(2026,8,30),"Entrada","12I88","TEC51","Depósito Central","Araña","","","Rodillo trabado"]]);ws["!cols"]=[{wch:11},{wch:14},{wch:22},{wch:18},{wch:18},{wch:12},{wch:16},{wch:10},{wch:30}];const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Movimientos");save("plantilla-movimientos-trepanos.xlsx",new Blob([XLSX.write(wb,{bookType:"xlsx",type:"array"})]),{direct:true})}).catch(()=>toast("No se pudo cargar el generador de Excel."));
+  $("#tl-tpl").onclick=()=>loadXlsx().then(()=>{const ws=XLSX.utils.aoa_to_sheet([["Fecha","Movimiento","Código(s)","Origen","Destino","Estado","Autorizó","Remito","Observaciones","Tipo","Diámetro"],[new Date(2026,8,15),"Salida","12I88, 12I218","Depósito Central","TEC51","","","","","",""],[new Date(2026,8,30),"Entrada","12I88","TEC51","Depósito Central","Araña","","","Rodillo trabado","",""],[new Date(2026,9,2),"Venta","12D999","Depósito Central","Gitanos/otros","Vendido","","","Código que no estaba registrado","Dientes",'12"']]);ws["!cols"]=[{wch:11},{wch:14},{wch:22},{wch:18},{wch:18},{wch:12},{wch:16},{wch:10},{wch:30},{wch:14},{wch:9}];const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Movimientos");save("plantilla-movimientos-trepanos.xlsx",new Blob([XLSX.write(wb,{bookType:"xlsx",type:"array"})]),{direct:true})}).catch(()=>toast("No se pudo cargar el generador de Excel."));
   $("#tl-file").onchange=()=>{const f=$("#tl-file").files[0];if(f)tlRead(f)};
 }
 async function tlRead(file){
   const box=$("#tl-body");box.innerHTML=`<div class="empty">Leyendo ${esc(file.name)}…</div>`;
   try{await loadXlsx()}catch(e){box.innerHTML='<div class="banner bad">No se pudo cargar el lector de Excel.</div>';return}
   let rows;try{const wb=XLSX.read(await file.arrayBuffer(),{type:"array",cellDates:true});rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:"",raw:true})}catch(e){box.innerHTML=`<div class="banner bad">No se pudo leer ${esc(file.name)}.</div>`;return}
-  const F={fecha:/^(fecha|dia)/,mov:/^(mov|tipo de mov|entrada.?salida|operacion|e.?s$)/,codigo:/^(cod|trepano|nro|numero)/,origen:/^(origen|desde)/,destino:/^(destino|hacia|equipo)/,estado:/^(estado|condicion)/,autoriza:/^(autoriz|responsable)/,remito:/^(remito|parte|comprobante)/,obs:/^(obs|nota|coment|motivo)/};
+  const F={fecha:/^(fecha|dia)/,mov:/^(mov|tipo de mov|entrada.?salida|operacion|e.?s$)/,codigo:/^(cod|trepano|nro|numero)/,origen:/^(origen|desde)/,destino:/^(destino|hacia|equipo)/,estado:/^(estado|condicion)/,autoriza:/^(autoriz|responsable)/,remito:/^(remito|parte|comprobante)/,obs:/^(obs|nota|coment|motivo)/,ttipo:/^(tipo$|tipo de trep|clase)/,diam:/^(diam|medida|pulg)/};
   let hi=-1,map={};for(let i=0;i<Math.min(rows.length,15);i++){const m={};rows[i].forEach((c,j)=>{const n=norm(c);for(const k in F)if(m[k]==null&&F[k].test(n))m[k]=j});if(m.fecha!=null&&m.codigo!=null){hi=i;map=m;break}}
   if(hi<0){box.innerHTML='<div class="banner bad">No encontré las columnas Fecha y Código. Usá la plantilla.</div>';return}
   const g=(r,k)=>map[k]==null?"":r[map[k]];const items=[],errs=[];let prevMov=null;
@@ -2723,23 +2736,25 @@ async function tlRead(file){
     const d=hiParseDate(g(r,"fecha"));const k=tlKOf(g(r,"estado"));let tipo=map.mov!=null?tlMov(g(r,"mov")):prevMov;if(k==="vendido")tipo="venta";
     const codes=String(g(r,"codigo")).split(/[\s,;\/]+/).map(tlClean).filter(Boolean);
     const e=[];if(!d)e.push("fecha no reconocida");else if(d>new Date())e.push("fecha futura");if(!tipo)e.push("movimiento no reconocido");if(!codes.length)e.push("sin código");
-    const miss=codes.filter(c=>!trByCode(c));if(miss.length)e.push("no existen: "+miss.join(", "));
+    const tt=String(g(r,"ttipo")||"").trim(),dd=trDiamFmt(g(r,"diam"));const nd={};
+    codes.filter(c=>!trByCode(c)).forEach(c=>{const q=taGuess(c);nd[c]={tipo:tt||q.tipo,diametro:dd||q.diametro};if(!nd[c].tipo||!nd[c].diametro)e.push(`código nuevo ${c} sin tipo o diámetro`)});
     const dr=String(g(r,"destino")).trim();let hacia="";if(tipo){if(tipo==="venta")hacia=dr||TR_VENTA;else if(tlEq(tipo))hacia=normEq(dr);else hacia=taUbs().find(x=>norm(x)===norm(dr))||dr}
     if(!hacia)e.push("sin destino");if(tipo==="estado"&&!k)e.push("cambio de estado sin estado");
     if(e.length){errs.push(`Fila ${line}: ${e.join(" · ")}`);return}
     const fd=new Date(d);if(fd.getHours()===0&&fd.getMinutes()===0)fd.setHours(12,0,0,0);
     const o=String(g(r,"origen")).trim();
-    codes.forEach(c=>items.push({line,fecha:fd.toISOString(),tipo,t:trByCode(c),desde:tipo==="traspaso"||tipo==="entrada"?(o?normEq(o):""):o,hacia,k:tipo==="venta"?"vendido":k,autoriza:String(g(r,"autoriza")||"").trim(),remito:String(g(r,"remito")||"").trim(),obs:String(g(r,"obs")||"").trim()}))});
+    codes.forEach(c=>items.push({line,fecha:fd.toISOString(),tipo,code:c,t:trByCode(c),nd:nd[c]||null,desde:tipo==="traspaso"||tipo==="entrada"?(o?normEq(o):""):o,hacia,k:tipo==="venta"?"vendido":k,autoriza:String(g(r,"autoriza")||"").trim(),remito:String(g(r,"remito")||"").trim(),obs:String(g(r,"obs")||"").trim()}))});
   const key=m=>m.trepanoId+"|"+String(m.fecha).slice(0,10)+"|"+m.tipo+"|"+norm(m.hacia||"");const ex=new Set(S.trmov.map(key));
-  const dup=items.filter(it=>ex.has(key({trepanoId:it.t.id,fecha:it.fecha,tipo:it.tipo,hacia:it.hacia}))),ok=items.filter(it=>!dup.includes(it));
-  const latest=new Map();ok.forEach(it=>{const l=latest.get(it.t.id);if(!l||it.fecha>l)latest.set(it.t.id,it.fecha)});const nUpd=Array.from(latest.entries()).filter(([id,f])=>f>tlLast(S.trep.get(id))).length;
-  box.innerHTML=`<div class="imp-sum"><span class="pill ok">${ok.length} movimiento${ok.length===1?"":"s"} para agregar</span><span class="pill" style="background:var(--surface)">${latest.size} trépano${latest.size===1?"":"s"}</span><span class="pill" style="background:var(--surface)">${nUpd} actualizan el listado</span>${dup.length?`<span class="pill warn">${dup.length} ya estaban cargados (se omiten)</span>`:""}${errs.length?`<span class="pill bad">${errs.length} filas con errores (no se cargan)</span>`:""}</div>
+  const dup=items.filter(it=>it.t&&ex.has(key({trepanoId:it.t.id,fecha:it.fecha,tipo:it.tipo,hacia:it.hacia}))),ok=items.filter(it=>!dup.includes(it));
+  const latest=new Map();ok.forEach(it=>{const kx=it.t?it.t.id:"new:"+it.code,l=latest.get(kx);if(!l||it.fecha>l)latest.set(kx,it.fecha)});const nUpd=Array.from(latest.entries()).filter(([id,f])=>id.startsWith("new:")||f>tlLast(S.trep.get(id))).length;
+  const nNew=new Set(ok.filter(it=>!it.t).map(it=>it.code)).size;
+  box.innerHTML=`<div class="imp-sum"><span class="pill ok">${ok.length} movimiento${ok.length===1?"":"s"} para agregar</span><span class="pill" style="background:var(--surface)">${latest.size} trépano${latest.size===1?"":"s"}</span><span class="pill" style="background:var(--surface)">${nUpd} actualizan el listado</span>${nNew?`<span class="pill warn">${nNew} código${nNew===1?"":"s"} nuevo${nNew===1?"":"s"}: se registra${nNew===1?"":"n"}</span>`:""}${dup.length?`<span class="pill warn">${dup.length} ya estaban cargados (se omiten)</span>`:""}${errs.length?`<span class="pill bad">${errs.length} filas con errores (no se cargan)</span>`:""}</div>
    ${errs.length?`<div class="banner bad">${errs.map(esc).join("<br>")}</div>`:""}
-   <div class="card table-wrap" style="max-height:320px;overflow:auto"><table class="prev"><thead><tr><th>Fila</th><th>Fecha</th><th>Movimiento</th><th>Código</th><th>Origen</th><th>Destino</th><th>Estado</th></tr></thead><tbody>${ok.map(it=>`<tr><td class="meta num">${it.line}</td><td class="mono meta">${esc(fmtD(it.fecha).split(" ")[0])}</td><td>${esc(TR_MOV[it.tipo])}</td><td class="mono">${esc(it.t.codigo)}</td><td class="meta">${esc(it.desde||"—")}</td><td>${esc(it.hacia)}</td><td>${it.k?trPillK(it.k):'<span class="meta">sin cambio</span>'}</td></tr>`).join("")}</tbody></table></div>
+   <div class="card table-wrap" style="max-height:320px;overflow:auto"><table class="prev"><thead><tr><th>Fila</th><th>Fecha</th><th>Movimiento</th><th>Código</th><th>Origen</th><th>Destino</th><th>Estado</th></tr></thead><tbody>${ok.map(it=>`<tr><td class="meta num">${it.line}</td><td class="mono meta">${esc(fmtD(it.fecha).split(" ")[0])}</td><td>${esc(TR_MOV[it.tipo])}</td><td class="mono">${esc(it.code)}${it.t?"":` <span class="pill warn">nuevo</span> <span class="meta">${esc([it.nd.tipo,it.nd.diametro].join(" "))}</span>`}</td><td class="meta">${esc(it.desde||"—")}</td><td>${esc(it.hacia)}</td><td>${it.k?trPillK(it.k):'<span class="meta">sin cambio</span>'}</td></tr>`).join("")}</tbody></table></div>
    <div class="form-actions" style="display:flex"><button class="btn" data-close>Cancelar</button><button class="btn primary" id="tl-imp-go"${ok.length?"":" disabled"}>Agregar ${ok.length} movimiento${ok.length===1?"":"s"}</button></div>`;
   const go=$("#tl-imp-go");if(go)go.onclick=async()=>{if(!guardWrite("deposito"))return;let n=0;box.innerHTML=`<div style="display:grid;gap:10px;padding:20px 0"><div class="name" id="tl-st">Cargando…</div><div class="bar"><i id="tl-bar"></i></div></div>`;
     try{const r=await tlApply(ok,("Importación "+file.name).slice(0,120),()=>{n++;const s=$("#tl-st"),b=$("#tl-bar");if(s)s.textContent=`Cargando ${n} de ${ok.length}…`;if(b)b.style.width=(100*n/ok.length)+"%"});
-      box.innerHTML=`<div class="empty"><b>Movimientos agregados</b>${r.nH} movimientos en el historial · ${r.nU} actualizaciones del listado de stock.</div><div class="form-actions" style="display:flex"><button class="btn primary" data-close>Listo</button></div>`;renderTrAll()}
+      box.innerHTML=`<div class="empty"><b>Movimientos agregados</b>${r.nH} movimientos en el historial${r.nN?` · ${r.nN} códigos nuevos registrados`:""} · ${r.nU} actualizaciones del listado de stock.</div><div class="form-actions" style="display:flex"><button class="btn primary" data-close>Listo</button></div>`;renderTrAll()}
     catch(e){console.error(e);box.innerHTML=`<div class="banner bad">La carga se cortó (${n} de ${ok.length}). Podés volver a importar el mismo archivo: los ya cargados se omiten.</div><div class="form-actions" style="display:flex"><button class="btn" data-close>Cerrar</button></div>`}};
 }
 document.addEventListener("click",e=>{if(e.target.closest("[data-tlimp]"))openTlImport()});
