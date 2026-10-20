@@ -759,7 +759,7 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
     </div>
     <div class="toolbar">
       <input class="grow" type="search" id="pd-q" placeholder="Buscar por número, elemento o solicitante">
-      <select id="pd-est" style="width:auto"><option value="">Todos los estados</option><option value="pendiente">Pendientes de envío</option><option value="enviado">Enviadas a Compras</option><option value="recibido">Recibidas</option><option value="anulado">Anuladas</option></select>
+      <select id="pd-est" style="width:auto"><option value="">Todos los estados</option><option value="pendiente">Pendientes de envío</option><option value="enviado">Enviados</option><option value="recibido">Recibidas</option><option value="anulado">Anuladas</option></select>
     </div>
     <div class="card"><div class="table-wrap"><table class="cards" id="t-ped">
       <thead><tr><th>Número</th><th>Fecha</th><th>Elementos</th><th>Solicita</th><th>Estado</th><th>Enviada</th></tr></thead>
@@ -4221,7 +4221,7 @@ $("#usr-hits").addEventListener("click",async e=>{const b=e.target.closest("[dat
 
 let ROLE_READY=false;
 /* ---------- notas de pedido ---------- */
-const PED_EST={pendiente:["warn","Pendiente de envío"],enviado:["ok","Enviada a Compras"],recibido:["","Recibida"],anulado:["bad","Anulada"]};
+const PED_EST={pendiente:["warn","Pendiente de envío"],enviado:["ok","Enviado"],recibido:["","Recibida"],anulado:["bad","Anulada"]};
 function pedList(){return Array.from(S.peds.values()).sort((a,b)=>(b.numero||0)-(a.numero||0))}
 const pedNum=n=>"NP-"+String(n||0).padStart(4,"0");
 function sugQty(p){const st=stockOf(p.sku),min=+p.minimo||0;if(!min)return st<=0?1:0;return Math.max(1,Math.ceil(min*2-st))}
@@ -4825,12 +4825,12 @@ function openPed(id){
      ${p.estado==="anulado"?"":`<div class="card" style="padding:14px;display:grid;gap:10px;background:var(--surface-2)">
        <div class="lb">Enviar por correo</div>
        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="pd-send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16v12H4z"/><path d="M4 7l8 6 8-6"/></svg>Enviar por correo</button><button class="btn" id="pd-pdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Descargar PDF</button></div>
-       <span class="hint">${mailer?"Elegís los destinatarios en la agenda (o cargás uno nuevo) y el correo sale desde la cuenta de la empresa con el PDF adjunto. Al enviarla, la nota queda marcada como enviada.":"Elegís los destinatarios en la agenda (o cargás uno nuevo) y se abre tu programa de correo con el asunto y el texto: adjuntá el PDF descargado y marcá la nota como enviada."}</span>
+       <span class="hint">${mailer?"Elegís los destinatarios en la agenda (o cargás uno nuevo) y el correo sale desde la cuenta de la empresa con el PDF adjunto. Al enviarla, la nota queda en estado Enviado.":"Elegís los destinatarios en la agenda (o cargás uno nuevo) y se abre tu programa de correo con el asunto y el texto: adjuntá el PDF descargado y marcá la nota como enviado."}</span>
      </div>`}
      ${p.enviado?`<div class="meta">Enviada el ${esc(fmtD(p.enviado))}${p.enviadoA?" a "+esc(p.enviadoA):""}.${p.recibido?" Recibida el "+esc(fmtD(p.recibido))+".":""}</div>`:""}
      <div id="pd-pdfs">${(p.pdfs||[]).length?`<div class="lb" style="margin-bottom:6px">PDF guardados en la base</div><div class="card table-wrap"><table class="prev"><tbody>${(p.pdfs||[]).slice().reverse().map((v,i)=>`<tr><td><a href="${esc("/_blob/"+v.id)}" target="_blank" rel="noopener" class="btn sm${i===0?" primary":""}">${i===0?"Ver PDF guardado":"Ver versión anterior"}</a></td><td class="wrap"><b>${esc(v.nombre)}</b><div class="meta">Guardado el ${esc(fmtD(v.fecha))}${i===0&&(p.pdfs||[]).length>1?" · versión actual":""}</div>${(v.envios||[]).map(e=>`<div class="meta">✉ Enviado el ${esc(fmtD(e.fecha))} a ${esc(e.para)}</div>`).join("")}</td></tr>`).join("")}</tbody></table></div>`:`<div class="meta">El PDF se guarda en la base al generarlo o descargarlo${mailer?" y al enviarlo":""}.</div>`}</div>
      <div class="form-actions" style="display:flex">
-       ${p.estado==="pendiente"?`<button class="btn danger" id="pd-anul" style="margin-right:auto">Anular</button><button class="btn" id="pd-edit">Editar</button><button class="btn in" id="pd-sent">Marcar como enviada</button>`:""}
+       ${p.estado==="pendiente"?`<button class="btn danger" id="pd-anul" style="margin-right:auto">Anular</button><button class="btn" id="pd-edit">Editar</button><button class="btn in" id="pd-sent">Marcar como enviado</button>`:""}
        ${p.estado==="enviado"?`<button class="btn" id="pd-back" style="margin-right:auto">Volver a pendiente</button><button class="btn in" id="pd-recv">Marcar como recibida</button>`:""}
        ${p.estado==="recibido"||p.estado==="anulado"?`<button class="btn" id="pd-back" style="margin-right:auto">Volver a pendiente</button>`:""}
        <button class="btn" data-close>Cerrar</button>
@@ -4847,7 +4847,7 @@ function openPed(id){
   const bsd=$("#pd-send");if(bsd)bsd.onclick=async()=>{const blob=await pedPdf(p,{blob:true});if(!blob)return;
     pedStorePdf(p,blob);
     openMailSend({title:"Enviar nota de pedido "+pedNum(p.numero),sub:mailer?"Nota de pedido con el PDF adjunto":"Se abre tu programa de correo",to:[],subject:pedSubject(p),body:pedText(p),files:[{name:`Nota de pedido ${pedNum(p.numero)}.pdf`,data:blob}],guardar:"np",
-      onSent:async r=>{const all=(r.to||[]).concat(r.cc||[]).join(", "),now=new Date().toISOString();await pedStorePdf(p,blob,all);const cur=S.peds.get(p.id)||p,ex={enviado:now,enviadoA:all,enviadoPor:myId||"",actualizado:now};if(cur.estado==="pendiente")ex.estado="enviado";
+      onSent:async r=>{const all=(r.to||[]).concat(r.cc||[]).join(", "),now=new Date().toISOString();await pedStorePdf(p,blob,all);const cur=S.peds.get(p.id)||p,ex={enviado:now,enviadoA:all,enviadoPor:myId||"",actualizado:now};if(cur.estado!=="anulado")ex.estado="enviado";
         try{await db.doc("pedidos/"+p.id).update(ex);S.peds.set(p.id,Object.assign({},cur,ex))}catch(e){writeError(e)}openPed(p.id)}})};
   const setEst=async(est,extra)=>{if(!guardWrite("deposito"))return;try{await db.doc("pedidos/"+p.id).update(Object.assign({estado:est,actualizado:new Date().toISOString()},extra||{}));S.peds.set(p.id,Object.assign({},p,{estado:est},extra||{}));toast("Nota "+pedNum(p.numero)+": "+PED_EST[est][1].toLowerCase());openPed(p.id)}catch(e){writeError(e)}};
   const b=(i,f)=>{const el=$(i);if(el)el.onclick=f};
