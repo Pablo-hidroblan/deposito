@@ -802,7 +802,7 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
     <div class="kpis" id="tr-kpis" style="grid-template-columns:repeat(auto-fill,minmax(130px,1fr))"></div>
     <div class="toolbar">
       <input class="grow" type="search" id="tr-q" placeholder="Buscar por código, tipo, diámetro o ubicación">
-      <select id="tr-est" style="width:auto"><option value="">En existencia (sin descarte ni vendidos)</option><option value="nuevo">Nuevo</option><option value="optimo">Operativo</option><option value="taller">Araña</option><option value="descarte">Descarte</option><option value="vendido">Vendidos</option><option value="todos">Todos (incluye descarte y vendidos)</option></select>
+      <select id="tr-est" style="width:auto"><option value="">En existencia (sin descarte ni vendidos)</option><option value="nuevo">Nuevo</option><option value="optimo">Operativo</option><option value="reparacion">Reparación</option><option value="taller">Araña</option><option value="descarte">Descarte</option><option value="vendido">Vendidos</option><option value="todos">Todos (incluye descarte y vendidos)</option></select>
       <select id="tr-ub" style="width:auto"><option value="">Todas las ubicaciones</option></select>
     </div>
     <div class="card"><div class="table-wrap"><table class="cards" id="t-tr">
@@ -810,7 +810,7 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
       <tbody></tbody>
     </table></div></div>
     <div class="lb" style="margin:22px 0 8px">Resumen por tipo y diámetro</div>
-    <div class="card"><div class="table-wrap"><table id="t-tr-res"><thead><tr><th>Tipo</th><th>Diámetro</th><th class="r">Nuevos</th><th class="r">Operativos</th><th class="r">Araña</th><th class="r">Descarte</th><th class="r">Vendidos</th><th class="r">En base</th><th class="r">En equipos</th></tr></thead><tbody></tbody></table></div></div>
+    <div class="card"><div class="table-wrap"><table id="t-tr-res"><thead><tr><th>Tipo</th><th>Diámetro</th><th class="r">Nuevos</th><th class="r">Operativos</th><th class="r">Reparación</th><th class="r">Araña</th><th class="r">Descarte</th><th class="r">Vendidos</th><th class="r">En base</th><th class="r">En equipos</th></tr></thead><tbody></tbody></table></div></div>
   </section>
   <section id="v-tr-in" data-view="tr-in" hidden>
     <div class="section-head"><div><h2>Entrada de trépanos</h2><p class="sub">Ingreso al stock: <b>Nuevo</b> (llega en caja, se carga por cantidad y con código a asignar), <b>Operativo</b>, <b>Araña</b> o <b>Descarte</b>, con la ubicación donde queda.</p></div></div>
@@ -833,7 +833,7 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
       <div><h2>Historial de movimientos</h2><p class="sub">Entradas, salidas y traspasos de todos los trépanos en orden cronológico. Tocá ✎ en una fila para agregar o corregir una observación.</p></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn need-dep" data-goto="trepanos/omitidos">+ Movimiento omitido</button><button class="btn need-adm" data-trimp>Importar Excel</button><button class="btn" data-trhxls>Exportar Excel</button></div>
     </div>
-    <div class="toolbar"><input class="grow" type="search" id="trh-q" placeholder="Buscar por código, tipo, origen o destino"><select id="trh-mov" style="width:auto"><option value="">Entradas, salidas, traspasos y cambios</option><option value="entrada">Entradas</option><option value="salida">Salidas</option><option value="traspaso">Traspasos</option><option value="estado">Cambios de estado / ubicación</option><option value="venta">Ventas</option><option value="todos">Todos (incluye ajustes y cambios)</option></select><select id="trh-est" style="width:auto"><option value="">Todos los estados</option><option value="nuevo">Nuevo</option><option value="optimo">Operativo</option><option value="taller">Araña</option><option value="descarte">Descarte</option><option value="vendido">Vendido</option></select><input type="date" id="trh-d1" title="Desde" style="width:auto"><input type="date" id="trh-d2" title="Hasta" style="width:auto"><select id="trh-ord" style="width:auto"><option value="asc">Más antiguos primero</option><option value="desc">Más recientes primero</option></select><button class="btn" id="trh-clear">Limpiar</button></div>
+    <div class="toolbar"><input class="grow" type="search" id="trh-q" placeholder="Buscar por código, tipo, origen o destino"><select id="trh-mov" style="width:auto"><option value="">Entradas, salidas, traspasos y cambios</option><option value="entrada">Entradas</option><option value="salida">Salidas</option><option value="traspaso">Traspasos</option><option value="estado">Cambios de estado / ubicación</option><option value="venta">Ventas</option><option value="todos">Todos (incluye ajustes y cambios)</option></select><select id="trh-est" style="width:auto"><option value="">Todos los estados</option><option value="nuevo">Nuevo</option><option value="optimo">Operativo</option><option value="reparacion">Reparación</option><option value="taller">Araña</option><option value="descarte">Descarte</option><option value="vendido">Vendido</option></select><input type="date" id="trh-d1" title="Desde" style="width:auto"><input type="date" id="trh-d2" title="Hasta" style="width:auto"><select id="trh-ord" style="width:auto"><option value="asc">Más antiguos primero</option><option value="desc">Más recientes primero</option></select><button class="btn" id="trh-clear">Limpiar</button></div>
     <p class="hint" id="trh-count" style="margin:0 0 8px"></p>
     <div class="card"><div class="table-wrap"><table class="cards" id="t-trh">
       <thead><tr><th>Fecha</th><th>Movimiento</th><th>Código</th><th>Tipo · diám.</th><th>Origen</th><th>Destino</th><th>Estado</th><th>Observaciones</th></tr></thead>
@@ -2373,21 +2373,21 @@ function openHistExport(sku){
 let CUR_TR=null;
 /* estados: nuevo · optimo · malo (malo: taller | descarte). Clave combinada k: nuevo | optimo | taller | descarte */
 const TR_EST={nuevo:["info","Nuevo"],optimo:["ok","Operativo"],malo:["bad","Malo"]};
-const TR_K={nuevo:["info","Nuevo","Sin uso, en caja · código a asignar"],optimo:["ok","Operativo","En condiciones de seguir perforando"],taller:["warn","Araña","Con desgaste o rotura en rodillos: para reparación"],descarte:["bad","Descarte","Ya no es operativo"],vendido:["","Vendido","Vendido o entregado a terceros: fuera de existencia (queda solo para el historial)"]};
-const TR_KS=["nuevo","optimo","taller","descarte","vendido"];
+const TR_K={nuevo:["info","Nuevo","Sin uso, en caja · código a asignar"],optimo:["ok","Operativo","En condiciones de seguir perforando"],reparacion:["rep","Reparación","Fuera de operatividad hasta que el taller metalúrgico lo repare"],taller:["warn","Araña","Con desgaste o rotura en rodillos: para reparación"],descarte:["bad","Descarte","Ya no es operativo"],vendido:["","Vendido","Vendido o entregado a terceros: fuera de existencia (queda solo para el historial)"]};
+const TR_KS=["nuevo","optimo","reparacion","taller","descarte","vendido"];
 const TR_VENTA="Gitanos/otros";
 const TR_ALIAS={operativo:"optimo",usado:"optimo",arana:"malo",reparacion:"malo",baja:"malo",descarte:"malo",taller:"malo"};
 const trE=e=>TR_ALIAS[e]||e||"";
 function trKOf(e,malo,ubic){e=String(e||"");
-  if(e==="nuevo"||e==="optimo"||e==="taller"||e==="descarte"||e==="vendido")return e;
-  if(e==="usado"||e==="operativo")return"optimo";if(e==="baja")return"descarte";if(e==="arana"||e==="reparacion")return"taller";
+  if(e==="nuevo"||e==="optimo"||e==="reparacion"||e==="taller"||e==="descarte"||e==="vendido")return e;
+  if(e==="usado"||e==="operativo")return"optimo";if(e==="baja")return"descarte";if(e==="arana")return"taller";
   if(e==="malo")return malo==="descarte"||(!malo&&/^(descarte|no encontrado|faltante)/i.test(ubic||""))?"descarte":"taller";
   return""}
 const trK=t=>trKOf(t.estado,t.malo,t.ubicacion);
 const movK=m=>trKOf(m.estado,m.malo,m.hacia);
-const trKParts=k=>({estado:{nuevo:"nuevo",optimo:"operativo",taller:"arana",descarte:"descarte",vendido:"vendido"}[k]||"operativo",malo:""});
+const trKParts=k=>({estado:{nuevo:"nuevo",optimo:"operativo",reparacion:"reparacion",taller:"arana",descarte:"descarte",vendido:"vendido"}[k]||"operativo",malo:""});
 const trKN=k=>TR_K[k]?TR_K[k][1]:(k||"");
-const trPillK=k=>{const [c,t]=TR_K[k]||["",k||"—"];return `<span class="pill ${c}"${c==="info"?' style="background:var(--accent-soft);color:var(--accent)"':!c?' style="background:var(--surface-2);color:var(--muted)"':""}>${t}</span>`};
+const trPillK=k=>{const [c,t]=TR_K[k]||["",k||"—"];return `<span class="pill ${c}"${c==="info"?' style="background:var(--accent-soft);color:var(--accent)"':c==="rep"?' style="background:#ece6fa;color:#5b3fa8"':!c?' style="background:var(--surface-2);color:var(--muted)"':""}>${t}</span>`};
 const trPill=(e,malo)=>trPillK(trKOf(e,malo));
 const trEstN=(e,malo)=>trKN(trKOf(e,malo));
 const trDesc0=t=>{const k=trK(t);return k==="descarte"||k==="vendido"};
@@ -2481,7 +2481,7 @@ function renderTrIn(opt){
   if(!TR_K[TRI.k])TRI.k="optimo";
   const keep=opt.reset?{}:trKeep(f),k=TRI.k,nu=k==="nuevo";if(TRI.ubReset){delete keep["ti-ub"];TRI.ubReset=false}
   f.innerHTML=`
-   <div class="field full"><label class="lb">Estado con el que entra <em>*</em></label>${trSeg("ti-k",[["nuevo","Nuevo"],["optimo","Operativo"],["taller","Araña"],["descarte","Descarte"]],k)}<span class="hint">${nu?"Trépanos nuevos en caja: se cargan por cantidad y quedan con <b>código a asignar</b> (el código se asigna en la salida).":k==="optimo"?"Trépano usado que vuelve en condiciones de seguir perforando.":k==="taller"?"Trépano con desgaste o rotura en rodillos, para reparación.":"Trépano que ya no es operativo."}</span></div>
+   <div class="field full"><label class="lb">Estado con el que entra <em>*</em></label>${trSeg("ti-k",[["nuevo","Nuevo"],["optimo","Operativo"],["reparacion","Reparación"],["taller","Araña"],["descarte","Descarte"]],k)}<span class="hint">${nu?"Trépanos nuevos en caja: se cargan por cantidad y quedan con <b>código a asignar</b> (el código se asigna en la salida).":k==="optimo"?"Trépano usado que vuelve en condiciones de seguir perforando.":k==="reparacion"?"Trépano que queda fuera de operatividad hasta que el taller metalúrgico lo repare. Cuando esté reparado, cambiá su estado a Operativo.":k==="taller"?"Trépano con desgaste o rotura en rodillos.":"Trépano que ya no es operativo."}</span></div>
    <div class="field"><label class="lb" for="ti-fecha">Fecha y hora</label><input type="datetime-local" id="ti-fecha" value="${nowLocal()}"></div>
    <div class="field"><label class="lb" for="ti-orig">Origen${nu?" / proveedor":""}</label><input type="text" id="ti-orig" list="${nu?"dl-origen":"dl-tror"}" placeholder="${nu?"Proveedor u origen":"Equipo del que vuelve"}"></div>
    ${nu?`<div class="field"><label class="lb" for="ti-n">Cantidad <em>*</em></label><input type="number" id="ti-n" min="1" max="100" value="1"></div>
@@ -2489,7 +2489,7 @@ function renderTrIn(opt){
     :`<div class="field"><label class="lb" for="ti-code">Código <em>*</em></label><input type="text" id="ti-code" list="dl-trep" placeholder="Ej.: 12I308" autocomplete="off"${TRI.sc?' disabled value="Código a asignar"':""}><label class="chk" style="margin-top:6px"><input type="checkbox" id="ti-sc"${TRI.sc?" checked":""}> <span>Sin código (código a asignar)</span></label><span class="hint" id="ti-info"></span></div>`}
    <div class="field"><label class="lb" for="ti-tipo">Tipo <em>*</em></label><input type="text" id="ti-tipo" list="dl-trtipo" placeholder="Dientes, Inserto Largo…"></div>
    <div class="field"><label class="lb" for="ti-diam">Diámetro <em>*</em></label><input type="text" id="ti-diam" list="dl-diam" placeholder='Ej.: 12"'></div>
-   <div class="field"><label class="lb" for="ti-ub">Ubicación <em>*</em></label><select id="ti-ub">${taUbs().map(x=>`<option${x===(k==="descarte"?"Descarte":k==="taller"?"Taller":trBases()[0])?" selected":""}>${esc(x)}</option>`).join("")}</select></div>
+   <div class="field"><label class="lb" for="ti-ub">Ubicación <em>*</em></label><select id="ti-ub">${taUbs().map(x=>`<option${x===(k==="descarte"?"Descarte":k==="reparacion"?"Taller":trBases()[0])?" selected":""}>${esc(x)}</option>`).join("")}</select></div>
    ${trOpt("ti")}
    <div class="form-actions"><button type="submit" class="btn in" id="ti-go">${ICON_IN}Registrar entrada</button></div>`;
   trRestore(f,keep);
@@ -2595,7 +2595,7 @@ function openTr(id){
        ${trInBase(t)&&(k==="optimo"||k==="nuevo")?`<button class="btn out" data-trgo="trepanos/salida">${ICON_OUT}Salida a equipo</button>`:""}
        <button class="btn" data-trgo="trepanos/trepano">Historial del trépano</button>
      </div>
-     <div style="display:flex;gap:6px;flex-wrap:wrap">${trDesc0(t)&&t.codigo&&!t.codigoLiberado?`<button class="btn sm need-dep" id="trf-reas">Reasignar código a otro elemento</button>`:""}${k!=="nuevo"&&!t.codigoLiberado?`<button class="btn sm" id="trf-code">${t.codigo?"Cambiar código":"Asignar código"}</button>`:""}<button class="btn sm need-dep" id="trf-est">Cambiar estado / ubicación</button><button class="btn sm need-adm" id="trf-edit">Editar datos</button>${ms.length<=1?`<button class="btn sm danger need-adm" id="trf-del">Eliminar (cargado por error)</button>`:""}</div>
+     <div style="display:flex;gap:6px;flex-wrap:wrap">${k==="reparacion"?`<button class="btn sm in need-dep" id="trf-rep">Reparado: volver a Operativo</button>`:""}${trDesc0(t)&&t.codigo&&!t.codigoLiberado?`<button class="btn sm need-dep" id="trf-reas">Reasignar código a otro elemento</button>`:""}${k!=="nuevo"&&!t.codigoLiberado?`<button class="btn sm" id="trf-code">${t.codigo?"Cambiar código":"Asignar código"}</button>`:""}<button class="btn sm need-dep" id="trf-est">Cambiar estado / ubicación</button><button class="btn sm need-adm" id="trf-edit">Editar datos</button>${ms.length<=1?`<button class="btn sm danger need-adm" id="trf-del">Eliminar (cargado por error)</button>`:""}</div>
      <div id="trf-panel"></div>
      <div><div class="lb" style="margin-bottom:6px">Últimos movimientos</div>
        ${ms.length?`<div class="card table-wrap"><table class="prev"><tbody>${ms.slice(0,8).map(m=>`<tr><td class="meta mono">${esc(fmtD(m.fecha))}</td><td>${esc(TR_MOV[m.tipo]||m.tipo)}</td><td class="wrap meta">${esc([m.desde,m.hacia].filter(Boolean).join(" → "))}</td><td>${movK(m)?trPillK(movK(m)):""}</td><td class="meta wrap">${esc(m.obs||"")}</td></tr>`).join("")}</tbody></table></div>`:'<div class="meta">Sin movimientos.</div>'}
@@ -2610,6 +2610,7 @@ function openTr(id){
     $("#trp-ok").onclick=async()=>{if(!guardWrite("deposito"))return;const c=$("#trp-code").value.trim().toUpperCase().replace(/\s+/g,"");if(!c){toast("Escribí el código.");return}const o=trByCode(c);if(o&&o.id!==t.id){toast("Ese código ya está asignado a otro trépano.");return}
       try{await trWrite(t,{codigo:c},{tipo:"codigo",autoriza:$("#trp-aut").value.trim(),obs:t.codigo?`Código anterior: ${t.codigo}`:"Asignación de código"});toast("Código guardado: "+c);openTr(t.id)}catch(e){writeError(e)}}};
   const pe=$("#trf-est");if(pe)pe.onclick=()=>openTrEstado(t.id);
+  const prp=$("#trf-rep");if(prp)prp.onclick=()=>openTrEstado(t.id,{k:"optimo",motivo:"Reparado por el taller metalúrgico"});
   const pr=$("#trf-reas");if(pr)pr.onclick=()=>openTrReasignar(t.id);
   $$("[data-tropen]").forEach(b=>b.onclick=()=>openTr(b.dataset.tropen));
   $("#trf-edit").onclick=()=>{panel.innerHTML=`<div class="card form" style="background:var(--surface-2)">
@@ -2713,7 +2714,7 @@ $("#f-tr-late").addEventListener("submit",async e=>{e.preventDefault();if(!guard
   catch(err){b.disabled=false;writeError(err)}});
 /* importar movimientos omitidos desde Excel */
 function tlMov(v){const t=norm(v);if(!t)return null;if(/vend|venta|gitano/.test(t))return"venta";if(/estado|cambio de ubic|reubic/.test(t))return"estado";return tiMov(v)}
-function tlKOf(v){const t=norm(v);if(!t)return"";if(/vend/.test(t))return"vendido";if(/descart|rot|baja|chatarr/.test(t))return"descarte";if(/arana|repar|taller|malo/.test(t))return"taller";if(/operativ|optim|usad|bueno/.test(t))return"optimo";return""}
+function tlKOf(v){const t=norm(v);if(!t)return"";if(/vend/.test(t))return"vendido";if(/descart|rot|baja|chatarr/.test(t))return"descarte";if(/repar|taller/.test(t))return"reparacion";if(/arana|malo/.test(t))return"taller";if(/operativ|optim|usad|bueno/.test(t))return"optimo";return""}
 function openTlImport(){
   if(!guardWrite("deposito"))return;
   modal(`<div class="modal-h"><div><h3>Importar movimientos omitidos</h3><div class="meta">Cada fila es un movimiento: fecha, tipo (salida, entrada, traspaso o cambio de estado), uno o varios códigos, origen, destino y estado.</div></div><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
@@ -2759,7 +2760,7 @@ async function tlRead(file){
 }
 document.addEventListener("click",e=>{if(e.target.closest("[data-tlimp]"))openTlImport()});
 /* cambiar estado o ubicación con motivo */
-function openTrEstado(id){
+function openTrEstado(id,o){o=o||{};
   const t=S.trep.get(id);if(!t)return;if(!guardWrite("deposito"))return;const k=trK(t),eq=t.ubicTipo==="equipo",fu=trFuera(t);
   const ubs=taUbs().slice();if(trInBase(t)&&t.ubicacion&&!ubs.includes(t.ubicacion))ubs.push(t.ubicacion);
   modal(`<div class="modal-h"><div><div class="meta">${esc(trDesc(t))} · ${esc(trKN(k))} · ${esc(trUbic(t))}</div><h3 class="${t.codigo?"mono":""}">Cambiar estado o ubicación · ${esc(trName(t))}</h3></div><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
@@ -2777,7 +2778,8 @@ function openTrEstado(id){
   let ut=eq?"equipo":"base";
   const vis=()=>{const vend=$("#tre-k").value==="vendido";$("#tre-uw").hidden=vend;$("#tre-bw").hidden=vend||ut!=="base";$("#tre-ew").hidden=vend||ut!=="equipo";$("#tre-vw").hidden=!vend};
   trSegOn("tre-ut",v=>{ut=v;$$("#tre-ut button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.k===v));vis()});
-  $("#tre-k").onchange=()=>{const v=$("#tre-k").value;if(ut==="base"){if(v==="descarte")$("#tre-b").value="Descarte";else if(v==="taller"&&taUbs().includes("Taller"))$("#tre-b").value="Taller"}vis()};
+  $("#tre-k").onchange=()=>{const v=$("#tre-k").value;if(ut==="base"){if(v==="descarte")$("#tre-b").value="Descarte";else if(v==="reparacion"&&taUbs().includes("Taller"))$("#tre-b").value="Taller"}vis()};
+  if(o.k&&TR_K[o.k]){$("#tre-k").value=o.k;$("#tre-k").onchange()}if(o.motivo)$("#tre-m").value=o.motivo;
   setTimeout(()=>$("#tre-m").focus(),50);
   $("#f-tre").addEventListener("submit",async e=>{e.preventDefault();if(!guardWrite("deposito"))return;
     const nk=$("#tre-k").value,vend=nk==="vendido",ub=vend?($("#tre-v").value.trim()||TR_VENTA):ut==="base"?$("#tre-b").value:normEq($("#tre-e").value),mot=$("#tre-m").value.trim();
@@ -2801,7 +2803,7 @@ function openTrReasignar(id){
      <div class="field full" id="trr-xw"${C.length?"":" hidden"}><label class="lb" for="trr-x">Trépano sin código</label><select id="trr-x"><option value="">Elegí…</option>${Object.entries(G).map(([key,L])=>`<option value="${esc(L[0].id)}">${esc(trKN(trK(L[0])))} · ${esc(L[0].tipo||"—")} · ${esc(L[0].diametro||"—")} · ${esc(trUbic(L[0]))} (${L.length} disponible${L.length===1?"":"s"})</option>`).join("")}</select><span class="hint">Si es Nuevo, al recibir el código pasa a Operativo.</span></div>
      <div class="field" data-trrn hidden><label class="lb" for="trr-t">Tipo <em>*</em></label><input type="text" id="trr-t" list="dl-trtipo" value="${esc(t.tipo||"")}"></div>
      <div class="field" data-trrn hidden><label class="lb" for="trr-d">Diámetro <em>*</em></label><input type="text" id="trr-d" list="dl-diam" value="${esc(t.diametro||"")}"></div>
-     <div class="field" data-trrn hidden><label class="lb" for="trr-k">Estado</label><select id="trr-k">${["optimo","taller","descarte"].map(x=>`<option value="${x}">${trKN(x)}</option>`).join("")}</select></div>
+     <div class="field" data-trrn hidden><label class="lb" for="trr-k">Estado</label><select id="trr-k">${["optimo","reparacion","taller","descarte"].map(x=>`<option value="${x}">${trKN(x)}</option>`).join("")}</select></div>
      <div class="field" data-trrn hidden><label class="lb" for="trr-u">Ubicación</label><select id="trr-u">${taUbs().map(x=>`<option>${esc(x)}</option>`).join("")}</select></div>
      <div class="field"><label class="lb" for="trr-f">Fecha</label><input type="datetime-local" id="trr-f" value="${nowLocal()}"></div>
      <div class="field"><label class="lb" for="trr-a">Autorizó</label><input type="text" id="trr-a" list="dl-personas" placeholder="Opcional"></div>
@@ -2932,7 +2934,7 @@ function renderTrArq(){
     try{await taPatch(a,{estado:"anulado",cerrado:new Date().toISOString()});TA_CUR=null;toast("Arqueo anulado");renderTrArq()}catch(err){writeError(err)}};
   $("#ta-fin").onclick=()=>taFinalize(taCur(a));
 }
-function taEst(v,code){const t=norm(v);if(!t)return code?"optimo":"nuevo";if(/nuev/.test(t))return"nuevo";if(/descart|rot|baja|chatarr/.test(t))return"descarte";if(/taller|repar|arana|malo/.test(t))return"taller";return"optimo"}
+function taEst(v,code){const t=norm(v);if(!t)return code?"optimo":"nuevo";if(/nuev/.test(t))return"nuevo";if(/descart|rot|baja|chatarr/.test(t))return"descarte";if(/repar|taller/.test(t))return"reparacion";if(/arana|malo/.test(t))return"taller";return"optimo"}
 async function taImport(a,file){
   try{await loadXlsx()}catch(e){toast("No se pudo cargar el lector de Excel.");return}
   let rows;try{const wb=XLSX.read(await file.arrayBuffer(),{type:"array"});const sh=wb.SheetNames.find(n=>/contad/i.test(n))||wb.SheetNames[0];rows=XLSX.utils.sheet_to_json(wb.Sheets[sh],{header:1,defval:"",raw:false})}catch(e){toast("No se pudo leer el archivo.");return}
@@ -2999,7 +3001,7 @@ function trStockFilter(){const q=norm($("#tr-q").value),es=TR_KPI||$("#tr-est").
 function renderTrStock(){
   const T=trList(),act=T.filter(t=>!trDesc0(t)),cnt=k=>T.filter(t=>trK(t)===k).length;
   $("#tr-sub").textContent=T.length?`${act.length} trépanos en existencia (sin descarte ni vendidos) · ${act.filter(trInBase).length} en base · ${act.filter(t=>t.ubicTipo==="equipo").length} en equipos`:"Todavía no hay trépanos cargados.";
-  const K=[["nuevo","Nuevos",cnt("nuevo"),""],["optimo","Operativos",cnt("optimo"),""],["taller","Araña",cnt("taller"),"warn"],["descarte","Descarte",cnt("descarte"),"bad"],["vendido","Vendidos",cnt("vendido"),""],["base","En base",act.filter(trInBase).length,""],["eq","En equipos",act.filter(t=>t.ubicTipo==="equipo").length,""]];
+  const K=[["nuevo","Nuevos",cnt("nuevo"),""],["optimo","Operativos",cnt("optimo"),""],["reparacion","En reparación",cnt("reparacion"),"warn"],["taller","Araña",cnt("taller"),"warn"],["descarte","Descarte",cnt("descarte"),"bad"],["vendido","Vendidos",cnt("vendido"),""],["base","En base",act.filter(trInBase).length,""],["eq","En equipos",act.filter(t=>t.ubicTipo==="equipo").length,""]];
   $("#tr-kpis").innerHTML=K.map(([id,l,n,c])=>`<button class="kpi${c?" "+c:""}" data-trk="${id}" aria-pressed="${TR_KPI===id}" title="${esc(TR_K[id]?TR_K[id][2]:"")}"><small>${l}</small><b>${n}</b></button>`).join("");
   const ub=$("#tr-ub"),cur=ub.value,bs=uniq(T.filter(trInBase).map(t=>t.ubicacion||"")).filter(Boolean).sort(),eqs=uniq(T.filter(t=>t.ubicTipo==="equipo").map(t=>t.ubicacion||"")).filter(Boolean).sort((a,b)=>a.localeCompare(b,"es",{numeric:true}));
   ub.innerHTML='<option value="">Todas las ubicaciones</option>'+(bs.length?`<optgroup label="Bases">${bs.map(x=>`<option value="b:${esc(x)}">${esc(x)}</option>`).join("")}</optgroup>`:"")+(eqs.length?`<optgroup label="Equipos">${eqs.map(x=>`<option value="eq:${esc(x)}">${esc(x)}</option>`).join("")}</optgroup>`:"");
@@ -3012,9 +3014,9 @@ function renderTrStock(){
   else tb.innerHTML=TR_KS.map(k=>{const L=rows.filter(t=>trK(t)===k);if(!L.length)return"";
       L.sort((a,b)=>(trInBase(a)===trInBase(b)?0:trInBase(a)?-1:1)||(k==="nuevo"?String(a.tipo+a.diametro+a.ubicacion).localeCompare(b.tipo+b.diametro+b.ubicacion,"es",{numeric:true})||trByCreado(a,b):String(a.codigo||"~").localeCompare(String(b.codigo||"~"),"es",{numeric:true})));
       return `<tr class="tr-grp"><td colspan="7">${trPillK(k)} <b>${L.length}</b> <span class="meta">${esc(TR_K[k][2])}</span></td></tr>`+L.map(row).join("")}).join("");
-  const G={};T.forEach(t=>{const key=(t.tipo||"—")+"|"+(t.diametro||"—");const g=G[key]=G[key]||{tipo:t.tipo||"—",diam:t.diametro||"—",nuevo:0,optimo:0,taller:0,descarte:0,vendido:0,base:0,eq:0};const k=trK(t);g[k]=(g[k]||0)+1;if(k!=="descarte"&&k!=="vendido"){if(trInBase(t))g.base++;else g.eq++}});
+  const G={};T.forEach(t=>{const key=(t.tipo||"—")+"|"+(t.diametro||"—");const g=G[key]=G[key]||{tipo:t.tipo||"—",diam:t.diametro||"—",nuevo:0,optimo:0,reparacion:0,taller:0,descarte:0,vendido:0,base:0,eq:0};const k=trK(t);g[k]=(g[k]||0)+1;if(k!=="descarte"&&k!=="vendido"){if(trInBase(t))g.base++;else g.eq++}});
   const gl=Object.values(G).sort((a,b)=>a.tipo.localeCompare(b.tipo)||a.diam.localeCompare(b.diam,"es",{numeric:true}));
-  $("#t-tr-res tbody").innerHTML=gl.length?gl.map(g=>`<tr><td>${esc(g.tipo)}</td><td class="mono">${esc(g.diam)}</td>${["nuevo","optimo","taller","descarte","vendido","base","eq"].map(k=>`<td class="r num">${g[k]||"—"}</td>`).join("")}</tr>`).join(""):`<tr><td colspan="9" class="meta" style="text-align:center;padding:16px">Sin datos todavía.</td></tr>`;
+  $("#t-tr-res tbody").innerHTML=gl.length?gl.map(g=>`<tr><td>${esc(g.tipo)}</td><td class="mono">${esc(g.diam)}</td>${["nuevo","optimo","reparacion","taller","descarte","vendido","base","eq"].map(k=>`<td class="r num">${g[k]||"—"}</td>`).join("")}</tr>`).join(""):`<tr><td colspan="10" class="meta" style="text-align:center;padding:16px">Sin datos todavía.</td></tr>`;
 }
 $("#tr-kpis").addEventListener("click",e=>{const b=e.target.closest("[data-trk]");if(!b)return;TR_KPI=TR_KPI===b.dataset.trk?"":b.dataset.trk;$("#tr-est").value="";renderTrStock()});
 ["#tr-q","#tr-est","#tr-ub"].forEach(s=>$(s).addEventListener("input",()=>{if(s==="#tr-est")TR_KPI="";renderTrStock()}));
@@ -3275,13 +3277,13 @@ function tiTipo(v){const t=norm(v).replace(/\./g," ").replace(/\s+/g," ").trim()
   if(/dient/.test(t))return"Dientes";if(/inserto (l|largo)\b/.test(t))return"Inserto Largo";if(/inserto (c|corto)\b/.test(t))return"Inserto Corto";if(/inserto/.test(t))return"Inserto";if(/pdc/.test(t))return"PDC";if(/tapon|cemento/.test(t))return"P/ tapón cemento";
   return String(v).trim().replace(/^./,c=>c.toUpperCase())}
 const tiTipoGen=t=>!t||t==="Inserto";
-function tiEstado(v){const t=norm(v);if(!t)return"";if(/nuev/.test(t))return"nuevo";if(/descart|rot|baja|chatarr/.test(t))return"descarte";if(/arana|repar|taller|malo/.test(t))return"taller";if(/usad|optim|bueno|operativ/.test(t))return"optimo";return""}
+function tiEstado(v){const t=norm(v);if(!t)return"";if(/nuev/.test(t))return"nuevo";if(/descart|rot|baja|chatarr/.test(t))return"descarte";if(/repar|taller/.test(t))return"reparacion";if(/arana|malo/.test(t))return"taller";if(/usad|optim|bueno|operativ/.test(t))return"optimo";return""}
 function tiCode(v){let c=String(v==null?"":v).trim().toUpperCase().replace(/\s+/g," ");if(!c)return{code:"",sc:false,diam:""};
   const sc=/S\s*\/\s*C|SIN COD|A ASIGNAR/.test(c);const dm=/^(\d{1,2})/.exec(c);return{code:sc?"":c.replace(/\s+/g,""),sc,diam:dm?dm[1]:""}}
 function tiDiam(n,raw){if(raw){const r=String(raw).trim();return /"$/.test(r)?r:r+'"'}if(!n)return"";const L=(S.config.diametros&&S.config.diametros.length?S.config.diametros:DEF_DIAM);
   return L.find(d=>String(d).replace(/[^\d].*$/,"")===n)||n+'"'}
 function tiPlace(v){const s=String(v==null?"":v).trim();if(!s)return null;const t=norm(s);
-  if(/taller|repar/.test(t))return{k:"taller",n:"Taller"};
+  if(/taller|repar/.test(t))return{k:"reparacion",n:"Taller"};
   if(/descart|chatarr|baja|rezago/.test(t))return{k:"descarte",n:"Descarte"};
   const bs=trBases().find(x=>norm(x)===t);if(bs||/deposit|panol|galpon|almacen|playon/.test(t))return{k:"deposito",n:bs||s};
   const eq=normEq(s);const known=(S.config.equipos||[]).find(e=>norm(e)===norm(eq));
@@ -3319,16 +3321,16 @@ function tiPlan(){
     t.rows.forEach((x,i)=>{
       const before=Object.assign({},st);let desde="",hacia="",nt=null,ne=x.estado;
       if(x.mov==="salida"){desde=trUbicOf(st);const d=x.d;
-        if(d.k==="taller"){nt={ubicTipo:"deposito",ubicacion:"Taller"};hacia="Taller";ne=ne==="descarte"?"descarte":"taller"}
+        if(d.k==="reparacion"){nt={ubicTipo:"deposito",ubicacion:"Taller"};hacia="Taller";ne=ne==="descarte"||ne==="taller"?ne:"reparacion"}
         else if(d.k==="descarte"){nt={ubicTipo:"deposito",ubicacion:"Descarte"};hacia="Descarte";ne="descarte"}
         else if(d.k==="deposito"){nt={ubicTipo:"deposito",ubicacion:d.n};hacia=d.n}
         else{nt={ubicTipo:"equipo",ubicacion:d.n};hacia=d.n}
-        if(!ne||(ne==="nuevo"&&x.code))ne=before.estado&&!["taller","descarte","nuevo"].includes(before.estado)?before.estado:"optimo"}
+        if(!ne||(ne==="nuevo"&&x.code))ne=before.estado&&!["reparacion","taller","descarte","nuevo"].includes(before.estado)?before.estado:"optimo"}
       else if(x.mov==="entrada"){
         const eqFrom=x.o&&x.o.k==="equipo"?x.o:(x.d&&x.d.k==="equipo"?x.d:null);
         desde=eqFrom?eqFrom.n:(x.o?x.o.n:(st.ubicTipo!=="deposito"?st.ubicacion:""));
         const to=x.d&&x.d.k!=="equipo"?x.d:{k:"deposito",n:dep};
-        if(to.k==="taller"){nt={ubicTipo:"deposito",ubicacion:"Taller"};hacia="Taller";ne=ne==="descarte"?"descarte":"taller"}
+        if(to.k==="reparacion"){nt={ubicTipo:"deposito",ubicacion:"Taller"};hacia="Taller";ne=ne==="descarte"||ne==="taller"?ne:"reparacion"}
         else if(to.k==="descarte"){nt={ubicTipo:"deposito",ubicacion:"Descarte"};hacia="Descarte";ne="descarte"}
         else{nt={ubicTipo:"deposito",ubicacion:to.n};hacia=to.n}
         if(ne==="nuevo"&&x.code)ne="";if(!ne)ne=before.estado&&before.estado!=="nuevo"?before.estado:"optimo"}
@@ -3385,9 +3387,9 @@ function tiRender(){
      <div class="lb">Cómo se interpreta</div>
      <ul class="steps" style="list-style:disc;margin:0">
        <li><b>Salida:</b> del depósito al equipo de "Destino" (T25 = TEC25).</li>
-       <li><b>Entrada:</b> vuelve a la base (${esc(depositos()[0]||"Depósito Central")}, o la indicada en Destino) desde el equipo de Origen. Si el destino es <i>Taller</i> queda como <b>Araña</b>; si es <i>Descarte</i> o el estado es <i>roto</i>, queda en <b>Descarte</b>.</li>
+       <li><b>Entrada:</b> vuelve a la base (${esc(depositos()[0]||"Depósito Central")}, o la indicada en Destino) desde el equipo de Origen. Si el destino es <i>Taller</i> queda <b>En reparación</b>; si es <i>Descarte</i> o el estado es <i>roto</i>, queda en <b>Descarte</b>.</li>
        <li><b>Traspaso:</b> de un equipo a otro.</li>
-       <li>Estados: <i>Nuevo</i>, <i>Operativo</i> (u óptimo, usado), <i>Araña</i> (también reparación o taller) y <i>Descarte</i> (roto, baja). Estado vacío: se mantiene el anterior; un trépano con código que sale a un equipo queda Operativo. "Código a asignar" o "S/C" = sin código.</li>
+       <li>Estados: <i>Nuevo</i>, <i>Operativo</i> (u óptimo, usado), <i>Reparación</i> (o taller), <i>Araña</i> y <i>Descarte</i> (roto, baja). Estado vacío: se mantiene el anterior; un trépano con código que sale a un equipo queda Operativo. "Código a asignar" o "S/C" = sin código.</li>
      </ul>
      <label class="chk"><input type="checkbox" id="ti-fill"${TI.fill?" checked":""}> <span>Si una salida no tiene destino, usar el de la fila anterior del mismo día</span></label>
    </div>
