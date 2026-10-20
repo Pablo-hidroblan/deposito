@@ -378,6 +378,24 @@
     pop.querySelector('#dep-logout').onclick = logout;
   }
 
+  /* ---------------- correo (solo en la aplicación de Google) ---------------- */
+  var MIME = { pdf: 'application/pdf', xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', csv: 'text/csv', zip: 'application/zip', json: 'application/json', png: 'image/png', jpg: 'image/jpeg' };
+  var MAIL = {
+    send: async function (o) {
+      o = o || {};
+      if (!USER || USER.perfil === 'consulta') throw err('not_granted', 'Tu perfil no permite enviar correos.');
+      var files = [];
+      for (var i = 0; i < (o.files || []).length; i++) {
+        var f = o.files[i], ext = String(f.name || '').split('.').pop().toLowerCase();
+        var blob = f.data instanceof Blob ? f.data : new Blob([f.data == null ? '' : f.data], { type: MIME[ext] || 'application/octet-stream' });
+        files.push({ name: f.name, mime: blob.type || MIME[ext] || 'application/octet-stream', b64: await b64(blob) });
+      }
+      var j = await call('sendMail', { to: o.to || [], cc: o.cc || [], subject: o.subject || '', body: o.body || '', files: files, guardar: o.guardar || '' });
+      return { to: j.to, cc: j.cc, quota: j.quota, guardado: j.guardado };
+    },
+    quota: async function () { var j = await call('mailQuota'); return j.quota; }
+  };
+
   /* ---------------- window.claude.use ---------------- */
   var BOOT = (async function () {
     if (!API) { document.addEventListener('DOMContentLoaded', function () { showGate('Falta configurar la dirección del servidor (web/config.js).', true); }); throw err('unavailable'); }
@@ -396,6 +414,7 @@
       if (name === 'user') return USERNS;
       if (name === 'assets') return USER.perfil === 'consulta' ? null : ASSETS;
       if (name === 'downloads') return DOWNLOADS;
+      if (name === 'mail') return USER && USER.perfil !== 'consulta' ? MAIL : null;
       return null;
     }
   };
