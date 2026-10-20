@@ -4767,14 +4767,26 @@ async function pfGenerate(){
   const body={numero:ex?ex.numero:(pedList().reduce((m,p)=>Math.max(m,p.numero||0),0)+1),fecha:emi,estado:ex?ex.estado:"pendiente",
     solicita:uniq(items.map(i=>i.solicitante)).join(", "),area:uniq(items.map(i=>i.area)).join(", "),imputacion:uniq(items.map(i=>i.imputacion).filter(Boolean)).join(", "),
     prioridad:items.some(i=>i.prioridad==="urgente")?"urgente":"normal",necesario:lims[0]||"",obs:ex?ex.obs||"":"",items,
-    enviado:ex?ex.enviado||"":"",enviadoA:ex?ex.enviadoA||"":"",recibido:ex?ex.recibido||"":"",by:ex?ex.by:(myId||""),actualizado:now};
+    enviado:ex?ex.enviado||"":"",enviadoA:ex?ex.enviadoA||"":"",recibido:ex?ex.recibido||"":"",by:ex?ex.by:(myId||""),actualizado:now,pdfs:ex?((S.peds.get(ex.id)||ex).pdfs||[]):[]};
   const b=$("#pf-go");b.disabled=true;
   try{let id=ex?ex.id:null;if(ex)await db.doc("pedidos/"+ex.id).set(body);else{const r=await db.collection("pedidos").add(body);id=r.id}
     const full=Object.assign({id},body);S.peds.set(id,full);if(!ex){PF.list=[];try{localStorage.removeItem(pfDraftKey)}catch(e){}}
     toast(ex?"Nota actualizada":pedNum(body.numero)+" generada");closeModal();showTab("ped");openPed(id);pedPdf(full)}
   catch(e){writeError(e);b.disabled=false}
 }
-function pedSubject(p){return `Nota de pedido ${pedNum(p.numero)}${p.prioridad==="urgente"?" · URGENTE":""} · Depósito Hidroblan`}
+function pedSubject(p){const d=new Date(p.fecha||p.creado||Date.now());return `Nota de pedido ${pedNum(p.numero)} – ${isNaN(d)?"":String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0")+"/"+d.getFullYear()}${p.prioridad==="urgente"?" · URGENTE":""}`}
+/* PDF de la nota guardado como registro (adjunto en la base) */
+function pedHash(p){const s=JSON.stringify([p.numero,p.fecha,p.solicita,p.area,p.imputacion,p.prioridad,p.necesario,p.obs,(p.items||[]).map(i=>[i.sku,i.nombre,i.cantidad,i.unidad,i.codProv,i.solicitante,i.area,i.imputacion,i.prioridad,i.necesario,i.obs])]);let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return(h>>>0).toString(36)}
+async function pedStorePdf(p,blob,envio){
+  if(!assets||!blob||!canWrite)return null;
+  try{const cur=S.peds.get(p.id)||p,h=pedHash(cur),L=(cur.pdfs||[]).slice();let v=L.find(x=>x.h===h);
+    if(!v){const nombre=`Nota de pedido ${pedNum(cur.numero)}${L.length?" (v"+(L.length+1)+")":""}.pdf`;
+      let r;try{r=await assets.upload(blob,window.DEP?{type:"application/pdf",name:nombre}:{type:"application/pdf"})}catch(e){if(e&&e.code==="store_unavailable"){await new Promise(z=>setTimeout(z,1200));r=await assets.upload(blob,window.DEP?{type:"application/pdf",name:nombre}:{type:"application/pdf"})}else throw e}
+      v={id:r.id,nombre,fecha:new Date().toISOString(),h,by:myId||"",envios:[]};L.push(v)}
+    else if(!envio)return v;
+    if(envio){v.envios=(v.envios||[]).concat([{fecha:new Date().toISOString(),para:envio}])}
+    await db.doc("pedidos/"+cur.id).update({pdfs:L});S.peds.set(cur.id,Object.assign({},S.peds.get(cur.id)||cur,{pdfs:L}));return v}
+  catch(e){console.error(e);toast("No se pudo guardar el PDF en la base (queda descargado).");return null}}
 function pedText(p){
   const L=[`Hola, equipo de Compras:`,``,`Envío la nota de pedido ${pedNum(p.numero)} del depósito${p.prioridad==="urgente"?" (URGENTE)":""}.`,``,
     `Fecha: ${fmtD(p.fecha).split(" ")[0]}`,`Solicita: ${p.solicita}${p.area?" · "+p.area:""}`];
@@ -4814,6 +4826,7 @@ function openPed(id){
        <details><summary class="meta" style="cursor:pointer">Ver el texto del mail</summary><pre id="pd-txt" style="white-space:pre-wrap;font-family:var(--f-body);font-size:13px;margin:8px 0 0;user-select:all">${esc(pedSubject(p)+"\n\n"+pedText(p))}</pre></details>`}
      </div>`}
      ${p.enviado?`<div class="meta">Enviada el ${esc(fmtD(p.enviado))}${p.enviadoA?" a "+esc(p.enviadoA):""}.${p.recibido?" Recibida el "+esc(fmtD(p.recibido))+".":""}</div>`:""}
+     <div id="pd-pdfs">${(p.pdfs||[]).length?`<div class="lb" style="margin-bottom:6px">PDF guardados en la base</div><div class="card table-wrap"><table class="prev"><tbody>${(p.pdfs||[]).slice().reverse().map((v,i)=>`<tr><td><a href="${esc("/_blob/"+v.id)}" target="_blank" rel="noopener" class="btn sm${i===0?" primary":""}">${i===0?"Ver PDF guardado":"Ver versión anterior"}</a></td><td class="wrap"><b>${esc(v.nombre)}</b><div class="meta">Guardado el ${esc(fmtD(v.fecha))}${i===0&&(p.pdfs||[]).length>1?" · versión actual":""}</div>${(v.envios||[]).map(e=>`<div class="meta">✉ Enviado el ${esc(fmtD(e.fecha))} a ${esc(e.para)}</div>`).join("")}</td></tr>`).join("")}</tbody></table></div>`:`<div class="meta">El PDF se guarda en la base al generarlo o descargarlo${mailer?" y al enviarlo":""}.</div>`}</div>
      <div class="form-actions" style="display:flex">
        ${p.estado==="pendiente"?`<button class="btn danger" id="pd-anul" style="margin-right:auto">Anular</button><button class="btn" id="pd-edit">Editar</button><button class="btn in" id="pd-sent">Marcar como enviada</button>`:""}
        ${p.estado==="enviado"?`<button class="btn" id="pd-back" style="margin-right:auto">Volver a pendiente</button><button class="btn in" id="pd-recv">Marcar como recibida</button>`:""}
@@ -4831,7 +4844,7 @@ function openPed(id){
   const bp=$("#pd-pdf");if(bp)bp.onclick=()=>pedPdf(p);
   const bsd=$("#pd-send");if(bsd)bsd.onclick=async()=>{const blob=await pedPdf(p,{blob:true});if(!blob)return;
     openMailSend({title:"Enviar nota de pedido "+pedNum(p.numero),sub:"Nota de pedido con el PDF adjunto",to:to.split(/[,;]/).map(x=>x.trim()).filter(Boolean),subject:pedSubject(p),body:pedText(p),files:[{name:`Nota de pedido ${pedNum(p.numero)}.pdf`,data:blob}],guardar:"np",
-      onSent:async r=>{const all=(r.to||[]).concat(r.cc||[]).join(", "),now=new Date().toISOString(),cur=S.peds.get(p.id)||p,ex={enviado:now,enviadoA:all,enviadoPor:myId||"",actualizado:now};if(cur.estado==="pendiente")ex.estado="enviado";
+      onSent:async r=>{const all=(r.to||[]).concat(r.cc||[]).join(", "),now=new Date().toISOString();await pedStorePdf(p,blob,all);const cur=S.peds.get(p.id)||p,ex={enviado:now,enviadoA:all,enviadoPor:myId||"",actualizado:now};if(cur.estado==="pendiente")ex.estado="enviado";
         try{await db.doc("pedidos/"+p.id).update(ex);S.peds.set(p.id,Object.assign({},cur,ex))}catch(e){writeError(e)}openPed(p.id)}})};
   const setEst=async(est,extra)=>{if(!guardWrite("deposito"))return;try{await db.doc("pedidos/"+p.id).update(Object.assign({estado:est,actualizado:new Date().toISOString()},extra||{}));S.peds.set(p.id,Object.assign({},p,{estado:est},extra||{}));toast("Nota "+pedNum(p.numero)+": "+PED_EST[est][1].toLowerCase());openPed(p.id)}catch(e){writeError(e)}};
   const b=(i,f)=>{const el=$(i);if(el)el.onclick=f};
@@ -4898,6 +4911,7 @@ async function pedPdf(p,opt){
   if(p.obs){const t=doc.splitTextToSize(p.obs,W-2);if(y+t.length*3.8+9>BOT){header()}y+=5;doc.setFont("helvetica","bold");doc.setFontSize(8.5);doc.text("Observaciones generales:",cx[0],y);doc.setFont("helvetica","normal");doc.text(t,cx[0],y+4.2);y+=t.length*3.8+4}
   const tp=doc.getNumberOfPages();for(let i=1;i<=tp;i++){doc.setPage(i);doc.setFontSize(6.5);doc.setTextColor(130);doc.text(`${pedNum(p.numero)} · generada el ${fmtD(new Date().toISOString())} desde Depósito Hidroblan${tp>1?` · hoja ${i} de ${tp}`:""}`,M,292);doc.setTextColor(0)}
   const pdfBlob=doc.output("blob");if(opt&&opt.blob)return pdfBlob;
+  pedStorePdf(p,pdfBlob).then(v=>{if(v&&$("#pd-pdfs"))openPed(p.id)});
   await save(`Nota de pedido ${pedNum(p.numero)}.pdf`,pdfBlob);
 }
 
