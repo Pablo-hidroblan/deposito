@@ -3924,7 +3924,8 @@ function openWaShare(d1,d2){
      <div class="field"><label class="lb" for="wa-d2">Hasta</label><input type="date" id="wa-d2" value="${esc(d2)}" max="${hoy}"></div>
      <div class="field full"><label class="lb">Incluir</label><div style="display:flex;gap:12px;flex-wrap:wrap">${BIT_CATS_WA.map(([k,l])=>`<label class="chk"><input type="checkbox" data-wacat="${k}" checked> <span>${l}</span></label>`).join("")}</div></div>
      <div class="field full"><label class="lb" for="wa-t">Mensaje <span class="meta" id="wa-n"></span></label><textarea id="wa-t" rows="14" style="font-family:var(--f-body)"></textarea><span class="hint">Podés corregir el texto antes de compartirlo. Los días van en negrita en WhatsApp (*15-oct*).</span></div>
-     <div class="form-actions"><button type="button" class="btn" id="wa-copy">Copiar texto</button><button type="button" class="btn primary" id="wa-go" style="background:#1f8f4e;border-color:#1f8f4e"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20l1.3-3.9A8 8 0 1 1 8 19z"/></svg>Abrir WhatsApp</button></div>
+     <div class="form-actions" style="flex-wrap:wrap"><button type="button" class="btn" id="wa-copy">Copiar texto</button>${navigator.share?`<button type="button" class="btn" id="wa-go" style="color:#1f8f4e">Abrir WhatsApp</button><button type="button" class="btn primary" id="wa-share" style="background:#1f8f4e;border-color:#1f8f4e"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>Compartir (elegí el grupo)</button>`:`<button type="button" class="btn primary" id="wa-go" style="background:#1f8f4e;border-color:#1f8f4e"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20l1.3-3.9A8 8 0 1 1 8 19z"/></svg>Abrir WhatsApp</button>`}</div>
+     ${navigator.share?'<div class="field full"><span class="hint"><b>Compartir</b> abre el menú del celular: tocá el grupo (por ejemplo "Talleres Hidroblan", que aparece arriba entre los chats frecuentes) y el mensaje queda escrito en el grupo; solo falta tocar Enviar.</span></div>':""}
    </div>`,"wide");
   let dirty=false;
   const gen=()=>{const cats=$$("[data-wacat]").filter(i=>i.checked).map(i=>i.dataset.wacat);const r=waText($("#wa-d1").value||hoy,$("#wa-d2").value||hoy,cats);
@@ -3939,6 +3940,8 @@ function openWaShare(d1,d2){
   $$("[data-wacat]").forEach(i=>i.addEventListener("change",regen));
   $("#wa-t").addEventListener("input",()=>{dirty=true});
   $("#wa-copy").onclick=()=>{const t=$("#wa-t").value.trim();if(!t){toast("No hay texto para copiar.");return}try{navigator.clipboard.writeText(t).then(()=>toast("Texto copiado: pegalo en WhatsApp"),()=>{$("#wa-t").select();toast("Seleccioné el texto: copialo con Ctrl+C")})}catch(e){$("#wa-t").select();toast("Seleccioné el texto: copialo con Ctrl+C")}};
+  const sh=$("#wa-share");if(sh)sh.onclick=async()=>{const t=$("#wa-t").value.trim();if(!t){toast("No hay movimientos para compartir en ese período.");return}
+    try{await navigator.share({text:t})}catch(e){if(e&&e.name==="AbortError")return;toast("No se pudo abrir el menú de compartir: uso Abrir WhatsApp.");$("#wa-go").click()}};
   $("#wa-go").onclick=()=>{const t=$("#wa-t").value.trim();if(!t){toast("No hay movimientos para compartir en ese período.");return}
     if(t.length>6000){toast("El mensaje es muy largo para abrirlo directo: usá Copiar texto y pegalo en WhatsApp.");return}
     const a=document.createElement("a");a.href="https://wa.me/?text="+encodeURIComponent(t);a.target="_blank";a.rel="noopener";document.body.appendChild(a);a.click();a.remove()};
