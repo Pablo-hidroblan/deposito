@@ -392,6 +392,9 @@ label.lb em{font-style:normal;color:var(--bad)}
 .form-actions{grid-column:1/-1;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
 
 /* modal */
+.nav-back{position:fixed;left:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:40;box-shadow:0 6px 18px rgba(0,0,0,.18);background:var(--surface);border-radius:999px;padding:9px 16px 9px 10px}
+.nav-back svg{width:18px;height:18px}
+main{padding-bottom:72px}
 .scrim{position:fixed;inset:0;background:rgba(10,18,24,.5);z-index:50;display:flex;align-items:flex-start;justify-content:center;padding:max(24px,env(safe-area-inset-top,0px)) 16px 24px;overflow-y:auto}
 .modal{background:var(--surface);border-radius:10px;width:100%;max-width:760px;border:1px solid var(--line)}
 .modal.wide{max-width:1060px}
@@ -861,7 +864,7 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
   </section>
   <!-- BITACORA -->
   <section id="v-bit-reg" data-view="bit-reg" hidden>
-    <div class="section-head"><div><h2>Registrar movimiento</h2><p class="sub">Bitácora del depósito: cargá cada novedad por separado.</p></div></div>
+    <div class="section-head"><div><h2>Registrar movimiento</h2><p class="sub">Bitácora del depósito: cargá cada novedad por separado.</p></div><div><button class="btn" data-washare="hoy" style="color:#1f8f4e"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20l1.3-3.9A8 8 0 1 1 8 19z"/></svg>Compartir por WhatsApp</button></div></div>
     <div class="bit-wrap">
       <form class="card form" id="f-bit" autocomplete="off" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)">
         <div class="field"><label class="lb" for="br-fecha">Fecha <em>*</em></label><div style="display:flex;gap:6px"><input type="date" id="br-fecha"><button type="button" class="btn sm" id="br-hoy">Hoy</button></div></div>
@@ -885,6 +888,7 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
       <div><h2>Historial de movimientos</h2><p class="sub" id="bh-sub"></p></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn need-adm" id="bh-imp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3M7 8l5-5 5 5M4 21h16"/></svg>Importar desde Excel</button>
+        <button class="btn" data-washare="hist" style="color:#1f8f4e"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20l1.3-3.9A8 8 0 1 1 8 19z"/></svg>Compartir por WhatsApp</button>
         <button class="btn" id="bh-xls"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Exportar a Excel</button>
         <button class="btn primary need-dep" data-goto="diario/registrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Registrar</button>
       </div>
@@ -1047,6 +1051,7 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
 <datalist id="dl-cat"></datalist>
 <datalist id="dl-equipos"></datalist>
 <datalist id="dl-trep"></datalist>
+<button type="button" class="btn nav-back" id="nav-back" hidden aria-label="Volver a la pantalla anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Volver</button>
 <datalist id="dl-ubic"></datalist>
 <datalist id="dl-trtipo"></datalist>
 <datalist id="dl-diam"></datalist>
@@ -1186,8 +1191,20 @@ function renderTree(){
 }
 function crumbHtml(){return ROUTE.it?`<span>${esc(ROUTE.grp.name)}</span><span>›</span><b>${esc(ROUTE.it.name)}</b>`:`<b>${esc(ROUTE.grp.name)}</b>`}
 function setDrawer(open){$("#side").classList.toggle("open",open);$("#side-scrim").hidden=!open;$("#menu-btn").setAttribute("aria-expanded",open?"true":"false")}
+/* volver atrás: botón propio y botón "atrás" del celular (en la app instalada) */
+const NAVS=[],HIST_OK=!!window.DEP;
+try{if(HIST_OK)history.replaceState({dep:"inicio"},"")}catch(e){}
+function goBack(){if(DD&&DD.box&&!DD.box.hidden)ddClose();if($("#scrim")){closeModal();return}
+  if(!NAVS.length){if(ROUTE.key!=="inicio")go("inicio",{pop:true});return}
+  if(HIST_OK){try{history.back();return}catch(e){}}go(NAVS.pop(),{pop:true})}
+addEventListener("popstate",e=>{
+  if($("#scrim")){closeModal();try{history.pushState({dep:ROUTE.key},"")}catch(x){}return}
+  if($("#side")&&$("#side").classList.contains("open")){setDrawer(false);try{history.pushState({dep:ROUTE.key},"")}catch(x){}return}
+  const k=(e.state&&e.state.dep)||NAVS[NAVS.length-1]||"inicio";NAVS.pop();go(k,{pop:true})});
+document.addEventListener("click",e=>{if(e.target.closest("#nav-back"))goBack()});
 function go(key,opt){
   let r=findRoute(OLD_TABS[key]||key)||findRoute("inicio");
+  {const prev=ROUTE&&ROUTE.key;if(!(opt&&opt.pop)&&prev&&prev!==r.key){NAVS.push(prev);if(NAVS.length>60)NAVS.shift();if(HIST_OK)try{history.pushState({dep:r.key},"")}catch(e){}}}
   if(ROLE_READY&&r.it&&r.it.need&&!roleOk(r.it.need)){toast(`Esta pantalla es para el perfil ${ROLE_NAME[r.it.need]}. Tu perfil es ${ROLE_NAME[ROLE]}.`);r=findRoute("inicio")}
   ROUTE=r;if(r.it){expanded.clear();expanded.add(r.grp.id)}
   const view=r.it?r.it.view:r.grp.view;
@@ -1195,6 +1212,7 @@ function go(key,opt){
   renderTree();$("#crumb").innerHTML=crumbHtml();$("#mcrumb").innerHTML=r.it?esc(r.grp.name)+" ›":"";
   lsSet("dep-route",r.key);setDrawer(false);$("#home-btn").classList.toggle("on",r.key==="inicio");$("#home-btn").setAttribute("aria-current",r.key==="inicio"?"page":"false");$("#rec-btn").classList.toggle("on",r.key==="productos/recuento");
   enterView(view,r,opt||{});
+  {const nb=$("#nav-back");if(nb)nb.hidden=ROUTE.key==="inicio";}
   if(!(opt&&opt.keepScroll))window.scrollTo(0,0);
 }
 function showTab(name){go(name)}
@@ -3883,6 +3901,51 @@ function bitFiltered(){
   const q=$("#bh-q").value.trim().toLowerCase(),de=$("#bh-desde").value,ha=$("#bh-hasta").value,c=$("#bh-cat").value,eq=$("#bh-eq").value;
   return bitList().filter(e=>(!de||e.fecha>=de)&&(!ha||e.fecha<=ha)&&(!c||e.categoria===c)&&(!eq||(e.equipos||[]).includes(eq))&&(!q||(e.texto||"").toLowerCase().includes(q)||(e.registro||"").toLowerCase().includes(q)));
 }
+/* ---------- compartir movimientos diarios por WhatsApp ---------- */
+const BIT_CATS_WA=[["recepcion","Recepción"],["entrega","Entrega"],["mantenimiento","Mantenimiento"],["otro","Otro"]];
+const MES_L=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"],MES_C=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+const waDia=d=>{const [y,m,dd]=d.split("-").map(Number);return `${dd} de ${MES_L[m-1]}${y!==new Date().getFullYear()?" de "+y:""}`};
+const waCorto=d=>{const [,m,dd]=d.split("-").map(Number);return `${dd}-${MES_C[m-1]}`};
+function waText(d1,d2,cats){
+  const hoy=todayStr(),h=new Date().getHours(),sal=h<12?"Buenos días":h<20?"Buenas tardes":"Buenas noches";
+  if(d1>d2){const x=d1;d1=d2;d2=x}
+  const L=S.bit.filter(b=>b.fecha>=d1&&b.fecha<=d2&&(!cats||cats.includes(b.categoria||"otro"))&&String(b.texto||"").trim()).sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha))||(a.orden||0)-(b.orden||0));
+  const head=d1===d2?(d1===hoy?`${sal}, a continuación comparto los movimientos relevantes del día de la fecha:`:`${sal}, a continuación comparto los movimientos relevantes del día ${waDia(d1)}:`)
+    :(d2===hoy?`${sal}, a continuación comparto los movimientos relevantes desde el día ${waDia(d1)} hasta la fecha:`:`${sal}, a continuación comparto los movimientos relevantes desde el día ${waDia(d1)} hasta el día ${waDia(d2)}:`);
+  const days=uniq(L.map(b=>b.fecha));
+  const body=days.map(d=>`*${waCorto(d)}*\n`+L.filter(b=>b.fecha===d).map(b=>".- "+String(b.texto).trim().replace(/\s*\n+\s*/g," ")).join("\n")).join("\n\n");
+  return{n:L.length,text:head+"\n\n"+body}}
+function openWaShare(d1,d2){
+  const hoy=todayStr();d1=d1||hoy;d2=d2||hoy;
+  modal(`<div class="modal-h"><div><div class="meta">Movimientos diarios</div><h3>Compartir por WhatsApp</h3></div><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
+   <div class="form" style="padding:18px">
+     <div class="field full"><label class="lb">Período</label>${trSeg("wa-per",[["hoy","Hoy"],["ayer","Ayer y hoy"],["rango","Entre dos fechas"]],d1===hoy&&d2===hoy?"hoy":"rango")}</div>
+     <div class="field"><label class="lb" for="wa-d1">Desde</label><input type="date" id="wa-d1" value="${esc(d1)}" max="${hoy}"></div>
+     <div class="field"><label class="lb" for="wa-d2">Hasta</label><input type="date" id="wa-d2" value="${esc(d2)}" max="${hoy}"></div>
+     <div class="field full"><label class="lb">Incluir</label><div style="display:flex;gap:12px;flex-wrap:wrap">${BIT_CATS_WA.map(([k,l])=>`<label class="chk"><input type="checkbox" data-wacat="${k}" checked> <span>${l}</span></label>`).join("")}</div></div>
+     <div class="field full"><label class="lb" for="wa-t">Mensaje <span class="meta" id="wa-n"></span></label><textarea id="wa-t" rows="14" style="font-family:var(--f-body)"></textarea><span class="hint">Podés corregir el texto antes de compartirlo. Los días van en negrita en WhatsApp (*15-oct*).</span></div>
+     <div class="form-actions"><button type="button" class="btn" id="wa-copy">Copiar texto</button><button type="button" class="btn primary" id="wa-go" style="background:#1f8f4e;border-color:#1f8f4e"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20l1.3-3.9A8 8 0 1 1 8 19z"/></svg>Abrir WhatsApp</button></div>
+   </div>`,"wide");
+  let dirty=false;
+  const gen=()=>{const cats=$$("[data-wacat]").filter(i=>i.checked).map(i=>i.dataset.wacat);const r=waText($("#wa-d1").value||hoy,$("#wa-d2").value||hoy,cats);
+    $("#wa-t").value=r.n?r.text:"";$("#wa-t").placeholder="No hay movimientos registrados en ese período.";$("#wa-n").textContent=`· ${r.n} movimiento${r.n===1?"":"s"}`;dirty=false};
+  const regen=()=>{if(dirty&&$("#wa-t").value.trim()&&!confirmLite())return;gen()};
+  const confirmLite=()=>{toast("Se rehízo el mensaje con el nuevo período (se perdieron los cambios que habías escrito).");return true};
+  trSegOn("wa-per",v=>{$$("#wa-per button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.k===v));const t=todayStr();
+    if(v==="hoy"){$("#wa-d1").value=t;$("#wa-d2").value=t}
+    else if(v==="ayer"){const y=new Date();y.setDate(y.getDate()-1);$("#wa-d1").value=localDay(y.toISOString());$("#wa-d2").value=t}
+    regen()});
+  ["#wa-d1","#wa-d2"].forEach(s=>$(s).addEventListener("change",()=>{$$("#wa-per button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.k==="rango"));regen()}));
+  $$("[data-wacat]").forEach(i=>i.addEventListener("change",regen));
+  $("#wa-t").addEventListener("input",()=>{dirty=true});
+  $("#wa-copy").onclick=()=>{const t=$("#wa-t").value.trim();if(!t){toast("No hay texto para copiar.");return}try{navigator.clipboard.writeText(t).then(()=>toast("Texto copiado: pegalo en WhatsApp"),()=>{$("#wa-t").select();toast("Seleccioné el texto: copialo con Ctrl+C")})}catch(e){$("#wa-t").select();toast("Seleccioné el texto: copialo con Ctrl+C")}};
+  $("#wa-go").onclick=()=>{const t=$("#wa-t").value.trim();if(!t){toast("No hay movimientos para compartir en ese período.");return}
+    if(t.length>6000){toast("El mensaje es muy largo para abrirlo directo: usá Copiar texto y pegalo en WhatsApp.");return}
+    const a=document.createElement("a");a.href="https://wa.me/?text="+encodeURIComponent(t);a.target="_blank";a.rel="noopener";document.body.appendChild(a);a.click();a.remove()};
+  gen();
+}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-washare]");if(!b)return;e.preventDefault();
+  if(b.dataset.washare==="hist")openWaShare($("#bh-desde").value||todayStr(),$("#bh-hasta").value||todayStr());else openWaShare()});
 function renderBitHist(){
   if($("#v-bit-hist").hidden)return;
   const eqs=uniq(bitList().flatMap(e=>e.equipos||[])).sort((a,b)=>a.localeCompare(b,"es",{numeric:true}));const sel=$("#bh-eq"),cur=sel.value;
