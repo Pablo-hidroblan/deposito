@@ -100,6 +100,10 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;backgroun
 .side .subs{display:grid;gap:1px;margin:2px 0 8px 19px;padding-left:12px;border-left:1px solid var(--line)}
 .side .it{background:none;border:0;text-align:left;padding:7px 10px;border-radius:var(--r);cursor:pointer;color:var(--muted);font-size:14px}
 .side .it:hover{background:var(--surface-2);color:var(--ink)}
+.side .it-sec{font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);padding:9px 10px 3px}
+.side .it.in-sec{padding-left:20px}
+.lvl .opt-sec{font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:6px 2px 0}
+.lvl .opts button.in-sec{margin-left:12px}
 .side .it[aria-current="page"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
 .side .sep{height:1px;background:var(--line);margin:8px 6px}
 main{padding-inline:20px;padding-block:20px 60px;min-width:0;max-width:1220px;width:100%}
@@ -503,7 +507,7 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
         <button class="btn need-dep" id="btn-ped-s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h9l4 4v14H6z"/><path d="M9 12h7M9 16h7"/></svg>Nota de pedido</button>
         <button class="btn" id="btn-labels-s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V3h12v6M6 18H4a1 1 0 01-1-1v-6a1 1 0 011-1h16a1 1 0 011 1v6a1 1 0 01-1 1h-2M6 14h12v7H6z"/></svg>Imprimir etiquetas</button>
         
-        <button class="btn" id="btn-export-stock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Exportar CSV</button>
+        <button class="btn" id="btn-export-stock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Exportar como…</button>
         <span id="stock-scope-actions" style="display:contents"></span>
         <button class="btn primary need-dep" id="btn-st-mov" data-goto="productos/entrada"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Nuevo movimiento</button>
       </div>
@@ -579,9 +583,10 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
       </div>
       <div class="field" id="m-doc-wrap">
         <label class="lb" for="m-doc" id="m-doc-lb">Nº de remito / pedido / OC</label>
-        <input type="text" id="m-doc" placeholder="Opcional">
+        <input type="text" id="m-doc" list="dl-docnum" placeholder="Opcional" autocomplete="off">
+        <span class="hint" id="m-doc-h"></span>
       </div>
-      <div class="field full" id="m-docp-wrap"><span class="lb">Documento de respaldo <span class="meta" style="font-weight:400;text-transform:none;letter-spacing:0">(opcional · remito, factura o vale con sus imágenes)</span></span><div id="m-docp"></div></div>
+      <div class="field full" id="m-docp-wrap" hidden><span class="lb">Documento de respaldo <span class="meta" style="font-weight:400;text-transform:none;letter-spacing:0">(opcional · remito, factura o vale con sus imágenes)</span></span><div id="m-docp"></div></div>
       <div class="field full">
         <label class="lb" for="m-obs" id="m-obs-lb">Observaciones</label>
         <textarea id="m-obs" placeholder="Estado del material, motivo, detalle del pedido…"></textarea>
@@ -607,16 +612,17 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
       <form class="card form" id="rec-f" hidden autocomplete="off">
         <div class="field"><label class="lb" for="rec-fecha">Fecha <em>*</em></label><input type="date" id="rec-fecha"></div>
         <div class="field"><label class="lb" for="rec-who">Realiza el recuento <em>*</em></label><input type="text" id="rec-who" list="dl-personas" placeholder="Nombre y apellido"></div>
+        <div class="field full"><label class="lb" for="rec-alc">Recuento de <em>*</em></label><select id="rec-alc"><option value="">Elegí qué se va a contar…</option><option value="repuestos">Stock repuestos</option><option value="metal">Insumos de taller metalúrgico</option></select><span class="hint">Stock repuestos incluye grava, bentonita y tripolifosfato.</span></div>
         <div class="field full"><span class="hint" id="rec-name-h"></span></div>
         <div class="form-actions"><button type="button" class="btn" id="rec-f-x">Cancelar</button><button type="submit" class="btn primary">Iniciar recuento</button></div>
       </form>
       <div id="rec-open"></div>
       <h3 class="rec-h3">Registros de control</h3>
-      <div class="card"><div class="table-wrap"><table class="cards" id="t-rec"><thead><tr><th>Registro</th><th>Realizó</th><th class="r">Productos</th><th class="r">Con diferencia</th><th>Estado</th></tr></thead><tbody></tbody></table></div></div>
+      <div class="card"><div class="table-wrap"><table class="cards" id="t-rec"><thead><tr><th>Registro</th><th>Realizó</th><th>Recuento de</th><th class="r">Productos</th><th>Estado</th></tr></thead><tbody></tbody></table></div></div>
     </div>
     <div id="rec-det-v" hidden>
       <div class="section-head"><div><button type="button" class="btn ghost sm" id="rec-back" style="margin:0 0 4px -8px">‹ Registros de control</button><h2 id="rec-title"></h2><p class="sub" id="rec-sub"></p></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary need-adm" id="rec-fin-top" hidden>✔ Finalizar recuento</button><button class="btn" id="rec-xls"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Exportar a Excel</button></div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary need-adm" id="rec-fin-top" hidden>✔ Finalizar recuento</button><button class="btn" id="rec-xls"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Exportar como…</button></div></div>
       <div class="kpis" id="rec-kpi"></div>
       <div class="card rec-scan" id="rec-scan">
         <div class="rec-guide" id="rec-guide"></div>
@@ -625,8 +631,8 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
         <div id="rec-res" class="np-res"></div>
         <div id="rec-cur" hidden></div>
       </div>
-      <div class="toolbar"><input class="grow" type="search" id="rec-f-q" placeholder="Filtrar líneas contadas"><select id="rec-f-d" style="width:auto"><option value="">Todas las líneas</option><option value="nc">No controlados (mantienen su stock)</option><option value="dif">Solo con diferencia</option><option value="ok">Solo sin diferencia</option></select></div>
-      <div class="card"><div class="table-wrap"><table class="cards" id="t-recl"><thead><tr><th>SKU · Producto</th><th class="r">Sistema</th><th class="r">Contado</th><th class="r">Diferencia</th><th>Hora</th><th></th></tr></thead><tbody></tbody></table></div></div>
+      <div class="toolbar"><input class="grow" type="search" id="rec-f-q" placeholder="Filtrar líneas contadas"><select id="rec-f-d" style="width:auto"><option value="">Todas las líneas</option><option value="nc">Pendientes de contar</option><option value="dif">Solo con diferencia</option><option value="ok">Solo sin diferencia</option></select></div>
+      <div class="card"><div class="table-wrap"><table class="cards" id="t-recl"><thead></thead><tbody></tbody></table></div></div>
       <div class="card rec-close" id="rec-close"></div>
     </div>
   </section>
@@ -693,17 +699,30 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
     </div>
     <div class="card" style="padding:14px 16px;display:grid;gap:8px;margin-top:14px" id="ct-advice"></div>
   </section>
+  <section id="v-docload" data-view="docload" hidden>
+    <div class="section-head"><div><h2>Carga de registros</h2><p class="sub">Subí los remitos y facturas de la jornada, cada uno con su número de referencia. Los movimientos solo indican ese número y quedan vinculados al registro.</p></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-goto="diario/verregistro">Ver registro</button></div></div>
+    <div class="grid2" style="display:grid;gap:16px">
+      <form class="card form" id="f-dl" autocomplete="off" style="display:grid;gap:12px">
+        <div class="field"><label class="lb" for="dl-fecha">Fecha de los registros <em>*</em></label><input type="date" id="dl-fecha"></div>
+        <div id="dl-rows" style="display:grid;gap:12px"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between"><button type="button" class="btn" id="dl-add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Agregar otro registro</button><button type="submit" class="btn primary" id="dl-go">Guardar registro</button></div>
+        <span class="hint">El número se puede escribir en mayúsculas o minúsculas y con puntos o guiones: R-04-0567, r.04.0567 y R.04.0567 son el mismo registro.</span>
+      </form>
+      <div><div class="lb" id="dl-day-h" style="margin-bottom:8px"></div><div class="card" id="dl-day" style="padding:0"></div></div>
+    </div>
+  </section>
   <section id="v-docs" data-view="docs" hidden>
-    <div class="section-head"><div><h2>Documentación de respaldo</h2><p class="sub" id="dc-sub"></p></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary need-dep" id="dc-new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Cargar documento</button></div></div>
-    <div class="toolbar"><input class="grow" type="search" id="dc-q" placeholder="Buscar por número, proveedor o destino"><select id="dc-tipo" style="width:auto"><option value="">Todos los tipos</option><option>Remito</option><option>Factura</option><option>Vale de retiro</option><option>Otro</option></select><input type="date" id="dc-desde" style="width:auto" aria-label="Desde"><input type="date" id="dc-hasta" style="width:auto" aria-label="Hasta"></div>
+    <div class="section-head"><div><h2>Ver registro</h2><p class="sub" id="dc-sub"></p></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary need-dep" id="dc-new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Carga de registros</button></div></div>
+    <div class="toolbar"><input class="grow" type="search" id="dc-q" placeholder="Nº de referencia completo o parcial (ej.: R-04-0567 o 0567), proveedor o destino" autocomplete="off"><select id="dc-tipo" style="width:auto"><option value="">Todos los tipos</option><option>Remito</option><option>Factura</option><option>Vale de retiro</option><option>Otro</option></select><input type="date" id="dc-desde" style="width:auto" aria-label="Desde"><input type="date" id="dc-hasta" style="width:auto" aria-label="Hasta"></div>
     <div id="dc-list" style="display:grid;gap:12px"></div>
   </section>
   <section id="v-hist" data-view="hist" hidden>
     <div class="section-head">
       <div><h2>Historial de movimientos de productos</h2><p class="sub" id="hist-sub"></p></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn need-adm" id="btn-imp-hist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3M7 8l5-5 5 5M4 21h16"/></svg>Importar historial desde Excel</button>
-      <button class="btn" id="btn-export-hist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Exportar CSV</button></div>
+      <button class="btn" id="btn-export-hist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Exportar como…</button></div>
     </div>
     <div class="toolbar">
       <input class="grow" type="search" id="h-q" placeholder="Buscar SKU, elemento, origen, destino, autorizante, remito…">
@@ -740,7 +759,7 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
     <div class="section-head">
       <div><h2>Proveedores</h2><p class="sub" id="prov-sub">Los proveedores activos aparecen como origen al registrar un ingreso.</p></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn" id="btn-export-prov"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Exportar CSV</button>
+        <button class="btn" id="btn-export-prov"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Exportar como…</button>
         <button class="btn primary need-adm" id="btn-new-prov"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Nuevo proveedor</button>
       </div>
     </div>
@@ -775,7 +794,7 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
     <div class="section-head">
       <div><h2>Clientes</h2><p class="sub" id="cli-sub"></p></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn" id="btn-export-cli"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Exportar CSV</button>
+        <button class="btn" id="btn-export-cli"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Exportar como…</button>
         <button class="btn primary need-adm" id="btn-new-cli"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Nuevo cliente</button>
       </div>
     </div>
@@ -797,8 +816,8 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
     <div class="section-head">
       <div><h2>Listado de stock de trépanos</h2><p class="sub" id="tr-sub"></p></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn" id="tr-xls-list">Exportar listado (Excel)</button>
-        <button class="btn" data-trhxls>Exportar historial (Excel)</button>
+        <button class="btn" id="tr-xls-list">Exportar listado como…</button>
+        <button class="btn" data-trhxls>Exportar historial como…</button>
         <button class="btn need-adm" data-trimp>Importar historial (Excel)</button>
       </div>
     </div>
@@ -834,7 +853,7 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
   <section id="v-tr-hist" data-view="tr-hist" hidden>
     <div class="section-head">
       <div><h2>Historial de movimientos</h2><p class="sub">Entradas, salidas y traspasos de todos los trépanos en orden cronológico. Tocá ✎ en una fila para agregar o corregir una observación.</p></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn need-dep" data-goto="trepanos/omitidos">+ Movimiento omitido</button><button class="btn need-adm" data-trimp>Importar Excel</button><button class="btn" data-trhxls>Exportar Excel</button></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn need-dep" data-goto="trepanos/omitidos">+ Movimiento omitido</button><button class="btn need-adm" data-trimp>Importar Excel</button><button class="btn" data-trhxls>Exportar como…</button></div>
     </div>
     <div class="toolbar"><input class="grow" type="search" id="trh-q" placeholder="Buscar por código, tipo, origen o destino"><select id="trh-mov" style="width:auto"><option value="">Entradas, salidas, traspasos y cambios</option><option value="entrada">Entradas</option><option value="salida">Salidas</option><option value="traspaso">Traspasos</option><option value="estado">Cambios de estado / ubicación</option><option value="venta">Ventas</option><option value="todos">Todos (incluye ajustes y cambios)</option></select><select id="trh-est" style="width:auto"><option value="">Todos los estados</option><option value="nuevo">Nuevo</option><option value="optimo">Operativo</option><option value="reparacion">Reparación</option><option value="taller">Araña</option><option value="descarte">Descarte</option><option value="vendido">Vendido</option></select><input type="date" id="trh-d1" title="Desde" style="width:auto"><input type="date" id="trh-d2" title="Hasta" style="width:auto"><select id="trh-ord" style="width:auto"><option value="asc">Más antiguos primero</option><option value="desc">Más recientes primero</option></select><button class="btn" id="trh-clear">Limpiar</button></div>
     <p class="hint" id="trh-count" style="margin:0 0 8px"></p>
@@ -853,7 +872,7 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
   <section id="v-tr-one" data-view="tr-one" hidden>
     <div class="section-head">
       <div><h2>Historial de trépano</h2><p class="sub">Ingresá el código de un trépano para ver todos sus movimientos en orden cronológico.</p></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn need-adm" data-trimp>Importar Excel</button><button class="btn" id="tro-xls">Exportar Excel</button></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn need-adm" data-trimp>Importar Excel</button><button class="btn" id="tro-xls">Exportar como…</button></div>
     </div>
     <div class="toolbar"><input class="grow" type="search" id="tro-q" list="dl-trep" placeholder="Código del trépano (ej.: 12I308)" autocomplete="off"></div>
     <div id="tro-card"></div>
@@ -889,7 +908,7 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn need-adm" id="bh-imp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3M7 8l5-5 5 5M4 21h16"/></svg>Importar desde Excel</button>
         <button class="btn" data-washare="hist" style="color:#1f8f4e"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20l1.3-3.9A8 8 0 1 1 8 19z"/></svg>Compartir por WhatsApp</button>
-        <button class="btn" id="bh-xls"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Exportar a Excel</button>
+        <button class="btn" id="bh-xls"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Exportar como…</button>
         <button class="btn primary need-dep" data-goto="diario/registrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Registrar</button>
       </div>
     </div>
@@ -911,7 +930,7 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn need-adm" id="sh-imp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3M7 8l5-5 5 5M4 21h16"/></svg>Importar desde Excel</button>
         <button class="btn" id="sh-mail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="1"/><path d="M3 7l9 6 9-6"/></svg>Compartir por correo</button>
-        <button class="btn" id="sh-xls"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Exportar a Excel</button>
+        <button class="btn" id="sh-xls"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Exportar como…</button>
       </div>
     </div>
     <div class="kpis" id="sh-sum"></div>
@@ -937,7 +956,7 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
         <thead><tr><th>Acción</th><th>Consulta</th><th>Depósito</th><th>Administrador</th></tr></thead>
         <tbody>
           <tr><td>Ver stock, historiales, trépanos, bitácora, catálogo y pedidos</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td></tr>
-          <tr><td>Exportar a Excel, compartir por correo, imprimir etiquetas</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td></tr>
+          <tr><td>Exportar (Excel o PDF), compartir por correo, imprimir etiquetas</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td></tr>
           <tr><td>Dejar sugerencias en el Mapa de la aplicación</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td></tr>
           <tr><td>Registrar entradas, salidas, bitácora, trépanos y notas de pedido</td><td class="n">—</td><td class="y">✓</td><td class="y">✓</td></tr>
           <tr><td>Alta, edición y baja de productos, proveedores y clientes · Nuevo producto</td><td class="n">—</td><td class="n">—</td><td class="y">✓</td></tr>
@@ -976,7 +995,7 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
     <div class="section-head" style="margin-top:26px">
       <div><h2 style="font-size:22px">Todas las sugerencias</h2><p class="sub" id="sg-sub"></p></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap"><select id="sg-f-est" style="width:auto"><option value="abiertas">Abiertas (pendientes y en revisión)</option><option value="">Todas</option><option value="pendiente">Pendientes</option><option value="revision">En revisión</option><option value="aplicada">Aplicadas</option><option value="descartada">Descartadas</option></select>
-      <button class="btn" id="btn-sg-csv"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Exportar CSV</button></div>
+      <button class="btn" id="btn-sg-csv"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Exportar como…</button></div>
     </div>
     <div class="card"><div class="table-wrap"><table class="cards" id="t-sg">
       <thead><tr><th>Fecha</th><th>Nivel / subnivel</th><th>Sugerencia</th><th>Propone</th><th>Prioridad</th><th>Estado</th></tr></thead>
@@ -1046,6 +1065,7 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
 
 <datalist id="dl-prod"></datalist>
 <datalist id="dl-origen"></datalist>
+<datalist id="dl-docnum"></datalist>
 <datalist id="dl-destino"></datalist>
 <datalist id="dl-personas"></datalist>
 <datalist id="dl-cat"></datalist>
@@ -1115,7 +1135,9 @@ const MENU=[
   {id:"inicio",name:"Inicio",ic:"home",view:"home"},
   {id:"diario",name:"Movimientos diarios",ic:"diario",items:[
     {id:"registrar",name:"Registrar movimiento",view:"bit-reg",need:"deposito"},
-    {id:"historial",name:"Historial de movimientos",view:"bit-hist"}]},
+    {id:"historial",name:"Historial de movimientos",view:"bit-hist"},
+    {id:"cargaregistros",name:"Carga de registros",view:"docload",need:"deposito",sec:"Registros de entrada y salida"},
+    {id:"verregistro",name:"Ver registro",view:"docs",sec:"Registros de entrada y salida"}]},
   {id:"productos",name:"Movimientos de productos",ic:"productos",items:[
     {id:"entrada",name:"Entrada",view:"mov",need:"deposito",tipos:["ingreso"],title:"Entrada de productos",sub:"Ingreso de productos al depósito: compra a proveedor, devolución o transferencia."},
     {id:"salida",name:"Salida",view:"mov",need:"deposito",tipos:["egreso"],title:"Salida de productos",sub:"Egreso de productos hacia un área, equipo, pozo o cliente."},
@@ -1129,9 +1151,6 @@ const MENU=[
     {id:"salida",name:"Salida",view:"mov",need:"deposito",tipos:["egreso"],title:"Salida de insumos metalúrgicos",sub:"Retiro de insumos del taller metalúrgico, en unidades o en cajas."},
     {id:"stock",name:"Stock",view:"stock",title:"Stock de insumos metalúrgicos"},
     {id:"historial",name:"Historial",view:"shist"}]},
-  {id:"docs",name:"Documentación de respaldo",ic:"docs",items:[
-    {id:"lista",name:"Documentos",view:"docs"},
-    {id:"nuevo",name:"Cargar documento",view:"docs",openNew:true,need:"deposito"}]},
   {id:"compras",name:"Compras",ic:"compras",items:[{id:"pedido",name:"Nota de pedido",view:"ped"}]},
   {id:"catalogo",name:"Catálogo",ic:"catalogo",items:[
     {id:"productos",name:"Productos",view:"prod",title:"Productos",sub:"Catálogo de elementos del depósito, importación desde Excel y etiquetas."},
@@ -1174,12 +1193,14 @@ const MENU=[
     {id:"migrar",name:"Pasar datos de la planilla anterior",view:"migrar",need:"admin"}]}
 ];
 const LEVELS=MENU.filter(g=>g.id!=="inicio");
-const OLD_TABS={stock:"productos/stock",mov:"productos/entrada",hist:"productos/historial",prod:"catalogo/productos",prov:"catalogo/proveedores",ped:"compras/pedido",conf:"admin",home:"inicio"};
+const OLD_TABS={docs:"diario/verregistro","docs/lista":"diario/verregistro","docs/nuevo":"diario/cargaregistros",stock:"productos/stock",mov:"productos/entrada",hist:"productos/historial",prod:"catalogo/productos",prov:"catalogo/proveedores",ped:"compras/pedido",conf:"admin",home:"inicio"};
 let ROUTE={key:"inicio",grp:MENU[0],it:null},STOCK_SCOPE=null,MOV_SCOPE=null,MOV_TIPOS=["ingreso","egreso","ajuste"];
 const expanded=new Set();
 function findRoute(key){const [g,i]=String(key||"").split("/");const grp=MENU.find(x=>x.id===g);if(!grp)return null;
   if(!grp.items)return {key:grp.id,grp,it:null};const it=grp.items.find(x=>x.id===i)||grp.items[0];return {key:grp.id+"/"+it.id,grp,it}}
 const svgIc=k=>`<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${IC[k]||""}</svg>`;
+/* subniveles agrupados bajo un título (ej. "Registros de entrada y salida") */
+function secItems(items,fn,hd){let last=null;return items.map(it=>{const h=it.sec&&it.sec!==last?hd(it.sec):"";last=it.sec||null;return h+fn(it,!!it.sec)}).join("")}
 function renderTree(){
   let n=0;
   $("#tree").innerHTML=MENU.map(g=>{
@@ -1187,17 +1208,18 @@ function renderTree(){
     if(!g.items)return `<button class="grp${on?" on":""}" data-route="${g.id}"${on?' aria-current="page"':""}>${svgIc(g.ic)}<span>${esc(g.name)}</span></button>${g.id==="inicio"?'<div class="sep"></div>':""}`;
     n++;const ex=expanded.has(g.id);
     return `<button class="grp${on?" on":""}" data-grp="${g.id}" aria-expanded="${ex}">${svgIc(g.ic)}<span>${esc(g.name)}</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
-      <div class="subs"${ex?"":" hidden"}>${g.items.filter(it=>!it.hidden&&roleOk(it.need||"consulta")).map(it=>`<button class="it" data-route="${g.id}/${it.id}"${ROUTE.key===g.id+"/"+it.id?' aria-current="page"':""}>${esc(it.name)}</button>`).join("")}</div>`}).join("");
+      <div class="subs"${ex?"":" hidden"}>${secItems(g.items.filter(it=>!it.hidden&&roleOk(it.need||"consulta")),(it,sub)=>`<button class="it${sub?" in-sec":""}" data-route="${g.id}/${it.id}"${ROUTE.key===g.id+"/"+it.id?' aria-current="page"':""}>${esc(it.name)}</button>`,h=>`<div class="it-sec">${esc(h)}</div>`)}</div>`}).join("");
 }
 function crumbHtml(){return ROUTE.it?`<span>${esc(ROUTE.grp.name)}</span><span>›</span><b>${esc(ROUTE.it.name)}</b>`:`<b>${esc(ROUTE.grp.name)}</b>`}
 function setDrawer(open){$("#side").classList.toggle("open",open);$("#side-scrim").hidden=!open;$("#menu-btn").setAttribute("aria-expanded",open?"true":"false")}
 /* volver atrás: botón propio y botón "atrás" del celular (en la app instalada) */
 const NAVS=[],HIST_OK=!!window.DEP;
 try{if(HIST_OK)history.replaceState({dep:"inicio"},"")}catch(e){}
-function goBack(){if(DD&&DD.box&&!DD.box.hidden)ddClose();if($("#scrim")){closeModal();return}
+function goBack(){if(DD&&DD.box&&!DD.box.hidden)ddClose();if(document.getElementById("exp-root")){expClose();return}if($("#scrim")){closeModal();return}
   if(!NAVS.length){if(ROUTE.key!=="inicio")go("inicio",{pop:true});return}
   if(HIST_OK){try{history.back();return}catch(e){}}go(NAVS.pop(),{pop:true})}
 addEventListener("popstate",e=>{
+  if(document.getElementById("exp-root")){expClose();try{history.pushState({dep:ROUTE.key},"")}catch(x){}return}
   if($("#scrim")){closeModal();try{history.pushState({dep:ROUTE.key},"")}catch(x){}return}
   if($("#side")&&$("#side").classList.contains("open")){setDrawer(false);try{history.pushState({dep:ROUTE.key},"")}catch(x){}return}
   const k=(e.state&&e.state.dep)||NAVS[NAVS.length-1]||"inicio";NAVS.pop();go(k,{pop:true})});
@@ -1241,7 +1263,8 @@ function enterView(view,r,opt){
   if(view==="backup")renderBackup();
   if(view==="migrar")renderMigrar();
   if(view==="agenda"){AG_EDIT=null;renderAgenda()}
-  if(view==="docs"){renderDocs();if(it.openNew)setTimeout(()=>openDocForm(null,{}),0)}
+  if(view==="docload")renderDocLoad({reset:!DLR.some(r=>r.n.trim()||r.files.length)});
+  if(view==="docs")renderDocs();
   else if(typeof ctStop==="function"&&CT.stream)ctStop();
   if(view==="rec"){if(!opt.keepRec)recLeave();renderRec()}
   if(view==="home")renderHome();
@@ -1271,7 +1294,7 @@ function renderHome(){
   const hb=$("#home-bk");if(hb){const d=bkDays();hb.innerHTML=false?`<div class="banner warn bk-hint"><span>${d==null?"Todavía no se descargó ninguna copia de seguridad de la planilla.":`La última copia de seguridad es de hace ${d} días.`}</span><button class="btn" data-route-h="admin/respaldo">Hacer copia ahora</button></div>`:""}
   box.innerHTML=LEVELS.map((g,i)=>`<div class="lvl"><div class="lvl-h">${svgIc(g.ic)}<div><small>Nivel ${i+1}</small><h3>${esc(g.name)}</h3></div></div>
     <div class="stat">${grpStat(g)}</div>
-    <div class="opts">${g.items?g.items.filter(it=>!it.hidden&&roleOk(it.need||"consulta")).map(it=>`<button data-route-h="${g.id}/${it.id}">${esc(it.name)}</button>`).join(""):`<button data-route-h="${g.id}">Abrir</button>`}</div></div>`).join("");
+    <div class="opts">${g.items?secItems(g.items.filter(it=>!it.hidden&&roleOk(it.need||"consulta")),(it,sub)=>`<button data-route-h="${g.id}/${it.id}"${sub?' class="in-sec"':""}>${esc(it.name)}</button>`,h=>`<div class="opt-sec">${esc(h)}</div>`):`<button data-route-h="${g.id}">Abrir</button>`}</div></div>`).join("");
 }
 document.addEventListener("click",e=>{const b=e.target.closest("[data-newscope]");if(b)newScopedProduct(b.dataset.newscope)});
 $("#home-grid").addEventListener("click",e=>{const b=e.target.closest("[data-route-h]");if(b)go(b.dataset.routeH)});
@@ -1426,7 +1449,7 @@ let currentModalSku=null;
 function closeModal(){$("#modal-root").innerHTML="";currentModalSku=null;CUR_TR=null;document.body.style.overflow=""}
 function modal(html,cls){currentModalSku=null;CUR_TR=null;$("#modal-root").innerHTML=`<div class="scrim" id="scrim"><div class="modal ${cls||""}" role="dialog" aria-modal="true">${html}</div></div>`;document.body.style.overflow="hidden";
   $("#scrim").addEventListener("click",e=>{if(e.target.id==="scrim"||e.target.closest("[data-close]"))closeModal()})}
-document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("#scrim"))closeModal()});
+document.addEventListener("keydown",e=>{if(e.key!=="Escape")return;if(document.getElementById("exp-root")){expClose();return}if($("#scrim"))closeModal()});
 
 function openProduct(sku,refresh){
   const p=S.products.get(sku);if(!p)return;
@@ -1451,7 +1474,7 @@ function openProduct(sku,refresh){
         <button class="btn out" data-quick="egreso">${ICON_OUT}Egreso</button>
       </div>
       <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap"><button class="btn sm need-adm" data-quick="ajuste">Ajuste por recuento</button><button class="btn sm need-adm" id="d-edit">Editar producto</button></div>
-      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center"><span class="lb" style="margin-right:2px">Historial</span><button class="btn sm" id="d-hx"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M8 8l3 4-3 4M13 16h3"/></svg>Exportar a Excel</button><button class="btn sm" id="d-hm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="1"/><path d="M3 7l9 6 9-6"/></svg>Enviar por correo</button></div>
+      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center"><span class="lb" style="margin-right:2px">Historial</span><button class="btn sm" id="d-hx"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M8 8l3 4-3 4M13 16h3"/></svg>Exportar como…</button><button class="btn sm" id="d-hm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="1"/><path d="M3 7l9 6 9-6"/></svg>Enviar por correo</button></div>
     </div>
   </div>
   <div style="padding:0 18px 18px"><div class="lb" style="margin-bottom:6px">Últimos movimientos</div>
@@ -1539,10 +1562,10 @@ function movUi(t){
   if(m)$("#m-destino-wrap").hidden=true;
   $("#m-solic-lb").innerHTML=m?"Persona que retira <em>*</em>":"Solicitado por";
   $("#m-solic").placeholder=m?"Nombre y apellido de quien retira":"Quién pide el material";
-  $("#m-aut-wrap").hidden=m;
+  $("#m-aut-wrap").hidden=m||t==="ingreso";
   $("#m-doc-wrap").hidden=m&&t==="egreso";
-  $("#m-doc-lb").innerHTML=m?"N° de remito o factura de compra"+opt:"Nº de remito / pedido / OC";
-  $("#m-doc").placeholder=m?"Ej.: R 0001-00012345 o FC A 0003-00004567":"Opcional";
+  $("#m-doc-lb").innerHTML=(m?"N° de registro (remito o factura de compra)":"Nº de registro (remito / factura)")+opt;
+  $("#m-doc").placeholder="Ej.: R-04-0567";try{docHint($("#m-doc"),$("#m-doc-h"))}catch(e){}
   $("#m-obs-lb").innerHTML="Observaciones"+(m?opt:"");
 }
 /* ---------- unidad de cada operación: unidad base del elemento o una de sus presentaciones ----------
@@ -1603,7 +1626,8 @@ $("#m-origen").addEventListener("input",origenHint);
 $("#m-cant").addEventListener("input",()=>{unHint();updatePreview()});
 $("#m-un").addEventListener("change",()=>{unHint();updatePreview()});
 $("#m-prod").addEventListener("input",unRefresh);
-$("#f-mov").addEventListener("reset",()=>setTimeout(()=>{$("#m-fecha").value=nowLocal();UN_SKU=null;unRefresh();mAttClear();if(MDP)MDP.clear();updatePreview();origenHint()},0));
+$("#m-doc").addEventListener("input",()=>docHint($("#m-doc"),$("#m-doc-h")));
+$("#f-mov").addEventListener("reset",()=>setTimeout(()=>{$("#m-doc-h").innerHTML="";$("#m-fecha").value=nowLocal();UN_SKU=null;unRefresh();mAttClear();if(MDP)MDP.clear();updatePreview();origenHint()},0));
 $("#f-mov").addEventListener("submit",async e=>{
   e.preventDefault();if(!guardWrite(movTipo==="ajuste"?"admin":"deposito"))return;
   const sku=parseSku($("#m-prod").value);
@@ -1621,16 +1645,16 @@ $("#f-mov").addEventListener("submit",async e=>{
   else{
   if(movTipo==="ingreso"&&!origen){toast("Indicá el origen del ingreso.");$("#m-origen").focus();return}
   if(movTipo==="egreso"&&!destino){toast("Indicá el destino del egreso.");$("#m-destino").focus();return}
-  if(!aut){toast("Indicá quién autoriza el pedido.");$("#m-aut").focus();return}}
+  if(movTipo!=="ingreso"&&!aut){toast("Indicá quién autoriza el pedido.");$("#m-aut").focus();return}}
   const negOk=MOV_NEG_OK;MOV_NEG_OK=false;const antes=stockOf(sku),despues=Math.round((antes+(movTipo==="egreso"?-q:q))*1000)/1000;
   if(despues<0&&movTipo!=="ingreso"&&!negOk){movNegConfirm({p,antes,despues,q,cnt,pr,retira,destino:met?MET_CAT:destino});return}
   const f=$("#m-fecha").value;const fecha=(!f||f===nowLocal())?new Date().toISOString():new Date(f).toISOString();
   const prov=movTipo==="ingreso"?findProv(origen):null;
   if(prov&&prov.activo===false){toast("Ese proveedor está inactivo. Reactivalo en Proveedores o elegí otro.");return}
-  const body={obra:MOV_SCOPE&&!met?$("#m-obra").value.trim():"",sku,nombre:p.nombre,tipo:movTipo,cantidad:q,origen:movTipo==="ingreso"?(prov?prov.razonSocial:origen):"",proveedorId:prov?prov.id:"",destino:movTipo==="egreso"?(met?MET_CAT:destino):"",solicitante:movTipo==="egreso"?retira:"",autoriza:met?"":aut,remito:met&&movTipo==="egreso"?"":docN,obs:$("#m-obs").value.trim(),fecha,by:myId||""};
+  const body={obra:MOV_SCOPE&&!met?$("#m-obra").value.trim():"",sku,nombre:p.nombre,tipo:movTipo,cantidad:q,origen:movTipo==="ingreso"?(prov?prov.razonSocial:origen):"",proveedorId:prov?prov.id:"",destino:movTipo==="egreso"?(met?MET_CAT:destino):"",solicitante:movTipo==="egreso"?retira:"",autoriza:met||movTipo==="ingreso"?"":aut,remito:met&&movTipo==="egreso"?"":docN,obs:$("#m-obs").value.trim(),fecha,by:myId||""};
   if(met)body.nivel="metal";if(pr){body.presN=pr.n;body.presCant=cnt;body.presF=+pr.f}
   if(despues<0&&movTipo!=="ingreso")body.stockNegativo={antes,despues};
-  const dId=MDP&&movTipo!=="ajuste"?MDP.get():null;if(dId){body.docId=dId;if(!body.remito){const dd=S.docs.get(dId);if(dd)body.remito=dd.numero}}
+  const dId=(MDP&&movTipo!=="ajuste"?MDP.get():null)||((docByKey(body.remito)||{}).id)||null;if(dId){body.docId=dId;if(!body.remito){const dd=S.docs.get(dId);if(dd)body.remito=dd.numero}}
   const btn=$("#m-submit");btn.disabled=true;
   const useAtt=movTipo!=="ajuste"&&M_ATT.length;
   if(useAtt){if(!assets){toast("Tu acceso no permite subir imágenes: quitalas o pedí permiso de edición.");btn.disabled=false;return}
@@ -2089,7 +2113,69 @@ $("#mg-go").addEventListener("click",async()=>{if(!guardWrite("admin")||!MG.ops)
 /* ---------- export / labels ---------- */
 function csvCell(v){v=v==null?"":String(v);return /[";\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
 function toCsv(rows){return "﻿"+rows.map(r=>r.map(csvCell).join(";")).join("\r\n")}
+/* ---------- Exportar como: planilla de Excel o documento PDF ---------- */
+let atLoading=null;
+function loadAutoTable(){return loadJsPdf().then(()=>{const J=window.jspdf&&window.jspdf.jsPDF;if(J&&J.API&&J.API.autoTable)return;if(atLoading)return atLoading;
+  const urls=["https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js","https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"];
+  atLoading=new Promise((res,rej)=>{const tryAt=i=>{if(i>=urls.length){atLoading=null;rej(new Error("autotable"));return}const sc=document.createElement("script");sc.src=urls[i];sc.onload=()=>res();sc.onerror=()=>{sc.remove();tryAt(i+1)};document.head.appendChild(sc)};tryAt(0)});return atLoading})}
+function csvParse(t){t=String(t||"").replace(/^﻿/,"");const rows=[];let row=[],cell="",q=false;
+  for(let i=0;i<t.length;i++){const c=t[i];if(q){if(c==='"'){if(t[i+1]==='"'){cell+='"';i++}else q=false}else cell+=c}
+    else if(c==='"')q=true;else if(c===";"){row.push(cell);cell=""}else if(c==="\n"){row.push(cell.replace(/\r$/,""));rows.push(row);row=[];cell=""}else cell+=c}
+  if(cell||row.length){row.push(cell.replace(/\r$/,""));rows.push(row)}return rows}
+async function expWorkbook(filename,data){await loadXlsx();
+  if(/\.csv$/i.test(filename)){const txt=typeof data==="string"?data:await blobOf(data).text();const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(csvParse(txt)),"Datos");return wb}
+  return XLSX.read(await blobOf(data).arrayBuffer(),{type:"array",cellDates:true})}
+const pdfTxt=v=>String(v==null?"":v).replace(/[‘’]/g,"'").replace(/[“”″]/g,'"').replace(/[–—]/g,"-").replace(/…/g,"...").replace(/[•·]/g,"-").replace(/✔|✓/g,"OK").replace(/[^\x00-\xFF]/g,"");
+function expTitle(filename){return mailSubjectFrom(filename).replace(/ · Depósito Hidroblan$/,"")}
+async function wbToPdf(wb,title){
+  await loadAutoTable();const {jsPDF}=window.jspdf;let doc=null;const when=new Date().toLocaleString("es-AR");
+  const sheets=wb.SheetNames.filter(n=>!/respaldo completo/i.test(n));
+  for(const name of sheets){let rows=XLSX.utils.sheet_to_json(wb.Sheets[name],{header:1,defval:"",raw:false}).map(r=>r.map(pdfTxt));
+    rows=rows.filter(r=>r.some(c=>String(c).trim()));if(!rows.length)continue;
+    const hi=Math.max(0,rows.findIndex(r=>r.filter(c=>String(c).trim()).length>=2));const pre=rows.slice(0,hi).map(r=>r.filter(c=>String(c).trim()).join(" "));
+    let head=rows[hi],body=rows.slice(hi+1);const w=Math.max(head.length,...body.map(r=>r.length));
+    const keep=Array.from({length:w},(_,i)=>i).filter(i=>String(head[i]||"").trim()||body.some(r=>String(r[i]||"").trim()));
+    head=keep.map(i=>head[i]||"");body=body.map(r=>keep.map(i=>r[i]==null?"":r[i]));
+    const land=keep.length>6,fs=keep.length<=6?9:keep.length<=9?7.5:keep.length<=13?6.5:5.5;
+    if(!doc)doc=new jsPDF({orientation:land?"landscape":"portrait",unit:"mm",format:"a4"});else doc.addPage("a4",land?"landscape":"portrait");
+    doc.setFontSize(14);doc.setTextColor(20);doc.text(pdfTxt(title),12,14);
+    doc.setFontSize(9);doc.setTextColor(110);let y=20;
+    const subs=[sheets.length>1?pdfTxt(name):""].concat(pre).filter(x=>x&&x!==pdfTxt(title));subs.forEach(s=>{doc.text(s.slice(0,160),12,y);y+=5});
+    doc.text("Deposito Hidroblan - exportado el "+pdfTxt(when),12,y);y+=4;
+    doc.autoTable({head:[head],body,startY:y+1,margin:{left:10,right:10},styles:{fontSize:fs,cellPadding:1.3,overflow:"linebreak"},headStyles:{fillColor:[15,92,122],textColor:255},alternateRowStyles:{fillColor:[245,247,249]}})}
+  if(!doc){doc=new jsPDF();doc.text(pdfTxt(title),12,14);doc.setFontSize(10);doc.text("Sin datos para exportar.",12,24)}
+  const n=doc.internal.getNumberOfPages();for(let i=1;i<=n;i++){doc.setPage(i);doc.setFontSize(8);doc.setTextColor(130);doc.text(`Pagina ${i} de ${n}`,doc.internal.pageSize.getWidth()-34,doc.internal.pageSize.getHeight()-6)}
+  return doc.output("blob")}
+function expClose(){const r=document.getElementById("exp-root");if(r)r.remove()}
+function openExportAs(filename,data,opt){
+  expClose();opt=opt||{};const base=filename.replace(/\.(xlsx|csv)$/i,""),title=opt.title||expTitle(filename);
+  const root=document.createElement("div");root.id="exp-root";root.className="scrim";root.style.zIndex="1150";root.style.alignItems="center";
+  root.innerHTML=`<div class="modal" role="dialog" aria-modal="true" style="max-width:460px">
+    <div class="modal-h"><div><div class="meta">Exportar como</div><h3 style="overflow-wrap:anywhere">${esc(title)}</h3></div><button class="btn ghost x" data-expx aria-label="Cerrar">✕</button></div>
+    <div style="padding:18px;display:grid;gap:12px">
+      <div class="exp-opts" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <label class="card exp-o" style="padding:12px;display:grid;gap:4px;cursor:pointer"><span><input type="radio" name="exp-f" value="xlsx" checked> <b>Planilla de Excel</b></span><span class="meta">${esc(base)}.xlsx</span></label>
+        <label class="card exp-o" style="padding:12px;display:grid;gap:4px;cursor:pointer"><span><input type="radio" name="exp-f" value="pdf"> <b>Documento PDF</b></span><span class="meta">${esc(base)}.pdf</span></label>
+      </div>
+      <div class="meta" id="exp-st"></div>
+      <div class="form-actions" style="display:flex;flex-wrap:wrap"><button type="button" class="btn" data-expx>Cancelar</button>${mailer?`<button type="button" class="btn" id="exp-mail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16v12H4z"/><path d="M4 7l8 6 8-6"/></svg>Enviar por correo</button>`:""}<button type="button" class="btn primary" id="exp-dl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Descargar</button></div>
+    </div></div>`;
+  document.body.appendChild(root);
+  root.addEventListener("click",e=>{if(e.target===root||e.target.closest("[data-expx]"))expClose()});
+  const build=async()=>{const f=root.querySelector("input[name=exp-f]:checked").value,st=root.querySelector("#exp-st");st.textContent=f==="pdf"?"Generando el PDF…":"Preparando la planilla…";
+    root.querySelectorAll("#exp-dl,#exp-mail").forEach(b=>b.disabled=true);
+    try{const wb=/\.csv$/i.test(filename)||f==="pdf"?await expWorkbook(filename,data):null;
+      if(f==="pdf")return{name:base+".pdf",blob:await wbToPdf(wb,title)};
+      if(/\.csv$/i.test(filename))return{name:base+".xlsx",blob:new Blob([XLSX.write(wb,{bookType:"xlsx",type:"array"})])};
+      return{name:filename,blob:blobOf(data)}}
+    catch(e){console.error(e);toast(f==="pdf"?"No se pudo generar el PDF. Revisá la conexión e intentá de nuevo.":"No se pudo preparar la planilla.");return null}
+    finally{st.textContent="";root.querySelectorAll("#exp-dl,#exp-mail").forEach(b=>b.disabled=false)}};
+  root.querySelector("#exp-dl").onclick=async()=>{const r=await build();if(!r)return;expClose();save(r.name,r.blob,{direct:true})};
+  const em=root.querySelector("#exp-mail");if(em)em.onclick=async()=>{const r=await build();if(!r)return;expClose();openMailSend({files:[{name:r.name,data:r.blob}],subject:mailSubjectFrom(r.name),body:`Hola:\n\nTe envío adjunto ${r.name}.\n\nSaludos.`})};
+}
 async function save(filename,data,opt){
+  opt=opt||{};
+  if(!opt.direct&&/\.(xlsx|csv)$/i.test(filename)&&!/^plantilla/i.test(filename)&&!opt.noPdf){openExportAs(filename,data,opt);return}
   if(mailer&&!(opt&&opt.direct)&&!$("#modal-root").innerHTML){saveChoice(filename,data);return}
   if(!downloads){toast("La descarga de archivos no está disponible en esta vista.");return}
   try{await downloads.save({filename,data})}catch(e){if(e&&e.code==="declined")return;if(e&&e.code==="rate_limited"){toast("Ya hay una descarga pendiente de confirmar.");return}toast("No se pudo generar la descarga.")}
@@ -2350,7 +2436,7 @@ function openHistMail(sku){
      <div class="card" style="padding:14px;display:grid;gap:10px;background:var(--surface-2)">
        <ol class="steps"><li>Descargá el Excel del historial.</li><li>Abrí el correo: los destinatarios, el asunto y el texto ya vienen cargados. Si no se abre tu programa de correo, copiá los datos y pegalos en un mail nuevo.</li><li>Adjuntá el Excel y enviá.</li></ol>
        <div style="display:flex;gap:8px;flex-wrap:wrap">
-         <button class="btn primary" id="hm-xls"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Descargar Excel</button>
+         <button class="btn primary" id="hm-xls"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Exportar como…</button>
          <a class="btn" id="hm-mail" href="#" target="_blank" rel="noopener">Abrir en el correo</a>
          <button class="btn" id="hm-copy">Copiar destinatarios, asunto y texto</button>
        </div>
@@ -2384,7 +2470,7 @@ function openHistMail(sku){
 }
 function openHistExport(sku){
   const p=S.products.get(sku);if(!p)return;
-  modal(`<div class="modal-h"><div><div class="mono meta">${esc(p.sku)}</div><h3>Exportar historial a Excel</h3><div class="meta">${esc(p.nombre)}</div></div><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
+  modal(`<div class="modal-h"><div><div class="mono meta">${esc(p.sku)}</div><h3>Exportar historial</h3><div class="meta">${esc(p.nombre)}</div></div><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
    <div style="padding:18px;display:grid;gap:14px">
      <div class="map-grid" style="grid-template-columns:repeat(auto-fill,minmax(170px,1fr))">
        <div class="field"><label class="lb" for="hx-d">Desde</label><input type="date" id="hx-d"></div>
@@ -2392,7 +2478,7 @@ function openHistExport(sku){
      </div>
      <p class="hint" style="margin:0">Dejá las fechas vacías para exportar todo. La planilla incluye los datos del producto, cada movimiento con su saldo y los totales de ingresos, egresos y ajustes.</p>
      <div class="meta" id="hx-info"></div>
-     <div class="form-actions" style="display:flex"><button class="btn" data-close>Cancelar</button><button class="btn primary" id="hx-go">Descargar Excel</button></div>
+     <div class="form-actions" style="display:flex"><button class="btn" data-close>Cancelar</button><button class="btn primary" id="hx-go">Exportar como…</button></div>
    </div>`);
   const upd=()=>{const n=prodHistory(sku,$("#hx-d").value,$("#hx-h").value).length;$("#hx-info").textContent=`${n} movimiento${n===1?"":"s"} a exportar`;$("#hx-go").disabled=!n};
   ["#hx-d","#hx-h"].forEach(s=>$(s).addEventListener("input",upd));upd();
@@ -2906,7 +2992,7 @@ function renderTrArq(){
   const L=taList(),open=L.find(a=>a.estado==="abierto");
   if(TA_CUR&&!S.trarq.has(TA_CUR))TA_CUR=null;if(!TA_CUR&&open)TA_CUR=open.id;
   const a=TA_CUR?S.trarq.get(TA_CUR):null;
-  const hist=`<div class="lb" style="margin:20px 0 8px">Arqueos anteriores</div><div class="card"><div class="table-wrap"><table class="cards"><thead><tr><th>Fecha</th><th>Arqueo</th><th>Responsable</th><th>Estado</th><th class="r">Contados</th><th class="r">Diferencias</th><th></th></tr></thead><tbody>${L.length?L.map(x=>`<tr class="click" data-taopen="${x.id}"${x.id===TA_CUR?' style="background:var(--accent-soft)"':""}><td class="mono meta">${esc(x.fecha||"")}</td><td class="name">${esc(x.nombre||"")}</td><td>${esc(x.responsable||"")}</td><td>${x.estado==="abierto"?'<span class="pill warn">En curso</span>':x.estado==="anulado"?'<span class="pill">Anulado</span>':'<span class="pill ok">Finalizado</span>'}</td><td class="r num">${taItems(x).reduce((s,i)=>s+i.cantidad,0)}</td><td class="r num">${x.resultado?x.resultado.nDif:"—"}</td><td><button class="btn sm" data-taxls="${x.id}">Excel</button></td></tr>`).join(""):`<tr><td colspan="7"><div class="empty" style="padding:16px">Todavía no se hizo ningún arqueo.</div></td></tr>`}</tbody></table></div></div>`;
+  const hist=`<div class="lb" style="margin:20px 0 8px">Arqueos anteriores</div><div class="card"><div class="table-wrap"><table class="cards"><thead><tr><th>Fecha</th><th>Arqueo</th><th>Responsable</th><th>Estado</th><th class="r">Contados</th><th class="r">Diferencias</th><th></th></tr></thead><tbody>${L.length?L.map(x=>`<tr class="click" data-taopen="${x.id}"${x.id===TA_CUR?' style="background:var(--accent-soft)"':""}><td class="mono meta">${esc(x.fecha||"")}</td><td class="name">${esc(x.nombre||"")}</td><td>${esc(x.responsable||"")}</td><td>${x.estado==="abierto"?'<span class="pill warn">En curso</span>':x.estado==="anulado"?'<span class="pill">Anulado</span>':'<span class="pill ok">Finalizado</span>'}</td><td class="r num">${taItems(x).reduce((s,i)=>s+i.cantidad,0)}</td><td class="r num">${x.resultado?x.resultado.nDif:"—"}</td><td><button class="btn sm" data-taxls="${x.id}">Exportar</button></td></tr>`).join(""):`<tr><td colspan="7"><div class="empty" style="padding:16px">Todavía no se hizo ningún arqueo.</div></td></tr>`}</tbody></table></div></div>`;
   $("#ta-new").hidden=!!open;
   if(!a){box.innerHTML=`<div class="card empty"><b>No hay un arqueo en curso</b>Tocá <em>Nuevo arqueo</em> para empezar el control de existencia en las bases.</div>`+hist;return}
   const closed=a.estado!=="abierto",items=taItems(a),R=a.resultado||{},done=new Set(R.aplicadas||[]);
@@ -2917,7 +3003,7 @@ function renderTrArq(){
   const secs=Object.keys(TA_CAT).map(cat=>{const ls=lines.filter(l=>l.cat===cat);if(!ls.length)return"";return `<div class="ta-sec"><h4><span class="pill ${TA_CAT[cat][1]}">${ls.length}</span> ${TA_CAT[cat][0]}</h4>${ls.map(l=>`<label class="ta-it">${closed?"":`<input type="checkbox" data-tafix="${esc(l.id)}"${l.def?" checked":""}>`}<span class="mono">${esc(l.ref)}</span><span class="meta">sistema: ${esc(l.sis)} · contado: ${esc(l.con)}</span> → ${esc(l.acc)} ${tag(l.id)}</label>`).join("")}</div>`}).join("");
   box.innerHTML=`
    <div class="card" style="padding:12px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px"><div style="flex:1 1 240px"><div class="name" style="font-size:17px">${esc(a.nombre)}</div><div class="meta">Responsable: ${esc(a.responsable||"—")} · ${closed?(a.estado==="anulado"?"Anulado":"Finalizado el "+esc(fmtD(a.cerrado))+(a.cerradoPor?" · autorizó "+esc(a.cerradoPor):"")):"En curso"} · ${total} trépano${total===1?"":"s"} contado${total===1?"":"s"}</div></div>
-     ${closed?"":`<button class="btn sm" id="ta-imp">Importar Excel</button><button class="btn sm" id="ta-tpl">Plantilla Excel</button><input type="file" id="ta-file" accept=".xlsx,.xls,.csv,.ods" hidden>`}<button class="btn sm" data-taxls="${a.id}">Exportar Excel</button>${closed?"":`<button class="btn sm need-adm" id="ta-anul">Anular</button>`}</div>
+     ${closed?"":`<button class="btn sm" id="ta-imp">Importar Excel</button><button class="btn sm" id="ta-tpl">Plantilla Excel</button><input type="file" id="ta-file" accept=".xlsx,.xls,.csv,.ods" hidden>`}<button class="btn sm" data-taxls="${a.id}">Exportar como…</button>${closed?"":`<button class="btn sm need-adm" id="ta-anul">Anular</button>`}</div>
    <div class="ta-grid">
     <div class="card" style="padding:14px 16px;display:grid;gap:12px;align-content:start">
      ${closed?"":`<div class="lb">1 · Cargar los trépanos contados</div>
@@ -3483,7 +3569,7 @@ function renderMap(){
   box.innerHTML=`<button class="mnode root${MAP_SEL==="app"?" sel":""}" data-node="app"><span>Depósito Hidroblan</span><small>Aplicación en general</small>${mapBadge("app")}</button>
    <div class="mlevels">${LEVELS.map((g,i)=>`<div class="mbranch">
      <button class="mnode lvl${MAP_SEL===g.id?" sel":""}" data-node="${g.id}">${svgIc(g.ic)}<span><small>Nivel ${i+1}</small>${esc(g.name)}</span>${mapBadge(g.id)}</button>
-     ${g.items?`<div class="mleaves">${g.items.filter(it=>!it.hidden).map(it=>`<button class="mnode leaf${MAP_SEL===g.id+"/"+it.id?" sel":""}" data-node="${g.id}/${it.id}"><span>${esc(it.name)}</span>${mapBadge(g.id+"/"+it.id)}</button>`).join("")}</div>`:""}
+     ${g.items?`<div class="mleaves">${secItems(g.items.filter(it=>!it.hidden),it=>`<button class="mnode leaf${MAP_SEL===g.id+"/"+it.id?" sel":""}" data-node="${g.id}/${it.id}"><span>${esc(it.sec?it.sec+" › "+it.name:it.name)}</span>${mapBadge(g.id+"/"+it.id)}</button>`,()=>"")}</div>`:""}
    </div>`).join("")}</div>`;
   renderMapPanel();renderSgTable();
 }
@@ -3633,7 +3719,7 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-attview]")
   lbOpen(en.adjuntos.map(a=>({src:attUrl(a),nombre:a.nombre,tipo:a.tipo,ctx:en.fecha.split("-").reverse().join("/")})),+b.dataset.atti||0)},true);
 /* adjuntos en salidas de productos (mismo sistema que la bitácora) */
 let M_ATT=[];
-function mAttUi(){mDocInit();$("#m-docp-wrap").hidden=movTipo==="ajuste";const w=$("#m-att");if(!w)return;w.hidden=true;const ok=!!assets;$("#m-att-bar").hidden=!ok;
+function mAttUi(){mDocInit();$("#m-docp-wrap").hidden=true;const w=$("#m-att");if(!w)return;w.hidden=true;const ok=!!assets;$("#m-att-bar").hidden=!ok;
   $("#m-att-hint").innerHTML=ok?(movTipo==="ingreso"?"Remito o factura del proveedor, foto del material recibido… Las fotos grandes se reducen solas.":"Remito firmado, vale de retiro, foto del material entregado… Las fotos grandes se reducen solas."):(ASSETS_READY?"Tu acceso a la planilla no permite subir imágenes (hace falta permiso de edición en el artefacto).":"Preparando adjuntos…")}
 function mAttRender(){$("#m-att-grid").innerHTML=M_ATT.map((it,i)=>`<div class="att-th" data-mprev="${i}" title="${esc(it.name)}">${it.type==="application/pdf"?`<span class="att-doc">PDF<br>${esc(it.name.slice(0,18))}</span>`:`<img src="${it.url}" alt="">`}${it.id?"":`<span class="att-st">${fmtBytes(it.blob.size)}</span>`}<button type="button" class="att-x" data-mrm="${i}" aria-label="Quitar">✕</button></div>`).join("");
   $("#m-att-n").textContent=M_ATT.length?`${M_ATT.length} adjunto${M_ATT.length===1?"":"s"} listo${M_ATT.length===1?"":"s"}`:""}
@@ -3666,11 +3752,10 @@ function openMovEdit(id){
      ${isOut?`<div class="field"><label class="lb" for="me-d">Destino</label><input type="text" id="me-d" list="dl-destino" value="${esc(m.destino||"")}"></div>
      <div class="field"><label class="lb" for="me-s">${m.nivel==="metal"?"Persona que retira":"Solicitado por"}</label><input type="text" id="me-s" list="dl-personas" value="${esc(m.solicitante||"")}"></div>
      <div class="field"><label class="lb" for="me-ob">N° de obra${opt}</label><input type="text" id="me-ob" value="${esc(m.obra||"")}"></div>`:""}
-     <div class="field"><label class="lb" for="me-a">Autoriza</label><input type="text" id="me-a" list="dl-personas" value="${esc(m.autoriza||"")}"></div>
-     <div class="field"><label class="lb" for="me-r">N° de remito / factura${opt}</label><input type="text" id="me-r" value="${esc(m.remito||"")}"></div>
+     <div class="field"${isIn&&!m.autoriza?" hidden":""}><label class="lb" for="me-a">Autoriza</label><input type="text" id="me-a" list="dl-personas" value="${esc(m.autoriza||"")}"></div>
+     <div class="field"><label class="lb" for="me-r">Nº de registro (remito / factura)${opt}</label><input type="text" id="me-r" list="dl-docnum" autocomplete="off" value="${esc(m.remito||"")}"><span class="hint" id="me-r-h"></span></div>
      <div class="field full"><label class="lb" for="me-obs">Observaciones</label><textarea id="me-obs">${esc(m.obs||"")}</textarea></div>
-     ${isAdj?"":`<div class="field full"><span class="lb">Documento de respaldo</span><div id="me-docp"></div></div>`}
-     ${(m.adjuntos||[]).length?`<div class="field full"><span class="lb">Imágenes cargadas en el movimiento (anteriores)</span><div class="att-grid" id="me-att"></div><span class="hint">Las imágenes nuevas se cargan en un documento de respaldo. Tocá ✕ para quitar una de estas.</span></div>`:'<div id="me-att" hidden></div>'}
+     ${(m.adjuntos||[]).length?`<div class="field full"><span class="lb">Imágenes cargadas en el movimiento (anteriores)</span><div class="att-grid" id="me-att"></div><span class="hint">Los documentos nuevos se cargan en Movimientos diarios › Carga de registros. Tocá ✕ para quitar una de estas.</span></div>`:'<div id="me-att" hidden></div>'}
      <div class="field full" id="me-warn" hidden></div>
      <div class="form-actions"><button type="button" class="btn" data-close>Cancelar</button><button type="submit" class="btn primary" id="me-go">Guardar cambios</button></div>
    </form>`,"wide");
@@ -3684,7 +3769,7 @@ function openMovEdit(id){
   drawAtt();
   $("#me-att").addEventListener("click",ev=>{const x=ev.target.closest("[data-merm]");if(x){const k=x.dataset.merm,i=+k.slice(1);if(k[0]==="o"){const a=OLD[i];RM.has(a.id)?RM.delete(a.id):RM.add(a.id)}else{const it=NEW.splice(i,1)[0];if(it.url)URL.revokeObjectURL(it.url)}drawAtt();return}
     const v=ev.target.closest("[data-meview]");if(v){const all=OLD.map(a=>({src:attUrl(a),nombre:a.nombre,tipo:a.tipo})).concat(NEW.map(it=>({src:it.url,nombre:it.name,tipo:it.type})));const k=v.dataset.meview;lbOpen(all,k[0]==="o"?+k.slice(1):OLD.length+ +k.slice(1))}});
-  const MEP=isAdj?null:docPicker($("#me-docp"),{pre:()=>({tipo:isIn?"Remito":"Vale de retiro",tercero:isIn?($("#me-o")?$("#me-o").value:""):($("#me-d")?$("#me-d").value:""),fecha:($("#me-f").value||"").slice(0,10)}),onChange:d=>{if(d&&!$("#me-r").value.trim())$("#me-r").value=d.numero}});if(MEP)MEP.set(m.docId||null);
+  const MEP=null;$("#me-r").addEventListener("input",()=>docHint($("#me-r"),$("#me-r-h")));docHint($("#me-r"),$("#me-r-h"));
   let negOk=false;
   $("#f-me").addEventListener("submit",async ev=>{ev.preventDefault();if(!guardWrite("deposito"))return;
     const q=qNew(),k=sel.value,pr=lockQty||isAdj||k===""?null:P[+k];
@@ -3709,7 +3794,7 @@ function openMovEdit(id){
       try{for(let i=0;i<NEW.length;i++){b.textContent=`Subiendo ${i+1} de ${NEW.length}…`;await attUpload(NEW[i])}}catch(err){toast(attErr(err));b.textContent="Guardar cambios";b.disabled=false;return}}
     const adj=OLD.filter(a=>!RM.has(a.id)).concat(NEW.map(attRow));
     if(NEW.length||RM.size){patch.adjuntos=adj;campos.push("imágenes")}
-    if(MEP){const nd=MEP.get()||null;if(nd!==(m.docId||null)){patch.docId=nd;campos.push("documento")}}
+    {const dd=docByKey($("#me-r").value.trim()),nd=dd?dd.id:null;if(nd!==(m.docId||null)&&(nd||campos.includes("remito"))){patch.docId=nd;campos.push("documento")}}
     if(!campos.length){toast("No hubo cambios.");closeModal();return}
     patch.ediciones=(m.ediciones||[]).concat([{fecha:new Date().toISOString(),by:myId||"",campos}]).slice(-20);
     try{await withRetry(()=>db.doc("movimientos/"+m.id).update(patch));Object.assign(m,patch);if(assets)RM.forEach(aid=>assets.delete(aid).catch(()=>{}));NEW.forEach(it=>it.url&&URL.revokeObjectURL(it.url));
@@ -3721,7 +3806,73 @@ const DOC_TIPOS=["Remito","Factura","Vale de retiro","Otro"];
 const docKey=t=>norm(t).replace(/[^a-z0-9]/g,"");
 const docList=()=>Array.from(S.docs.values()).sort((a,b)=>(b.fecha||"").localeCompare(a.fecha||"")||(b.creado||"").localeCompare(a.creado||""));
 const docLabel=d=>d?`${d.tipo||"Documento"} ${d.numero||"s/n"}`:"";
-const docMovs=id=>S.movs.filter(m=>m.docId===id);
+const docMovs=id=>{const d=S.docs.get(id);return d?docLinks(d).mv:S.movs.filter(m=>m.docId===id)};
+/* registros por número de referencia: mayúsculas/minúsculas, puntos, guiones y espacios dan igual */
+let DKC={src:null,n:-1,map:null};
+const docByKey=num=>{const k=docKey(num||"");if(!k)return null;
+  if(DKC.src!==S.docs||DKC.n!==S.docs.size){const M=new Map();docList().slice().reverse().forEach(d=>{const x=docKey(d.numero||"");if(x)M.set(x,d)});DKC={src:S.docs,n:S.docs.size,map:M}}
+  const d=DKC.map.get(k);if(!d)return null;return S.docs.get(d.id)===d&&docKey(d.numero||"")===k?d:docList().find(z=>docKey(z.numero||"")===k)||null};
+const docOfMov=m=>(m.docId&&S.docs.get(m.docId))||docByKey(m.remito);
+/* números de registro mencionados en un texto (bitácora): tokens con separadores . - / y pares de tokens separados por espacio */
+function docRefsIn(t){const T=String(t||"").match(/[A-Za-z0-9]+(?:[.\-\/][A-Za-z0-9]+)*/g)||[],K=new Set();
+  T.forEach((x,i)=>{K.add(docKey(x));if(i)K.add(docKey(T[i-1]+x))});return Array.from(K).filter(k=>/\d/.test(k))}
+function docLinks(d){const k=docKey(d.numero||"");
+  const mv=S.movs.filter(m=>m.docId===d.id||(k&&docKey(m.remito||"")===k));
+  const tr=(S.trmov||[]).filter(m=>k&&docKey(m.remito||"")===k);
+  const bi=(S.bit||[]).filter(b=>k&&docRefsIn(b.texto).includes(k));
+  return{mv,tr,bi,n:mv.length+tr.length+bi.length}}
+function refreshDocDl(){trDl("dl-docnum",docList().map(d=>`<option value="${esc(d.numero)}" label="${esc(d.tipo||"")} · ${esc((d.fecha||"").split("-").reverse().join("/"))}${d.tercero?" · "+esc(d.tercero):""}"></option>`).join(""))}
+/* ---------- carga de registros de la jornada ---------- */
+let DLR=[];let DLR_SEQ=0;
+const dlNew=()=>({k:++DLR_SEQ,n:"",t:"Remito",te:"",o:"",files:[]});
+function renderDocLoad(opt){
+  if($("#v-docload").hidden)return;opt=opt||{};
+  if(opt.reset||!DLR.length){DLR.forEach(r=>r.files.forEach(it=>it.url&&URL.revokeObjectURL(it.url)));DLR=[dlNew()]}
+  if(!$("#dl-fecha").value)$("#dl-fecha").value=todayStr();
+  dlDraw();renderDocDay()}
+function dlDraw(){const box=$("#dl-rows");
+  box.innerHTML=DLR.map((r,i)=>{const ex=r.n.trim()&&docByKey(r.n),dupIn=r.n.trim()&&DLR.some((x,j)=>j!==i&&docKey(x.n)===docKey(r.n));
+    return `<div class="card dl-row" data-dlk="${r.k}" style="padding:12px 14px;display:grid;gap:10px;background:var(--surface-2)">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b>Registro ${i+1}</b>${DLR.length>1?`<button type="button" class="btn ghost sm" data-dlrm="${r.k}" aria-label="Quitar este registro">✕</button>`:""}</div>
+      <div class="form" style="padding:0;gap:10px">
+        <div class="field"><label class="lb" for="dl-n${r.k}">Nº de referencia <em>*</em></label><input type="text" id="dl-n${r.k}" data-dlf="n" value="${esc(r.n)}" placeholder="Ej.: R-04-0567" autocomplete="off"></div>
+        <div class="field"><label class="lb" for="dl-t${r.k}">Tipo</label><select id="dl-t${r.k}" data-dlf="t">${DOC_TIPOS.map(t=>`<option${t===r.t?" selected":""}>${t}</option>`).join("")}</select></div>
+        <div class="field"><label class="lb" for="dl-te${r.k}">Proveedor / destino</label><input type="text" id="dl-te${r.k}" data-dlf="te" list="dl-origen" value="${esc(r.te)}" placeholder="Opcional"></div>
+        <div class="field"><label class="lb" for="dl-o${r.k}">Observaciones</label><input type="text" id="dl-o${r.k}" data-dlf="o" value="${esc(r.o)}" placeholder="Opcional"></div>
+        <div class="field full">${ex?`<div class="banner warn" style="margin:0">Ya hay un registro con ese número: <button type="button" class="lnk" data-docopen="${esc(ex.id)}">${esc(docLabel(ex))} del ${esc((ex.fecha||"").split("-").reverse().join("/"))}</button>. Cambiá el número o quitá esta fila.</div>`:dupIn?'<div class="banner warn" style="margin:0">Este número está repetido en otra fila.</div>':""}</div>
+        <div class="field full"><span class="lb">Imágenes o PDF del documento</span><div class="att-grid" id="dl-att${r.k}">${r.files.map((it,j)=>`<div class="att-th">${it.type==="application/pdf"?`<span class="att-doc">PDF</span>`:`<img src="${esc(it.url)}" alt="">`}<button type="button" class="att-x" data-dlfrm="${r.k}:${j}" aria-label="Quitar">✕</button></div>`).join("")}</div>
+          <div class="att-bar" style="margin-top:8px"${assets?"":" hidden"}><label class="btn sm" for="dl-file${r.k}">Adjuntar archivos</label><input type="file" id="dl-file${r.k}" data-dlfile="${r.k}" accept="image/*,application/pdf" multiple hidden><label class="btn sm" for="dl-cam${r.k}">Cámara</label><input type="file" id="dl-cam${r.k}" data-dlfile="${r.k}" accept="image/*" capture="environment" hidden><span class="meta">${r.files.length?`${r.files.length} archivo${r.files.length===1?"":"s"}`:""}</span></div>
+          ${assets?"":'<span class="hint">Tu acceso no permite subir imágenes.</span>'}</div>
+      </div></div>`}).join("");
+  $("#dl-go").textContent=DLR.length>1?`Guardar ${DLR.length} registros`:"Guardar registro"}
+function dlRow(k){return DLR.find(r=>r.k===+k)}
+$("#dl-rows").addEventListener("input",e=>{const f=e.target.dataset.dlf;if(!f)return;const r=dlRow(e.target.closest("[data-dlk]").dataset.dlk);if(!r)return;r[f]=e.target.value;
+  if(f==="n"){clearTimeout(r._t);r._t=setTimeout(()=>{const pos=e.target.selectionStart,id=e.target.id;dlDraw();const i=$("#"+id);if(i){i.focus();try{i.setSelectionRange(pos,pos)}catch(x){}}},500)}});
+$("#dl-rows").addEventListener("change",async e=>{const k=e.target.dataset.dlfile;if(k){const r=dlRow(k);if(!r)return;await attAddFiles(e.target.files,r.files,dlDraw);e.target.value="";return}
+  const f=e.target.dataset.dlf;if(f){const r=dlRow(e.target.closest("[data-dlk]").dataset.dlk);if(r)r[f]=e.target.value}});
+$("#dl-rows").addEventListener("click",e=>{const x=e.target.closest("[data-dlrm]");if(x){const r=dlRow(x.dataset.dlrm);if(r)r.files.forEach(it=>it.url&&URL.revokeObjectURL(it.url));DLR=DLR.filter(z=>z.k!==+x.dataset.dlrm);dlDraw();return}
+  const y=e.target.closest("[data-dlfrm]");if(y){const [k,j]=y.dataset.dlfrm.split(":");const r=dlRow(k);if(r){const it=r.files.splice(+j,1)[0];if(it&&it.url)URL.revokeObjectURL(it.url)}dlDraw()}});
+$("#dl-add").addEventListener("click",()=>{DLR.push(dlNew());dlDraw();setTimeout(()=>{const i=$(`#dl-n${DLR[DLR.length-1].k}`);if(i)i.focus()},30)});
+$("#dl-fecha").addEventListener("change",renderDocDay);
+$("#f-dl").addEventListener("submit",async e=>{e.preventDefault();if(!guardWrite("deposito"))return;
+  const fecha=$("#dl-fecha").value||todayStr(),R=DLR.filter(r=>r.n.trim()||r.files.length||r.te.trim()||r.o.trim());
+  if(!R.length){toast("Escribí el número de referencia del registro.");return}
+  for(const r of R){if(!r.n.trim()){toast("Cada registro necesita su número de referencia.");const i=$(`#dl-n${r.k}`);if(i)i.focus();return}
+    if(docByKey(r.n)){toast(`Ya existe un registro con el número ${r.n.trim()}.`);return}
+    if(R.some(x=>x!==r&&docKey(x.n)===docKey(r.n))){toast(`El número ${r.n.trim()} está repetido.`);return}}
+  if(R.some(r=>r.files.length)&&!assets){toast("Tu acceso no permite subir imágenes: quitalas para guardar.");return}
+  const b=$("#dl-go");b.disabled=true;let ok=0;
+  try{for(const r of R){for(let i=0;i<r.files.length;i++){b.textContent=`Subiendo archivo ${i+1} de ${r.files.length} (${r.n.trim()})…`;await attUpload(r.files[i])}
+      const now=new Date().toISOString(),body={tipo:r.t,numero:r.n.trim(),fecha,tercero:normEq(r.te.trim()),obs:r.o.trim(),adjuntos:r.files.map(attRow),creado:now,actualizado:now,by:myId||""};
+      const x=await withRetry(()=>db.collection("documentos").add(body));S.docs.set(x.id,Object.assign({id:x.id},body));r.files.forEach(it=>it.url&&URL.revokeObjectURL(it.url));DLR=DLR.filter(z=>z!==r);ok++}
+    toast(`${ok} registro${ok===1?"":"s"} guardado${ok===1?"":"s"}`);refreshDocDl();renderDocLoad({reset:true})}
+  catch(err){writeError(err);toast(`Se guardaron ${ok} de ${R.length}. Revisá y volvé a guardar los que faltan.`);dlDraw()}
+  finally{b.disabled=false;dlDraw()}});
+function renderDocDay(){const f=$("#dl-fecha").value||todayStr(),L=docList().filter(d=>d.fecha===f),box=$("#dl-day");
+  $("#dl-day-h").textContent=`Registros cargados el ${f.split("-").reverse().join("/")} (${L.length})`;
+  box.innerHTML=L.length?L.map(d=>{const n=docLinks(d).n;return `<div class="dc-row" data-docopen="${esc(d.id)}" role="button" tabindex="0" style="display:flex;gap:10px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line)"><span class="dc-mv-th">${docThumbs(d,2)}</span><span style="flex:1;min-width:0"><b class="mono">${esc(d.numero)}</b> <span class="meta">${esc(d.tipo||"")}${d.tercero?" · "+esc(d.tercero):""}</span></span><span class="pill" style="background:var(--surface)">${n} vínculo${n===1?"":"s"}</span></div>`}).join(""):'<div class="meta" style="padding:12px 14px">Todavía no hay registros cargados en esta fecha.</div>'}
+/* número de registro en el movimiento: muestra si ya está vinculado */
+function docHint(inp,out){const v=inp.value.trim(),d=v&&docByKey(v);out.innerHTML=!v?"":d?`<span style="color:var(--ok)">✓ Vinculado a <button type="button" class="lnk" data-docopen="${esc(d.id)}">${esc(docLabel(d))}</button> del ${esc((d.fecha||"").split("-").reverse().join("/"))}</span>`:'<span class="meta">Todavía no hay un registro cargado con ese número: se vincula solo cuando se cargue en <b>Carga de registros</b>.</span>'}
 function docThumbs(d,max){const A=d.adjuntos||[];return A.slice(0,max||4).map((a,i)=>`<button type="button" class="mv-th" data-docimg="${esc(d.id)}" data-atti="${i}" aria-label="Ver ${esc(a.nombre||"imagen")}">${isPdf(a)?'<span>PDF</span>':`<img src="${esc(attUrl(a))}" alt="" loading="lazy">`}</button>`).join("")+(A.length>(max||4)?`<button type="button" class="mv-th more" data-docimg="${esc(d.id)}" data-atti="${max||4}">+${A.length-(max||4)}</button>`:"")}
 document.addEventListener("click",e=>{const b=e.target.closest("[data-docimg]");if(!b)return;e.preventDefault();e.stopPropagation();const d=S.docs.get(b.dataset.docimg);if(!d||!(d.adjuntos||[]).length)return;
   lbOpen(d.adjuntos.map(a=>({src:attUrl(a),nombre:a.nombre,tipo:a.tipo,ctx:`${docLabel(d)} · ${(d.fecha||"").split("-").reverse().join("/")}`})),+b.dataset.atti||0)},true);
@@ -3731,24 +3882,27 @@ function renderDocs(){
   if($("#v-docs").hidden)return;
   const q=norm($("#dc-q").value),ti=$("#dc-tipo").value,de=$("#dc-desde").value,ha=$("#dc-hasta").value,box=$("#dc-list");
   const L=docList().filter(d=>(!ti||d.tipo===ti)&&(!de||d.fecha>=de)&&(!ha||d.fecha<=ha)&&(!q||norm([d.tipo,d.numero,d.tercero,d.obs].join(" ")).includes(q)||docKey(d.numero||"").includes(q.replace(/[^a-z0-9]/g,""))&&q.replace(/[^a-z0-9]/g,"")));
-  $("#dc-sub").textContent=S.loadedDc?`${S.docs.size} documento${S.docs.size===1?"":"s"} · ${docList().reduce((a,d)=>a+(d.adjuntos||[]).length,0)} imágenes`:"Cargando…";
+  $("#dc-sub").textContent=S.loadedDc?`${S.docs.size} registro${S.docs.size===1?"":"s"} · ${docList().reduce((a,d)=>a+(d.adjuntos||[]).length,0)} archivos${q||ti||de||ha?` · ${L.length} coinciden`:""}`:"Cargando…";
   if(!S.loadedDc){box.innerHTML='<div class="card empty">Cargando…</div>';return}
-  if(!L.length){box.innerHTML=`<div class="card empty">${S.docs.size?"Ningún documento coincide con el filtro.":"<b>Todavía no hay documentos</b>Tocá <em>Cargar documento</em> para subir el primer remito o factura."}</div>`;return}
+  if(!L.length){box.innerHTML=`<div class="card empty">${S.docs.size?"Ningún registro coincide con la búsqueda.":"<b>Todavía no hay registros</b>Cargalos en <em>Carga de registros</em>."}</div>`;return}
   const days=new Map();L.forEach(d=>{const k=d.fecha||"";if(!days.has(k))days.set(k,[]);days.get(k).push(d)});
-  box.innerHTML=Array.from(days.entries()).map(([k,ds])=>`<div class="card bit-day"><div class="bit-dh"><b>${k?esc(fmtDay(k)):"Sin fecha"}</b><span class="meta">${ds.length} documento${ds.length===1?"":"s"}</span></div>${ds.map(d=>{const n=docMovs(d.id).length;return `<div class="dc-row" data-docopen="${esc(d.id)}" role="button" tabindex="0"><div class="dc-main"><div><span class="pill" style="background:var(--surface-2)">${esc(d.tipo||"Documento")}</span> <b class="mono">${esc(d.numero||"s/n")}</b></div><div class="meta">${esc(d.tercero||"")}${d.obs?` · ${esc(d.obs)}`:""}</div><div class="meta">${n?`${n} movimiento${n===1?"":"s"} vinculado${n===1?"":"s"}`:"Sin movimientos vinculados"}</div></div><div class="mv-att">${docThumbs(d,4)}</div></div>`}).join("")}</div>`).join("");
+  box.innerHTML=Array.from(days.entries()).map(([k,ds])=>`<div class="card bit-day"><div class="bit-dh"><b>${k?esc(fmtDay(k)):"Sin fecha"}</b><span class="meta">${ds.length} registro${ds.length===1?"":"s"}</span></div>${ds.map(d=>{const n=docLinks(d).n;return `<div class="dc-row" data-docopen="${esc(d.id)}" role="button" tabindex="0"><div class="dc-main"><div><span class="pill" style="background:var(--surface-2)">${esc(d.tipo||"Documento")}</span> <b class="mono">${esc(d.numero||"s/n")}</b></div><div class="meta">${esc(d.tercero||"")}${d.obs?` · ${esc(d.obs)}`:""}</div><div class="meta">${n?`${n} movimiento${n===1?"":"s"} vinculado${n===1?"":"s"}`:"Sin movimientos vinculados"}</div></div><div class="mv-att">${docThumbs(d,4)}</div></div>`}).join("")}</div>`).join("");
 }
 ["#dc-q","#dc-tipo","#dc-desde","#dc-hasta"].forEach(x=>$(x).addEventListener("input",renderDocs));
-$("#dc-new").addEventListener("click",()=>openDocForm(null,{}));
+$("#dc-new").addEventListener("click",()=>go("diario/cargaregistros"));
 $("#dc-list").addEventListener("keydown",e=>{if(e.key==="Enter"){const r=e.target.closest("[data-docopen]");if(r)openDoc(r.dataset.docopen)}});
 /* ver un documento */
 function openDoc(id){const d=S.docs.get(id);if(!d){toast("No encontré ese documento.");return}
-  const M=docMovs(id).sort((a,b)=>(b.fecha||"").localeCompare(a.fecha||""));
+  const LK=docLinks(d),M=LK.mv.slice().sort((a,b)=>(b.fecha||"").localeCompare(a.fecha||"")),TM=LK.tr.slice().sort((a,b)=>(b.fecha||"").localeCompare(a.fecha||"")),BM=LK.bi.slice().sort((a,b)=>(b.fecha||"").localeCompare(a.fecha||""));
   modal(`<div class="modal-h"><div><div class="meta">${esc(d.fecha?fmtDay(d.fecha):"")}</div><h3>${esc(docLabel(d))}</h3>${d.tercero?`<div class="meta">${esc(d.tercero)}</div>`:""}</div><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
    <div style="padding:18px;display:grid;gap:14px">
      ${(d.adjuntos||[]).length?`<div class="dc-gal">${d.adjuntos.map((a,i)=>`<button type="button" class="dc-big" data-docimg="${esc(d.id)}" data-atti="${i}">${isPdf(a)?`<span class="att-doc">PDF<br>${esc((a.nombre||"").slice(0,24))}</span>`:`<img src="${esc(attUrl(a))}" alt="${esc(a.nombre||"")}" loading="lazy">`}</button>`).join("")}</div>`:'<div class="meta">Sin imágenes.</div>'}
      ${d.obs?`<div><div class="lb">Observaciones</div><div>${esc(d.obs)}</div></div>`:""}
-     <div><div class="lb" style="margin-bottom:6px">Movimientos vinculados (${M.length})</div>${M.length?`<div class="card table-wrap"><table class="prev"><tbody>${M.map(m=>{const p=S.products.get(m.sku)||{};return `<tr><td class="meta mono">${esc(fmtD(m.fecha))}</td><td><span class="tipo ${m.tipo}">${m.tipo==="ingreso"?"entrada":m.tipo==="egreso"?"salida":m.tipo}</span></td><td><span class="mono meta">${esc(m.sku)}</span> ${esc(m.nombre||p.nombre||"")}</td><td class="r num"><b>${fmtN(Math.abs(m.cantidad))}</b> <span class="unit">${esc(p.unidad||"u")}</span></td></tr>`}).join("")}</tbody></table></div>`:'<div class="meta">Todavía ningún movimiento usa este documento.</div>'}</div>
-     <div class="form-actions" style="display:flex">${roleOk("admin")&&!M.length?`<button class="btn danger" id="dc-del" style="margin-right:auto">Eliminar</button>`:""}<button class="btn" data-close>Cerrar</button><button class="btn primary need-dep" id="dc-edit">Editar</button></div>
+     <div><div class="lb" style="margin-bottom:6px">Movimientos vinculados (${LK.n})</div>${LK.n?"":'<div class="meta">Todavía ningún movimiento usa este número de registro.</div>'}</div>
+     ${M.length?`<div><div class="lb" style="margin-bottom:6px">Productos (${M.length})</div>`:""}${M.length?`<div class="card table-wrap"><table class="prev"><tbody>${M.map(m=>{const p=S.products.get(m.sku)||{};return `<tr><td class="meta mono">${esc(fmtD(m.fecha))}</td><td><span class="tipo ${m.tipo}">${m.tipo==="ingreso"?"entrada":m.tipo==="egreso"?"salida":m.tipo}</span></td><td><span class="mono meta">${esc(m.sku)}</span> ${esc(m.nombre||p.nombre||"")}</td><td class="r num"><b>${fmtN(Math.abs(m.cantidad))}</b> <span class="unit">${esc(p.unidad||"u")}</span></td></tr>`}).join("")}</tbody></table></div></div>`:""}
+     ${TM.length?`<div><div class="lb" style="margin-bottom:6px">Trépanos (${TM.length})</div><div class="card table-wrap"><table class="prev"><tbody>${TM.map(m=>`<tr><td class="meta mono">${esc(fmtD(m.fecha))}</td><td>${esc(m.tipo||"")}</td><td><b class="mono">${esc(m.codigo||"s/c")}</b> <span class="meta">${esc(m.desc||"")}</span></td><td class="meta">${esc([m.desde,m.hacia].filter(Boolean).join(" → "))}</td></tr>`).join("")}</tbody></table></div></div>`:""}
+     ${BM.length?`<div><div class="lb" style="margin-bottom:6px">Movimientos diarios (${BM.length})</div><div class="card table-wrap"><table class="prev"><tbody>${BM.map(b=>`<tr><td class="meta mono">${esc((b.fecha||"").split("-").reverse().join("/"))}</td><td>${esc(b.texto||"")}</td></tr>`).join("")}</tbody></table></div></div>`:""}
+     <div class="form-actions" style="display:flex">${roleOk("admin")&&!LK.n?`<button class="btn danger" id="dc-del" style="margin-right:auto">Eliminar</button>`:""}<button class="btn" data-close>Cerrar</button><button class="btn primary need-dep" id="dc-edit">Editar</button></div>
    </div>`,"wide");
   const be=$("#dc-edit");if(be)be.onclick=()=>openDocForm(id,{});
   const bd=$("#dc-del");if(bd)bd.onclick=async()=>{if(!guardWrite("admin"))return;if(bd.dataset.ok!=="1"){bd.dataset.ok="1";bd.textContent="Tocá de nuevo para eliminar";return}
@@ -3827,7 +3981,7 @@ function openDocFormInline(pre,cb){
   const mo=new MutationObserver(()=>{if(!$("#f-dc")&&$("#modal-stack")){mo.disconnect();if(!$("#modal-root").innerHTML.trim())restore()}});mo.observe($("#modal-root"),{childList:true,subtree:true});
 }
 /* chip de documento en historiales */
-const movDocHtml=m=>{const d=m.docId&&S.docs.get(m.docId);if(!d)return "";return `<div class="mv-doc"><button type="button" class="lnk" data-docopen="${esc(d.id)}" title="Ver documento">📄 ${esc(docLabel(d))}</button>${(d.adjuntos||[]).length?`<span class="mv-att">${docThumbs(d,2)}</span>`:""}</div>`};
+const movDocHtml=m=>{const d=docOfMov(m);if(!d)return "";return `<div class="mv-doc"><button type="button" class="lnk" data-docopen="${esc(d.id)}" title="Ver documento">📄 ${esc(docLabel(d))}</button>${(d.adjuntos||[]).length?`<span class="mv-att">${docThumbs(d,2)}</span>`:""}</div>`};
 
 let MDP=null;
 function mDocInit(){if(MDP)return;MDP=docPicker($("#m-docp"),{pre:()=>({tipo:movTipo==="ingreso"?"Remito":"Vale de retiro",tercero:movTipo==="ingreso"?$("#m-origen").value.trim():$("#m-destino").value.trim(),fecha:($("#m-fecha").value||"").slice(0,10)}),onChange:d=>{if(d&&!$("#m-doc").value.trim())$("#m-doc").value=d.numero}})}
@@ -4184,7 +4338,7 @@ function openShMail(){
      <div class="card" style="padding:14px;display:grid;gap:10px;background:var(--surface-2)">
        <ol class="steps"><li>Descargá el Excel del historial.</li><li>Abrí el correo: destinatarios, asunto y resumen ya vienen cargados. Si no se abre tu programa de correo, copiá los datos y pegalos en un mail nuevo.</li><li>Adjuntá el Excel y enviá.</li></ol>
        <div style="display:flex;gap:8px;flex-wrap:wrap">
-         <button class="btn primary" id="sm-xls"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Descargar Excel</button>
+         <button class="btn primary" id="sm-xls"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Exportar como…</button>
          <a class="btn disabled" id="sm-mail" href="#" target="_blank" rel="noopener">Abrir en el correo</a>
          <button class="btn" id="sm-copy">Copiar destinatarios, asunto y texto</button>
        </div>
@@ -4508,8 +4662,13 @@ $("#ct-copy").addEventListener("click",async()=>{const e=CT.env||ctEnv(),r=CT.re
 /* ---------- recuento de stock y registros de control ---------- */
 let REC_CUR=null,REC_UNSUB=null,REC_PICK=null;
 const recList=()=>Array.from(S.recs.values()).sort((a,b)=>(b.fecha||"").localeCompare(a.fecha||"")||(b.seq||0)-(a.seq||0));
-const recName=(fecha,seq)=>`Recuento ${String(fecha).split("-").reverse().join("/")}${seq>1?` (${seq})`:""}`;
-const recNextSeq=f=>recList().filter(r=>r.fecha===f).reduce((m,r)=>Math.max(m,r.seq||1),0)+1;
+/* alcance del recuento: stock de repuestos (incluye grava, bentonita y tripolifosfato) o insumos del taller metalúrgico. Los recuentos viejos (sin alcance) abarcan todo */
+const REC_ALC={repuestos:{name:"Stock repuestos",test:p=>!!p&&!SCOPES.metal.test(p)},metal:{name:"Insumos de taller metalúrgico",test:p=>!!p&&SCOPES.metal.test(p)}};
+const recAlcName=r=>r&&REC_ALC[r.alcance]?REC_ALC[r.alcance].name:"Todos los productos";
+const recInScope=(r,p)=>!r||!REC_ALC[r.alcance]?!!p:REC_ALC[r.alcance].test(p);
+const recCurInScope=p=>recInScope(S.recs.get(REC_CUR),p);
+const recName=(fecha,seq,alc)=>`Recuento ${REC_ALC[alc]?REC_ALC[alc].name.toLowerCase()+" ":""}${String(fecha).split("-").reverse().join("/")}${seq>1?` (${seq})`:""}`;
+const recNextSeq=(f,alc)=>recList().filter(r=>r.fecha===f&&(r.alcance||"")===(alc||"")).reduce((m,r)=>Math.max(m,r.seq||1),0)+1;
 const REC_EST={abierto:["warn","En curso"],cerrado:["ok","Finalizado · archivado"],anulado:["bad","Anulado"]};
 const fmtDif=d=>d>0?`<span class="dif-pos">+${fmtN(d)}</span>`:d<0?`<span class="dif-neg">−${fmtN(-d)}</span>`:'<span class="meta">0</span>';
 function renderRec(opt){
@@ -4517,18 +4676,19 @@ function renderRec(opt){
   if(REC_CUR&&S.recs.has(REC_CUR)){renderRecDet();return}
   $("#rec-list-v").hidden=false;$("#rec-det-v").hidden=true;
   const L=recList(),open=L.filter(r=>r.estado==="abierto"),tb=$("#t-rec tbody");
-  $("#rec-open").innerHTML=open.map(r=>`<div class="banner warn" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px"><span><b>${esc(r.nombre)}</b> en curso · ${esc(r.responsable||"")} · ${r.n||0} producto${r.n===1?"":"s"} contado${r.n===1?"":"s"}</span><button class="btn sm primary" data-rec="${esc(r.id)}" style="margin-left:auto">Continuar</button></div>`).join("");
+  $("#rec-open").innerHTML=open.map(r=>`<div class="banner warn" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px"><span><b>${esc(r.nombre)}</b> en curso · ${esc(recAlcName(r))} · ${esc(r.responsable||"")} · ${r.n||0} producto${r.n===1?"":"s"} contado${r.n===1?"":"s"}</span><button class="btn sm primary" data-rec="${esc(r.id)}" style="margin-left:auto">Continuar</button></div>`).join("");
   if(!S.loadedR){tb.innerHTML='<tr><td colspan="5" class="span"><div class="empty">Cargando…</div></td></tr>';return}
-  tb.innerHTML=L.length?L.map(r=>{const [c,t]=REC_EST[r.estado]||["",r.estado];return `<tr class="click" data-rec="${esc(r.id)}"><td class="name">${esc(r.nombre)}<div class="meta">${r.cerrado?"Finalizado "+esc(fmtD(r.cerrado))+(r.cerradoPor?" por "+esc(r.cerradoPor):""):"Iniciado "+esc(fmtD(r.creado))}</div></td><td>${esc(r.responsable||"")}</td><td class="r num">${r.n||0}${r.nNoCtrl!=null?`<div class="meta">${r.nNoCtrl} no controlados</div>`:""}</td><td class="r num">${r.nDif?`<b>${r.nDif}</b>`:"0"}</td><td><span class="pill ${c}">${t}</span></td></tr>`}).join(""):`<tr><td colspan="5" class="span"><div class="empty"><b>Todavía no hay recuentos</b>Tocá <em>Nuevo recuento</em>, indicá la fecha y quién cuenta, y empezá a escanear.</div></td></tr>`;
+  tb.innerHTML=L.length?L.map(r=>{const [c,t]=REC_EST[r.estado]||["",r.estado];return `<tr class="click" data-rec="${esc(r.id)}"><td class="name">${esc(r.nombre)}<div class="meta">${r.cerrado?"Finalizado "+esc(fmtD(r.cerrado))+(r.cerradoPor?" por "+esc(r.cerradoPor):""):"Iniciado "+esc(fmtD(r.creado))}</div></td><td>${esc(r.responsable||"")}</td><td>${esc(recAlcName(r))}</td><td class="r num">${r.n||0}</td><td><span class="pill ${c}">${t}</span></td></tr>`}).join(""):`<tr><td colspan="5" class="span"><div class="empty"><b>Todavía no hay recuentos</b>Tocá <em>Nuevo recuento</em>, indicá la fecha y quién cuenta, y empezá a escanear.</div></td></tr>`;
 }
-function recNameHint(){const f=$("#rec-fecha").value;$("#rec-name-h").textContent=f?`Se va a guardar como "${recName(f,recNextSeq(f))}".`:""}
-$("#rec-new").addEventListener("click",()=>{if(!guardWrite("deposito"))return;$("#rec-f").hidden=false;$("#rec-fecha").value=todayStr();$("#rec-who").value=lsGet("dep-rec-who")||$("#rec-who").value;recNameHint();$("#rec-who").focus()});
+function recNameHint(){const f=$("#rec-fecha").value,a=$("#rec-alc").value;$("#rec-name-h").textContent=f&&a?`Se va a guardar como "${recName(f,recNextSeq(f,a),a)}" · ${prodList().filter(REC_ALC[a].test).length} productos para contar.`:""}
+$("#rec-new").addEventListener("click",()=>{if(!guardWrite("deposito"))return;$("#rec-f").hidden=false;$("#rec-fecha").value=todayStr();$("#rec-alc").value="";$("#rec-who").value=lsGet("dep-rec-who")||$("#rec-who").value;recNameHint();$("#rec-who").focus()});
 $("#rec-f-x").addEventListener("click",()=>{$("#rec-f").hidden=true});
-$("#rec-fecha").addEventListener("input",recNameHint);
+$("#rec-fecha").addEventListener("input",recNameHint);$("#rec-alc").addEventListener("change",recNameHint);
 $("#rec-f").addEventListener("submit",async e=>{e.preventDefault();if(!guardWrite("deposito"))return;
-  const f=$("#rec-fecha").value,who=$("#rec-who").value.trim();if(!f){toast("Indicá la fecha.");return}if(!who){toast("Indicá quién realiza el recuento.");$("#rec-who").focus();return}
-  lsSet("dep-rec-who",who);const seq=recNextSeq(f),now=new Date().toISOString();
-  const body={fecha:f,seq,nombre:recName(f,seq),responsable:who,estado:"abierto",n:0,nDif:0,creado:now,by:myId||""};
+  const f=$("#rec-fecha").value,who=$("#rec-who").value.trim(),alc=$("#rec-alc").value;if(!f){toast("Indicá la fecha.");return}if(!who){toast("Indicá quién realiza el recuento.");$("#rec-who").focus();return}
+  if(!REC_ALC[alc]){toast("Elegí si el recuento es de Stock repuestos o de Insumos de taller metalúrgico.");$("#rec-alc").focus();return}
+  lsSet("dep-rec-who",who);const seq=recNextSeq(f,alc),now=new Date().toISOString();
+  const body={fecha:f,seq,alcance:alc,nombre:recName(f,seq,alc),responsable:who,estado:"abierto",n:0,nDif:0,creado:now,by:myId||""};
   try{const r=await withRetry(()=>db.collection("recuentos").add(body));S.recs.set(r.id,Object.assign({id:r.id},body));$("#rec-f").hidden=true;toast(body.nombre+" iniciado");recOpen(r.id)}catch(err){writeError(err)}});
 $("#v-rec").addEventListener("click",e=>{const r=e.target.closest("[data-rec]");if(r){e.preventDefault();recOpen(r.dataset.rec)}});
 $("#rec-back").addEventListener("click",e=>{e.preventDefault();recLeave();renderRec()});
@@ -4545,18 +4705,29 @@ function renderRecDet(fromSnap){
   $("#rec-list-v").hidden=true;$("#rec-det-v").hidden=false;
   const open=r.estado==="abierto",L=recLines(),[c,t]=REC_EST[r.estado]||["",r.estado];
   $("#rec-title").textContent=r.nombre;
-  $("#rec-sub").innerHTML=`Realiza: <b>${esc(r.responsable||"")}</b> · <span class="pill ${c}">${t}</span>${r.cerrado?` · finalizado el ${esc(fmtD(r.cerrado))}${r.cerradoPor?" por "+esc(r.cerradoPor):""}`:""}`;
+  $("#rec-sub").innerHTML=`${esc(recAlcName(r))} · Realiza: <b>${esc(r.responsable||"")}</b> · <span class="pill ${c}">${t}</span>${r.cerrado?` · finalizado el ${esc(fmtD(r.cerrado))}${r.cerradoPor?" por "+esc(r.cerradoPor):""}`:""}`;
   const dif=L.filter(l=>Math.abs(l.dif||0)>1e-9);
   const NC=recNoCtrl(r);$("#rec-fin-top").hidden=!open||!L.length;
-  $("#rec-kpi").innerHTML=`<div class="kpi"><small>Productos contados</small><b>${L.length}</b><span class="meta">${L.length-dif.length} coinciden</span></div><div class="kpi"><small>No controlados</small><b>${NC.length}</b><span class="meta">mantienen su stock</span></div><div class="kpi"><small>Con diferencia</small><b${dif.length?' style="color:var(--bad)"':""}>${dif.length}</b></div><div class="kpi"><small>Faltantes / sobrantes</small><b>${dif.filter(l=>l.dif<0).length} / ${dif.filter(l=>l.dif>0).length}</b></div>`;
+  $("#rec-f-d").hidden=!open;if(!open)$("#rec-f-d").value="";
   $("#rec-scan").hidden=!open||!roleOk("deposito");renderRecGuide();
   const q=norm($("#rec-f-q").value),fd=$("#rec-f-d").value;
-  const tb=$("#t-recl tbody");
+  const tb=$("#t-recl tbody"),th=$("#t-recl thead");
+  if(!open){
+    /* recuento finalizado o anulado: solo producto, cantidad contada y observación */
+    const oc=L.some(l=>l.obs);
+    $("#rec-kpi").innerHTML=`<div class="kpi"><small>Productos contados</small><b>${L.length}</b><span class="meta">${esc(recAlcName(r))}</span></div>`;
+    th.innerHTML=`<tr><th>Producto</th><th class="r">Cantidad contada</th>${oc?"<th>Observación</th>":""}</tr>`;
+    const V=L.slice().sort((a,b)=>String(a.nombre||"").localeCompare(String(b.nombre||""),"es")).filter(l=>!q||norm(l.sku+" "+l.nombre+" "+(l.obs||"")).includes(q));
+    tb.innerHTML=!S.loadedRL?`<tr><td colspan="3" class="span"><div class="empty">Cargando…</div></td></tr>`:V.length?V.map(l=>`<tr><td><div class="mono meta">${esc(l.sku)}</div>${esc(l.nombre)}</td><td class="r num"><b>${fmtN(l.contado)}</b> <span class="unit">${esc(l.unidad||"u")}</span></td>${oc?`<td>${esc(l.obs||"")}</td>`:""}</tr>`).join(""):`<tr><td colspan="3" class="span"><div class="empty">${L.length?"Ningún producto coincide con el filtro.":"El recuento no tiene productos contados."}</div></td></tr>`}
+  else{
+  $("#rec-kpi").innerHTML=`<div class="kpi"><small>Productos contados</small><b>${L.length}</b><span class="meta">${L.length-dif.length} coinciden</span></div><div class="kpi"><small>Pendientes de contar</small><b>${NC.length}</b><span class="meta">de ${esc(recAlcName(r).toLowerCase())}</span></div><div class="kpi"><small>Con diferencia</small><b${dif.length?' style="color:var(--bad)"':""}>${dif.length}</b></div><div class="kpi"><small>Faltantes / sobrantes</small><b>${dif.filter(l=>l.dif<0).length} / ${dif.filter(l=>l.dif>0).length}</b></div>`;
+  th.innerHTML=fd==="nc"?'<tr><th>SKU · Producto</th><th class="r">Sistema</th><th class="r">Contado</th><th class="r">Estado</th><th></th><th></th></tr>':'<tr><th>SKU · Producto</th><th class="r">Sistema</th><th class="r">Contado</th><th class="r">Diferencia</th><th>Hora</th><th></th></tr>';
   if(fd==="nc"){const W=NC.filter(x=>!q||norm(x.sku+" "+x.nombre).includes(q));
-    tb.innerHTML=W.length?W.map(x=>`<tr style="opacity:.85"><td><div class="mono meta">${esc(x.sku)}</div>${esc(x.nombre)}</td><td class="r num">${fmtN(x.stock)} <span class="unit">${esc(x.unidad||"u")}</span></td><td class="r meta">—</td><td class="r"><span class="pill" style="background:var(--surface-2)">No controlado</span></td><td class="meta">se mantiene</td><td></td></tr>`).join(""):`<tr><td colspan="6" class="span"><div class="empty">${NC.length?"Ningún producto coincide con el filtro.":"Se controlaron todos los productos."}</div></td></tr>`}
+    tb.innerHTML=W.length?W.map(x=>`<tr style="opacity:.85"><td><div class="mono meta">${esc(x.sku)}</div>${esc(x.nombre)}</td><td class="r num">${fmtN(x.stock)} <span class="unit">${esc(x.unidad||"u")}</span></td><td class="r meta">—</td><td class="r"><span class="pill" style="background:var(--surface-2)">Pendiente</span></td><td class="meta"></td><td></td></tr>`).join(""):`<tr><td colspan="6" class="span"><div class="empty">${NC.length?"Ningún producto coincide con el filtro.":"Se controlaron todos los productos."}</div></td></tr>`}
   else{
   const V=L.filter(l=>(!q||norm(l.sku+" "+l.nombre).includes(q))&&(!fd||(fd==="dif")===(Math.abs(l.dif||0)>1e-9)));
-  tb.innerHTML=!S.loadedRL?'<tr><td colspan="6" class="span"><div class="empty">Cargando…</div></td></tr>':V.length?V.map(l=>`<tr><td><div class="mono meta">${esc(l.sku)}</div>${esc(l.nombre)}</td><td class="r num">${fmtN(l.sistema)} <span class="unit">${esc(l.unidad||"u")}</span></td><td class="r num"><b>${fmtN(l.contado)}</b> <span class="unit">${esc(l.unidad||"u")}</span>${l.veces>1?`<div class="meta">${l.veces} conteos sumados</div>`:""}</td><td class="r num">${fmtDif(l.dif||0)}</td><td class="meta mono">${esc(fmtD(l.ts).split(" ").slice(1).join(" ")||fmtD(l.ts))}</td><td style="white-space:nowrap">${open&&roleOk("deposito")?`<button class="btn ghost sm" data-recedit="${esc(l.sku)}">Corregir</button><button class="btn ghost sm" data-recdel="${esc(l.sku)}" aria-label="Quitar">✕</button>`:l.ajusteId?'<span class="meta">ajustado</span>':""}</td></tr>`).join(""):`<tr><td colspan="6" class="span"><div class="empty">${L.length?"Ninguna línea coincide con el filtro.":open?"Escaneá o escribí el primer producto para empezar.":"Este recuento no tiene productos."}</div></td></tr>`;
+  tb.innerHTML=!S.loadedRL?'<tr><td colspan="6" class="span"><div class="empty">Cargando…</div></td></tr>':V.length?V.map(l=>`<tr><td><div class="mono meta">${esc(l.sku)}</div>${esc(l.nombre)}</td><td class="r num">${fmtN(l.sistema)} <span class="unit">${esc(l.unidad||"u")}</span></td><td class="r num"><b>${fmtN(l.contado)}</b> <span class="unit">${esc(l.unidad||"u")}</span>${l.veces>1?`<div class="meta">${l.veces} conteos sumados</div>`:""}${l.obs?`<div class="meta">${esc(l.obs)}</div>`:""}</td><td class="r num">${fmtDif(l.dif||0)}</td><td class="meta mono">${esc(fmtD(l.ts).split(" ").slice(1).join(" ")||fmtD(l.ts))}</td><td style="white-space:nowrap">${open&&roleOk("deposito")?`<button class="btn ghost sm" data-recedit="${esc(l.sku)}">Corregir</button><button class="btn ghost sm" data-recdel="${esc(l.sku)}" aria-label="Quitar">✕</button>`:l.ajusteId?'<span class="meta">ajustado</span>':""}</td></tr>`).join(""):`<tr><td colspan="6" class="span"><div class="empty">${L.length?"Ninguna línea coincide con el filtro.":open?"Escaneá o escribí el primer producto para empezar.":"Este recuento no tiene productos."}</div></td></tr>`;
+  }
   }
   const cl=$("#rec-close");
   if(open){cl.innerHTML=`<div class="lb">Finalizar recuento</div>
@@ -4572,12 +4743,12 @@ $("#rec-fin-top").addEventListener("click",()=>recClose());
 /* búsqueda / escaneo */
 function recSearch(enter){
   const raw=$("#rec-q").value,box=$("#rec-res");if(!raw.trim()){box.innerHTML="";return}
-  const exact=parseSku(raw);
-  if(exact&&enter){box.innerHTML="";recPick(exact);return}
+  const exact=parseSku(raw),rr=S.recs.get(REC_CUR);
+  if(exact&&enter){box.innerHTML="";if(!recCurInScope(S.products.get(exact))){toast(`${exact} no es de ${recAlcName(rr).toLowerCase()}: se cuenta en el otro recuento.`);$("#rec-q").value="";return}recPick(exact);return}
   const words=norm(raw.includes("#")?raw.split("#").pop():raw).split(/\s+/).filter(Boolean);
-  const L=prodList().filter(p=>{const h=norm(p.sku+" "+p.nombre);return words.every(w=>h.includes(w))}).slice(0,30);
+  const L=prodList().filter(recCurInScope).filter(p=>{const h=norm(p.sku+" "+p.nombre);return words.every(w=>h.includes(w))}).slice(0,30);
   if(enter&&L.length===1){box.innerHTML="";recPick(L[0].sku);return}
-  box.innerHTML=L.length?L.map(p=>`<button type="button" class="np-it" data-recpick="${esc(p.sku)}"><span class="mono meta">${esc(p.sku)}</span><span class="nm">${esc(p.nombre)}${S.recL.has(p.sku)?' <span class="pill" style="background:var(--surface-2)">ya contado</span>':""}</span><span class="st">${fmtN(stockOf(p.sku))} ${esc(p.unidad||"u")}</span></button>`).join(""):`<div class="empty" style="padding:12px">No encontré "${esc(raw.trim())}" en el catálogo.</div>`;
+  box.innerHTML=L.length?L.map(p=>`<button type="button" class="np-it" data-recpick="${esc(p.sku)}"><span class="mono meta">${esc(p.sku)}</span><span class="nm">${esc(p.nombre)}${S.recL.has(p.sku)?' <span class="pill" style="background:var(--surface-2)">ya contado</span>':""}</span><span class="st">${fmtN(stockOf(p.sku))} ${esc(p.unidad||"u")}</span></button>`).join(""):`<div class="empty" style="padding:12px">No encontré "${esc(raw.trim())}" en ${esc(recAlcName(rr).toLowerCase())}.</div>`;
 }
 $("#rec-q").addEventListener("input",()=>recSearch(false));
 $("#rec-q").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();recSearch(true)}});
@@ -4592,6 +4763,7 @@ function recPick(sku,guided){
    ${prev?`<div class="banner warn" style="margin:0">Ya contado en este recuento: <b>${fmtN(prev.contado)} ${esc(p.unidad||"u")}</b>. Elegí si la nueva cantidad <b>reemplaza</b> a la anterior o se <b>suma</b> (por ejemplo, si el producto está en dos lugares).</div>`:""}
    <div class="rec-qty"><label class="lb" for="rec-n" style="width:100%">Cantidad observada <em>*</em></label><input type="number" id="rec-n" step="any" min="0" inputmode="decimal" placeholder="0"><select id="rec-un" aria-label="Unidad" style="width:auto"></select>
      ${prev?`<button type="button" class="btn" id="rec-sum">Sumar</button><button type="button" class="btn primary" id="rec-ok">Reemplazar</button>`:`<button type="button" class="btn primary" id="rec-ok">Guardar</button>`}${REC_GUIDE?`<button type="button" class="btn" id="rec-skip">Saltar ›</button><button type="button" class="btn ghost" id="rec-prev">‹ Anterior</button><button type="button" class="btn ghost" id="rec-x">Pausar recorrido</button>`:`<button type="button" class="btn ghost" id="rec-x">Cancelar</button>`}</div>
+   <div class="field" style="margin-top:8px"><label class="lb" for="rec-obs">Observación <span class="meta" style="font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></label><input type="text" id="rec-obs" value="${esc(prev&&prev.obs||"")}" placeholder="Ej.: 2 cajas abiertas, material dañado…" autocomplete="off"></div>
    <span class="hint">${REC_GUIDE?`Enter guarda${prev?" (reemplaza)":""} y pasa al siguiente producto de la lista. «Saltar» lo deja pendiente para el final.`:`Enter guarda${prev?" (reemplaza)":""} y vuelve al buscador para el siguiente producto.`}</span>`;
   unOptions($("#rec-un"),p,"recuento",null);
   const recHint=()=>{const k=$("#rec-un").value,pr=k===""?null:presOf(p)[+k],c=parseNum($("#rec-n").value);$("#rec-un-h").textContent=pr&&c>0?`${fmtN(c)} × ${pr.n} = ${fmtN(c*pr.f)} ${p.unidad||"u"}`:""};
@@ -4600,6 +4772,7 @@ function recPick(sku,guided){
   $("#rec-un").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();recSaveLine(false)}});
   const n=$("#rec-n");n.focus();
   n.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();recSaveLine(false)}if(e.key==="Escape"){recCancelPick()}});
+  $("#rec-obs").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();recSaveLine(false)}if(e.key==="Escape"){recCancelPick()}});
   $("#rec-ok").onclick=()=>recSaveLine(false);const bs=$("#rec-sum");if(bs)bs.onclick=()=>recSaveLine(true);$("#rec-x").onclick=recCancelPick;
   const sk=$("#rec-skip");if(sk)sk.onclick=()=>{const O=recOrder(),i=O.indexOf(sku),ni=recNextIdx(i+1,O,sku);if(ni<0){toast("No quedan otros productos pendientes.");return}recGuideAt(ni)};
   const pv=$("#rec-prev");if(pv)pv.onclick=()=>{const O=recOrder(),i=O.indexOf(sku);if(i>0)recGuideAt(i-1)};
@@ -4609,12 +4782,12 @@ function recCancelPick(){const g=REC_GUIDE;REC_GUIDE=false;REC_PICK=null;$("#rec
 /* ---------- recorrido guiado en el orden definido ---------- */
 let REC_GUIDE=false;
 /* orden: primero la lista definida (config.ordenRecuento), después el resto del stock en el orden del sistema */
-function recOrder(){const seen=new Set(),O=[];(S.config.ordenRecuento||[]).forEach(k=>{if(S.products.has(k)&&!seen.has(k)){seen.add(k);O.push(k)}});prodList().forEach(p=>{if(!seen.has(p.sku))O.push(p.sku)});return O}
+function recOrder(){const seen=new Set(),O=[];(S.config.ordenRecuento||[]).forEach(k=>{if(S.products.has(k)&&!seen.has(k)){seen.add(k);O.push(k)}});prodList().forEach(p=>{if(!seen.has(p.sku))O.push(p.sku)});return O.filter(k=>recCurInScope(S.products.get(k)))}
 function recNextIdx(from,O,skipSku){O=O||recOrder();for(let i=from;i<O.length;i++)if(!S.recL.has(O[i])&&O[i]!==skipSku)return i;for(let i=0;i<Math.min(from,O.length);i++)if(!S.recL.has(O[i])&&O[i]!==skipSku)return i;return -1}
 function recGuideAt(i){const O=recOrder();if(!O[i])return;REC_GUIDE=true;recPick(O[i],true)}
 function recGuideStart(){const O=recOrder(),ni=recNextIdx(0,O);if(ni<0){toast("Ya están contados todos los productos.");return}recGuideAt(ni)}
 function renderRecGuide(){const g=$("#rec-guide");if(!g)return;const r=S.recs.get(REC_CUR);if(!r||r.estado!=="abierto"||!roleOk("deposito")){g.innerHTML="";return}
-  const O=recOrder(),done=O.filter(k=>S.recL.has(k)).length,nl=(S.config.ordenRecuento||[]).filter(k=>S.products.has(k)).length;
+  const O=recOrder(),done=O.filter(k=>S.recL.has(k)).length,nl=(S.config.ordenRecuento||[]).filter(k=>S.products.has(k)&&recCurInScope(S.products.get(k))).length;
   g.innerHTML=REC_GUIDE?"":`<div class="rec-guide-in"><div><b>${done?"Continuar el recorrido":"Contar en orden"}</b><div class="meta">${nl?`${nl} productos según la lista definida y luego ${O.length-nl} del stock en el orden del sistema`:"Orden del sistema (todavía no hay una lista definida)"} · ${done} de ${O.length} contados</div><div class="rec-bar"><i style="width:${O.length?Math.round(100*done/O.length):0}%"></i></div></div><button type="button" class="btn primary" id="rec-go"${done>=O.length?" disabled":""}>${done?"▶ Continuar recorrido":"▶ Comenzar recorrido"}</button></div><div class="meta" style="text-align:center">o buscá un producto puntual:</div>`;
   const b=$("#rec-go");if(b)b.onclick=recGuideStart}
 let REC_BUSY=false;
@@ -4624,7 +4797,8 @@ async function recSaveLine(sumar){
   if(v==null||v<0){toast("Indicá la cantidad observada (0 si no hay).");$("#rec-n").focus();return}
   const ku=$("#rec-un")?$("#rec-un").value:"",pr=ku===""?null:presOf(p)[+ku];if(pr){if(!Number.isInteger(v)){toast(`Indicá cuántas unidades de "${pr.n}" (número entero).`);return}v=Math.round(v*pr.f*1000)/1000}
   const prev=S.recL.get(sku),contado=Math.round((sumar&&prev?prev.contado+v:v)*1000)/1000,sistema=stockOf(sku),now=new Date().toISOString();
-  const line={sku,nombre:p.nombre,unidad:p.unidad||"u",sistema,contado,dif:Math.round((contado-sistema)*1000)/1000,ts:now,veces:sumar&&prev?(prev.veces||1)+1:1,by:myId||""};
+  const obsN=($("#rec-obs")?$("#rec-obs").value:"").trim(),obs=sumar&&prev&&prev.obs&&obsN&&obsN!==prev.obs&&!obsN.includes(prev.obs)?prev.obs+" · "+obsN:(obsN||(sumar&&prev?prev.obs||"":""));
+  const line={sku,nombre:p.nombre,unidad:p.unidad||"u",sistema,contado,dif:Math.round((contado-sistema)*1000)/1000,obs,ts:now,veces:sumar&&prev?(prev.veces||1)+1:1,by:myId||""};
   REC_BUSY=true;
   try{await withRetry(()=>db.doc(`recuentos/${REC_CUR}/lineas/${sku}`).set(line));S.recL.set(sku,Object.assign({id:sku},line));
     recSyncSummary();toast(`${sku}: ${fmtN(contado)} ${line.unidad}${line.dif?` · diferencia ${line.dif>0?"+":"−"}${fmtN(Math.abs(line.dif))}`:" · coincide"}`);
@@ -4650,7 +4824,7 @@ function recClose(){
        <div><small>No controlados</small><b>${NC.length}</b><span class="meta">quedan con su último valor</span></div>
      </div>
      ${NC.length?`<details><summary class="meta" style="cursor:pointer">Ver los ${NC.length} productos no controlados</summary><div class="card table-wrap" style="max-height:220px;overflow:auto;margin-top:6px"><table class="prev"><tbody>${NC.map(x=>`<tr><td class="mono meta">${esc(x.sku)}</td><td>${esc(x.nombre)}</td><td class="r num">${fmtN(x.stock)} ${esc(x.unidad)}</td></tr>`).join("")}</tbody></table></div></details>`:""}
-     <p class="meta" style="margin:0">El recuento se cierra y queda archivado en <b>Registros de control</b> con los productos contados y los no controlados. Después no se puede modificar.</p>
+     <p class="meta" style="margin:0">El recuento se cierra y queda archivado en <b>Registros de control</b> solo con los productos contados (producto, cantidad contada y observación). Los no controlados no figuran en el listado final. Después no se puede modificar.</p>
      <div class="form-actions" style="display:flex"><button class="btn" data-close>Volver</button><button class="btn primary" id="rf-go">✔ Finalizar y archivar</button></div>
    </div>`);
   $("#rf-go").onclick=()=>recFinalize($("#rf-go"));
@@ -4660,12 +4834,11 @@ async function recFinalize(b){
   b.disabled=true;const L=Array.from(S.recL.values()),D=L.filter(l=>Math.abs(l.dif||0)>1e-9&&!l.ajusteId);
   let who="";try{if(user&&myId){const ps=await user.profiles([myId]);who=(ps&&ps[myId]&&ps[myId].name)||""}}catch(e){}if(!who)who=IS_OWNER?"Administradora":"Administrador";let done=0;
   try{for(const l of D){b.textContent=`Ajustando ${done+1} de ${D.length}…`;
-      const mv={sku:l.sku,nombre:l.nombre,tipo:"ajuste",cantidad:l.dif,origen:"",proveedorId:"",destino:"",obra:"",solicitante:"",autoriza:who,remito:r.nombre,obs:`${r.nombre} · contado ${fmtN(l.contado)}, sistema ${fmtN(l.sistema)} · realizó ${r.responsable||""}`,fecha:l.ts,by:myId||"",recuentoId:r.id};
+      const mv={sku:l.sku,nombre:l.nombre,tipo:"ajuste",cantidad:l.dif,origen:"",proveedorId:"",destino:"",obra:"",solicitante:"",autoriza:who,remito:r.nombre,obs:`${r.nombre} · contado ${fmtN(l.contado)}, sistema ${fmtN(l.sistema)} · realizó ${r.responsable||""}${l.obs?" · "+l.obs:""}`,fecha:l.ts,by:myId||"",recuentoId:r.id};
       const m=await withRetry(()=>db.collection("movimientos").add(mv));
       await withRetry(()=>db.doc(`recuentos/${r.id}/lineas/${l.sku}`).update({ajusteId:m.id}));l.ajusteId=m.id;done++}
     b.textContent="Archivando…";
-    const NC=recNoCtrl(r).map(x=>({sku:x.sku,nombre:x.nombre,unidad:x.unidad,stock:x.stock}));
-    const now=new Date().toISOString(),patch={estado:"cerrado",cerrado:now,cerradoPor:who,cerradoPorId:myId||"",n:L.length,nDif:L.filter(l=>Math.abs(l.dif||0)>1e-9).length,nNoCtrl:NC.length,noControlados:NC,total:L.length+NC.length};
+    const now=new Date().toISOString(),patch={estado:"cerrado",cerrado:now,cerradoPor:who,cerradoPorId:myId||"",n:L.length,nDif:L.filter(l=>Math.abs(l.dif||0)>1e-9).length};
     await withRetry(()=>db.doc("recuentos/"+r.id).update(patch));Object.assign(r,patch);REC_GUIDE=false;
     closeModal();toast(`${r.nombre} finalizado y archivado${D.length?` · ${D.length} ajuste${D.length===1?"":"s"} de stock`:""}`);renderRecDet()}
   catch(err){writeError(err);toast(`Se registraron ${done} de ${D.length} ajustes. Tocá Finalizar de nuevo para completar: no se duplican.`);b.disabled=false;b.textContent="✔ Finalizar y archivar"}
@@ -4674,13 +4847,16 @@ async function recAnular(){if(!guardWrite("admin"))return;const r=S.recs.get(REC
   try{await db.doc("recuentos/"+r.id).update({estado:"anulado",anulado:new Date().toISOString()});r.estado="anulado";toast(r.nombre+" anulado: el stock no cambió");renderRecDet()}catch(err){writeError(err)}}
 $("#rec-xls").addEventListener("click",async()=>{const r=S.recs.get(REC_CUR);if(!r)return;const L=recLines().slice().reverse();if(!L.length){toast("El recuento no tiene líneas.");return}
   try{await loadXlsx()}catch(e){toast("No se pudo cargar el generador de Excel.");return}
-  const head=[[r.nombre],[`Realizó: ${r.responsable||""}`],[`Estado: ${(REC_EST[r.estado]||["",r.estado])[1]}${r.cerrado?" · cerrado el "+fmtD(r.cerrado)+(r.cerradoPor?" por "+r.cerradoPor:""):""}`],[],["SKU","Producto","Unidad","Stock en sistema","Cantidad contada","Diferencia","Hora del conteo"]];
-  const a=head.concat(L.map(l=>[l.sku,l.nombre,l.unidad||"u",l.sistema,l.contado,l.dif,fmtD(l.ts)]));
-  const ws=XLSX.utils.aoa_to_sheet(a);ws["!cols"]=[{wch:12},{wch:44},{wch:7},{wch:15},{wch:15},{wch:11},{wch:16}];ws["!autofilter"]={ref:`A5:G${a.length}`};
-  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Recuento");
-  const NC=recNoCtrl(r);if(NC.length){const b2=[[r.nombre+" · productos no controlados"],[r.estado==="abierto"?"Pendientes de contar (stock actual en sistema)":"Quedaron con su último valor al finalizar"],[],["SKU","Producto","Unidad","Stock"]].concat(NC.map(x=>[x.sku,x.nombre,x.unidad,x.stock]));
-    const w2=XLSX.utils.aoa_to_sheet(b2);w2["!cols"]=[{wch:12},{wch:44},{wch:7},{wch:10}];XLSX.utils.book_append_sheet(wb,w2,"No controlados")}
-  await save(`${r.nombre.replace(/\//g,"-")}.xlsx`,new Blob([XLSX.write(wb,{bookType:"xlsx",type:"array"})]))});
+  const open=r.estado==="abierto",wb=XLSX.utils.book_new();
+  const head=[[r.nombre],[`${recAlcName(r)} · Realizó: ${r.responsable||""}`],[`Estado: ${(REC_EST[r.estado]||["",r.estado])[1]}${r.cerrado?" · cerrado el "+fmtD(r.cerrado)+(r.cerradoPor?" por "+r.cerradoPor:""):""}`],[]];
+  if(!open){const oc=L.some(l=>l.obs),V=L.slice().sort((a,b)=>String(a.nombre||"").localeCompare(String(b.nombre||""),"es"));
+    const a=head.concat([oc?["Producto","Cantidad contada","Unidad","Observación"]:["Producto","Cantidad contada","Unidad"]]).concat(V.map(l=>oc?[l.nombre,l.contado,l.unidad||"u",l.obs||""]:[l.nombre,l.contado,l.unidad||"u"]));
+    const ws=XLSX.utils.aoa_to_sheet(a);ws["!cols"]=[{wch:48},{wch:16},{wch:8},{wch:40}];XLSX.utils.book_append_sheet(wb,ws,"Recuento")}
+  else{const a=head.concat([["SKU","Producto","Unidad","Stock en sistema","Cantidad contada","Diferencia","Observación","Hora del conteo"]]).concat(L.map(l=>[l.sku,l.nombre,l.unidad||"u",l.sistema,l.contado,l.dif,l.obs||"",fmtD(l.ts)]));
+    const ws=XLSX.utils.aoa_to_sheet(a);ws["!cols"]=[{wch:12},{wch:44},{wch:7},{wch:15},{wch:15},{wch:11},{wch:30},{wch:16}];ws["!autofilter"]={ref:`A5:H${a.length}`};XLSX.utils.book_append_sheet(wb,ws,"Recuento");
+    const NC=recNoCtrl(r);if(NC.length){const b2=[[r.nombre+" · pendientes de contar"],["Stock actual en sistema"],[],["SKU","Producto","Unidad","Stock"]].concat(NC.map(x=>[x.sku,x.nombre,x.unidad,x.stock]));
+      const w2=XLSX.utils.aoa_to_sheet(b2);w2["!cols"]=[{wch:12},{wch:44},{wch:7},{wch:10}];XLSX.utils.book_append_sheet(wb,w2,"Pendientes")}}
+  await save(`${r.nombre.replace(/\//g,"-")}.xlsx`,new Blob([XLSX.write(wb,{bookType:"xlsx",type:"array"})]),{title:r.nombre})});
 /* ---------- orden del recuento (lista definida por Admin) ---------- */
 function recOrdMatch(lines){const out=[],miss=[],seen=new Set();const P=prodList();
   lines.forEach(raw=>{const t=String(raw||"").trim();if(!t)return;let sku=parseSku(t)||parseSku(t.replace(/[\/\s]/g,""));
@@ -5208,7 +5384,7 @@ pendingHash=decodeURIComponent((location.hash||"").slice(1))||null;if(pendingHas
   db.collection("clientes").onSnapshot(s=>{S.clis=new Map(s.docs.map(x=>[x.id,Object.assign({},x.data(),{id:x.id})]));S.loadedC=true;renderCli();renderLists();renderHome()},onErr);
   db.collection("trepanos").onSnapshot(s=>{S.trep=new Map(s.docs.map(x=>[x.id,Object.assign({},x.data(),{id:x.id})]));S.loadedT=true;renderTrAll();renderHome()},onErr);
   db.collection("trepanos_mov").orderBy("fecha","desc").onSnapshot(s=>{S.trmov=s.docs.map(x=>Object.assign({id:x.id},x.data()));renderTrAll();if(CUR_TR&&$("#trf-panel")&&!$("#trf-panel").innerHTML&&S.trep.has(CUR_TR)){const sc=$("#scrim").scrollTop;openTr(CUR_TR);$("#scrim").scrollTop=sc}},onErr);
-  db.collection("documentos").onSnapshot(s=>{S.docs=new Map(s.docs.map(x=>[x.id,Object.assign({},x.data(),{id:x.id})]));S.loadedDc=true;renderDocs();if(!$("#v-hist").hidden||!$("#v-shist").hidden)renderAll()},onErr);
+  db.collection("documentos").onSnapshot(s=>{S.docs=new Map(s.docs.map(x=>[x.id,Object.assign({},x.data(),{id:x.id})]));S.loadedDc=true;refreshDocDl();renderDocs();renderDocDay&&!$("#v-docload").hidden&&renderDocDay();if(!$("#v-hist").hidden||!$("#v-shist").hidden)renderAll()},onErr);
   db.collection("agenda").onSnapshot(s=>{S.agenda=new Map(s.docs.map(x=>[x.id,Object.assign({},x.data(),{id:x.id})]));if(ROUTE.it&&ROUTE.it.view==="agenda"&&!AG_EDIT)renderAgenda()},()=>{});
   db.collection("trarqueos").onSnapshot(s=>{S.trarq=new Map(s.docs.map(x=>[x.id,Object.assign({},x.data(),{id:x.id})]));S.loadedTA=true;if(ROUTE.it&&ROUTE.it.view==="tr-arq"&&!$("#v-tr-arq").contains(document.activeElement))renderTrArq()},onErr);
   db.collection("recuentos").onSnapshot(s=>{S.recs=new Map(s.docs.map(x=>[x.id,Object.assign({},x.data(),{id:x.id})]));S.loadedR=true;renderRec()},onErr);
