@@ -1087,6 +1087,11 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
         <span class="hint">Destinatario de las notas de pedido. Podés poner varios separados por coma.</span>
       </div>
       <div class="field full">
+        <label class="lb" for="c-compras-wa">WhatsApp del área de Compras</label>
+        <input type="tel" id="c-compras-wa" inputmode="tel" placeholder="Ej.: 54 9 299 412 3456">
+        <span class="hint">Opcional. Con el número, «Abrir WhatsApp» abre directo el chat de Compras para avisar recambios o devoluciones; sin número se elige el chat al compartir.</span>
+      </div>
+      <div class="field full">
         <label class="lb" for="c-cont">Contactos de otras áreas</label>
         <textarea id="c-cont" rows="5" placeholder="Uno por línea: Nombre Apellido <email@hidroblan.com.ar>"></textarea>
         <span class="hint">Aparecen como destinatarios rápidos al compartir por correo los historiales de Grava, Bentonita y Tripolifosfato. Formato: Nombre &lt;email&gt;.</span>
@@ -1471,8 +1476,9 @@ function npSeg(p){
   (p.items||[]).forEach(i=>req.set(i.sku,Math.round(((req.get(i.sku)||0)+(+i.cantidad||0))*1000)/1000));
   movs.forEach(m=>rec.set(m.sku,Math.round(((rec.get(m.sku)||0)+(+m.cantidad||0))*1000)/1000));
   const skus=Array.from(req.keys()),full=skus.filter(k=>(rec.get(k)||0)>=req.get(k)-1e-9).length,any=skus.filter(k=>(rec.get(k)||0)>0).length;
-  const k=skus.length&&full===skus.length?"recibido":any||movs.length?"parcial":p.nroCompras?"procesada":"enviada";
-  return {k,req,rec,movs,n:skus.length,full,any,manual:k!=="recibido"&&p.estado==="recibido"}}
+  const recPend=(p.recambios||[]).filter(r=>!r.resuelto&&(rec.get(r.sku)||0)<(req.get(r.sku)||0)-1e-9);
+  const k=skus.length&&full===skus.length?"recibido":any||movs.length||recPend.length?"parcial":p.nroCompras?"procesada":"enviada";
+  return {k,req,rec,movs,n:skus.length,full,any,recPend,manual:k!=="recibido"&&p.estado==="recibido"}}
 const npTracked=()=>pedList().filter(p=>(p.enviado||p.estado==="enviado"||p.estado==="recibido")&&p.estado!=="anulado");
 /* notas con ese producto pendiente de recibir (para vincular una entrada) */
 function npOpenFor(sku){return npTracked().filter(p=>(p.items||[]).some(i=>i.sku===sku)).map(p=>{const g=npSeg(p);return {p,req:g.req.get(sku)||0,rec:g.rec.get(sku)||0}}).filter(x=>x.rec<x.req-1e-9)}
@@ -1499,7 +1505,7 @@ function renderNpSeg(){
     <td><b class="mono">${pedNum(p.numero)}</b><div class="meta">Enviada ${esc(fmtD(p.enviado||p.fecha).split(" ")[0])}</div></td>
     <td class="mono">${p.nroCompras?`<b>${esc(p.nroCompras)}</b>`:rv?'<span class="pill warn">Respuesta para revisar</span>':'<span class="meta">—</span>'}</td>
     <td class="span">${p.detalle?esc(p.detalle):'<span class="meta">Sin detalle</span>'}</td>
-    <td>${npsPill(g.k)}${g.k==="parcial"?`<div class="meta">${g.full} de ${g.n} ítem${g.n===1?"":"s"} completo${g.full===1?"":"s"}</div>`:""}${g.manual?'<div class="meta">marcada recibida a mano</div>':""}</td></tr>`}).join("");
+    <td>${npsPill(g.k)}${g.k==="parcial"?`<div class="meta">${g.full} de ${g.n} ítem${g.n===1?"":"s"} completo${g.full===1?"":"s"}</div>`:""}${g.recPend.length?`<div><span class="pill bad">Recambio pedido (${g.recPend.length})</span></div>`:""}${g.manual?'<div class="meta">marcada recibida a mano</div>':""}</td></tr>`}).join("");
 }
 ["#nps-q","#nps-est"].forEach(x=>$(x).addEventListener("input",renderNpSeg));
 $("#t-nps").addEventListener("click",e=>{const r=e.target.closest("[data-nps]");if(r)openNpSeg(r.dataset.nps)});
@@ -1521,6 +1527,7 @@ function openNpSeg(id){const p=S.peds.get(id);if(!p)return;const g=npSeg(p),R=p.
      ${R?`<div class="field full nps-dat"><div class="banner ${R.revisar&&!p.nroCompras?"warn":"ok"}" style="margin:0;display:grid;gap:4px"><b>Respuesta de Compras · ${esc(fmtD(R.fecha))}${R.de?" · "+esc(R.de):""}</b>${R.revisar&&!p.nroCompras?"<span>No encontré el número con seguridad. Revisá el texto y cargalo arriba.</span>":""}<span class="meta" style="white-space:pre-wrap">${esc((R.extracto||"").slice(0,600))}</span>${(R.candidatos||[]).length&&!p.nroCompras?`<span>Posibles números: ${R.candidatos.map(c=>`<button type="button" class="btn sm" data-npscand="${esc(c)}">${esc(c)}</button>`).join(" ")}</span>`:""}</div></div>`:""}
      <div class="field full"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px"><div class="lb" id="nps-items-h"></div><button type="button" class="btn ghost sm" id="nps-all" hidden style="margin-left:auto">Seleccionar todo lo pendiente</button></div>
        <div class="card table-wrap"><table class="prev" id="nps-items"></table></div></div>
+     <div class="field full nps-dat" id="nps-rec"></div>
      <div class="field full" id="nps-ing" hidden></div>
      <div class="field full nps-dat"><div class="lb" style="margin-bottom:6px">Entradas vinculadas (${g.movs.length})</div>${g.movs.length?`<div class="card table-wrap"><table class="prev"><tbody>${g.movs.map(m=>`<tr><td class="meta mono">${esc(fmtD(m.fecha))}</td><td><span class="mono meta">${esc(m.sku)}</span> ${esc(m.nombre||"")}</td><td class="r num">+${fmtN(m.cantidad)}</td><td class="meta">${esc(m.origen||"")}${m.remito?" · "+esc(m.remito):""}</td></tr>`).join("")}</tbody></table></div>`:'<div class="meta">Todavía no hay entradas vinculadas. Usá «Dar ingreso» o, al registrar la Entrada de un elemento pedido, elegí esta nota en el campo «Nota de pedido».</div>'}</div>
      <div class="form-actions" style="display:flex;flex-wrap:wrap" id="nps-foot"></div>
@@ -1528,9 +1535,11 @@ function openNpSeg(id){const p=S.peds.get(id);if(!p)return;const g=npSeg(p),R=p.
   const draw=()=>{const sel=ING.sel;
     $("#nps-items-h").textContent=ING.on?`Elegí qué llegó y cuánto (${sel.size} seleccionado${sel.size===1?"":"s"})`:`Ítems de la nota (${g.full} de ${g.n} recibidos completos)`;
     $("#nps-all").hidden=!ING.on||!pendientes.length;
+    {const RCa=(S.peds.get(id)||p).recambios||[],box=$("#nps-rec");box.innerHTML=RCa.length?`<div class="lb" style="margin-bottom:6px">Recambios / devoluciones solicitados (${RCa.length})</div><div class="card table-wrap"><table class="prev"><tbody>${RCa.slice().reverse().map(r=>{const ok=r.resuelto||(g.rec.get(r.sku)||0)>=(g.req.get(r.sku)||0)-1e-9;return `<tr><td class="meta mono">${esc(fmtD(r.fecha).split(" ")[0])}</td><td class="wrap"><span class="mono meta">${esc(r.sku)}</span> ${esc(r.nombre||"")}<div class="meta">${esc(r.motivo||"")}</div></td><td class="r num">${fmtN(r.cantidad)} <span class="unit">${esc(r.unidad||"u")}</span></td><td>${ok?'<span class="pill ok">Resuelto</span>':'<span class="pill bad">Pendiente</span>'}</td></tr>`}).join("")}</tbody></table></div>${g.recPend.length?`<div style="margin-top:6px"><button type="button" class="btn sm" id="nps-rwa">Volver a avisar a Compras por WhatsApp</button></div>`:""}`:"";
+      const rw=$("#nps-rwa");if(rw)rw.onclick=()=>npRecambioWa(S.peds.get(id)||p,g.recPend,()=>openNpSeg(id))}
     $("#nps-items").innerHTML=`<thead><tr>${ING.on?"<th></th>":""}<th>Elemento</th><th class="r">Pedido</th><th class="r">Recibido</th><th class="r">${ING.on?"Ingresar ahora":"Pendiente"}</th></tr></thead><tbody>${items.map(i=>{const done=i.pend<=1e-9,chk=sel.has(i.sku);
       return `<tr${ING.on&&done?' style="opacity:.6"':""}>${ING.on?`<td>${done?"":i.ok?`<input type="checkbox" data-npsck="${esc(i.sku)}"${chk?" checked":""} aria-label="Ingresar ${esc(i.nombre)}">`:'<span class="meta" title="El producto ya no está en el catálogo">—</span>'}</td>`:""}<td class="wrap"><div class="mono meta">${esc(i.sku)}</div>${esc(i.nombre)}</td><td class="r num">${fmtN(i.req)} <span class="unit">${esc(i.unidad)}</span></td><td class="r num"><b${done?' style="color:var(--ok)"':""}>${fmtN(i.rec)}</b></td>
-        <td class="r num">${done?'<span class="pill ok">Completo</span>':ING.on?(chk?`<input type="text" inputmode="decimal" data-npsq="${esc(i.sku)}" value="${String(sel.get(i.sku)).replace(".",",")}" style="width:90px;text-align:right"> <span class="unit">${esc(i.unidad)}</span>`:`<span class="meta">pend. ${fmtN(i.pend)}</span>`):fmtN(i.pend)}</td></tr>`}).join("")}</tbody>`;
+        <td class="r num">${done?'<span class="pill ok">Completo</span>':ING.on?(chk?`<div style="display:flex;gap:6px;justify-content:flex-end;align-items:center;flex-wrap:wrap"><select data-npsa="${esc(i.sku)}" style="width:auto"><option value="ing"${sel.get(i.sku).acc==="ing"?" selected":""}>Ingresar</option><option value="rec"${sel.get(i.sku).acc==="rec"?" selected":""}>Pedir recambio / devolución</option></select><input type="text" inputmode="decimal" data-npsq="${esc(i.sku)}" value="${String(sel.get(i.sku).q).replace(".",",")}" style="width:80px;text-align:right" aria-label="Cantidad"> <span class="unit">${esc(i.unidad)}</span></div>`:`<span class="meta">pend. ${fmtN(i.pend)}</span>`):fmtN(i.pend)}</td></tr>${ING.on&&chk&&sel.get(i.sku).acc==="rec"?`<tr><td></td><td colspan="4"><input type="text" data-npsm="${esc(i.sku)}" value="${esc(sel.get(i.sku).mot)}" placeholder="Motivo del recambio o devolución * (ej.: se pidieron puntas de 1.2 mm y llegaron de 1.0 mm)" style="width:100%"></td></tr>`:""}`}).join("")}</tbody>`;
     foot()};
   const foot=()=>{const f=$("#nps-foot");
     if(!ING.on){f.innerHTML=`<button type="button" class="btn" id="nps-np" style="margin-right:auto">Ver la nota de pedido</button><button type="button" class="btn" data-close>Cerrar</button>${pendientes.length?`<button type="button" class="btn in need-dep" id="nps-ing-b">${ICON_IN}Dar ingreso</button>`:""}<button type="submit" class="btn primary need-dep">Guardar</button>`;
@@ -1540,17 +1549,22 @@ function openNpSeg(id){const p=S.peds.get(id);if(!p)return;const g=npSeg(p),R=p.
     f.innerHTML=`<button type="button" class="btn" id="nps-back" style="margin-right:auto">‹ Volver a los ítems</button><button type="button" class="btn in" id="nps-go">${ICON_IN}Ingresar</button>`;
     $("#nps-back").onclick=()=>{$("#nps-ing").hidden=true;$("#nps-items").closest(".field").hidden=false;foot()};$("#nps-go").onclick=ingresar};
   /* selección y cantidades */
-  $("#nps-items").addEventListener("change",e=>{const ck=e.target.dataset.npsck;if(!ck)return;const it=items.find(i=>i.sku===ck);if(e.target.checked)ING.sel.set(ck,it.pend);else ING.sel.delete(ck);draw();if(e.target.checked){const q=$(`[data-npsq="${CSS.escape(ck)}"]`);if(q){q.focus();q.select()}}});
-  $("#nps-items").addEventListener("input",e=>{const k=e.target.dataset.npsq;if(!k)return;const v=parseNum(e.target.value);ING.sel.set(k,v==null?0:v)});
-  $("#nps-all").onclick=()=>{pendientes.forEach(i=>{if(!ING.sel.has(i.sku))ING.sel.set(i.sku,i.pend)});draw()};
+  $("#nps-items").addEventListener("change",e=>{const a=e.target.dataset.npsa;if(a){const o=ING.sel.get(a);if(o){o.acc=e.target.value;draw();if(o.acc==="rec"){const m=$(`[data-npsm="${CSS.escape(a)}"]`);if(m)m.focus()}}return}
+    const ck=e.target.dataset.npsck;if(!ck)return;const it=items.find(i=>i.sku===ck);if(e.target.checked)ING.sel.set(ck,{q:it.pend,acc:"ing",mot:""});else ING.sel.delete(ck);draw();if(e.target.checked){const q=$(`[data-npsq="${CSS.escape(ck)}"]`);if(q){q.focus();q.select()}}});
+  $("#nps-items").addEventListener("input",e=>{const k=e.target.dataset.npsq,mk=e.target.dataset.npsm;if(k){const v=parseNum(e.target.value),o=ING.sel.get(k);if(o)o.q=v==null?0:v}if(mk){const o=ING.sel.get(mk);if(o)o.mot=e.target.value}});
+  $("#nps-all").onclick=()=>{pendientes.forEach(i=>{if(!ING.sel.has(i.sku))ING.sel.set(i.sku,{q:i.pend,acc:"ing",mot:""})});draw()};
   /* paso 3: proveedor, Nº de registro y fecha */
   function step3(){
-    for(const [sku,q] of ING.sel){if(!(q>0)){const it=items.find(i=>i.sku===sku);toast(`Indicá una cantidad mayor a cero para ${it?it.nombre:sku}.`);const el=$(`[data-npsq="${CSS.escape(sku)}"]`);if(el)el.focus();return}}
-    const adm=roleOk("admin"),L=Array.from(ING.sel.entries()).map(([sku,q])=>Object.assign({},items.find(i=>i.sku===sku),{q}));
+    for(const [sku,o] of ING.sel){const it=items.find(i=>i.sku===sku);if(!(o.q>0)){toast(`Indicá una cantidad mayor a cero para ${it?it.nombre:sku}.`);const el=$(`[data-npsq="${CSS.escape(sku)}"]`);if(el)el.focus();return}
+      if(o.acc==="rec"&&!String(o.mot||"").trim()){toast(`Indicá el motivo del recambio de ${it?it.nombre:sku}.`);const el=$(`[data-npsm="${CSS.escape(sku)}"]`);if(el)el.focus();return}}
+    const adm=roleOk("admin"),ALL=Array.from(ING.sel.entries()).map(([sku,o])=>Object.assign({},items.find(i=>i.sku===sku),{q:o.q,acc:o.acc,mot:String(o.mot||"").trim()})),L=ALL.filter(i=>i.acc==="ing"),RC=ALL.filter(i=>i.acc==="rec");
     $("#nps-items").closest(".field").hidden=true;const box=$("#nps-ing");box.hidden=false;
     box.innerHTML=`<div class="card" style="padding:14px;display:grid;gap:12px;background:var(--surface-2)">
-      <div class="lb">Se van a ingresar ${L.length} elemento${L.length===1?"":"s"}</div>
-      <div class="card table-wrap"><table class="prev"><tbody>${L.map(i=>`<tr><td class="wrap"><span class="mono meta">${esc(i.sku)}</span> ${esc(i.nombre)}</td><td class="r num"><b class="qty ingreso">+${fmtN(i.q)}</b> <span class="unit">${esc(i.unidad)}</span></td><td class="meta">${i.q>=i.pend-1e-9?(i.q>i.pend+1e-9?"más de lo pendiente":"completa el ítem"):(()=>{const r=Math.round((i.pend-i.q)*1000)/1000;return r===1?"queda 1 pendiente":`quedan ${fmtN(r)} pendientes`})()}</td></tr>`).join("")}</tbody></table></div>
+      ${L.length?`<div class="lb">Se van a ingresar ${L.length} elemento${L.length===1?"":"s"}</div>
+      <div class="card table-wrap"><table class="prev"><tbody>${L.map(i=>`<tr><td class="wrap"><span class="mono meta">${esc(i.sku)}</span> ${esc(i.nombre)}</td><td class="r num"><b class="qty ingreso">+${fmtN(i.q)}</b> <span class="unit">${esc(i.unidad)}</span></td><td class="meta">${i.q>=i.pend-1e-9?(i.q>i.pend+1e-9?"más de lo pendiente":"completa el ítem"):(()=>{const r=Math.round((i.pend-i.q)*1000)/1000;return r===1?"queda 1 pendiente":`quedan ${fmtN(r)} pendientes`})()}</td></tr>`).join("")}</tbody></table></div>`:""}
+      ${RC.length?`<div class="lb" style="color:var(--bad)">Recambio o devolución (no suma al stock): ${RC.length} elemento${RC.length===1?"":"s"}</div>
+      <div class="card table-wrap"><table class="prev"><tbody>${RC.map(i=>`<tr><td class="wrap"><span class="mono meta">${esc(i.sku)}</span> ${esc(i.nombre)}</td><td class="r num"><b>${fmtN(i.q)}</b> <span class="unit">${esc(i.unidad)}</span></td><td class="meta wrap">${esc(i.mot)}</td></tr>`).join("")}</tbody></table></div>
+      <span class="hint">Al terminar se arma el mensaje de WhatsApp para Compras con el pedido de recambio. La nota sigue en «Entrega parcial» hasta que esos elementos se ingresen conformes.</span>`:""}
       <div class="form" style="padding:0">
         <div class="field"><label class="lb" for="nps-prov">Proveedor <span class="meta" style="font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></label><input type="text" id="nps-prov" list="dl-npsprov" placeholder="${adm?"Elegí de la lista o escribí uno nuevo":"Elegí de la lista de proveedores"}"><datalist id="dl-npsprov">${provList().filter(v=>v.activo!==false).map(v=>`<option value="${esc(v.razonSocial)}"${v.cuit?` label="CUIT ${esc(v.cuit)}"`:""}></option>`).join("")}</datalist><span class="hint" id="nps-prov-h">${adm?"Si no está en la lista, se agrega a Proveedores.":"Si no está en la lista, dejalo vacío: un Administrador lo puede completar después editando la entrada."}</span></div>
         <div class="field"><label class="lb" for="nps-doc">Nº de registro (remito / factura) <span class="meta" style="font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></label><input type="text" id="nps-doc" list="dl-docnum" placeholder="Ej.: R-04-0567"><span class="hint" id="nps-doc-h"></span></div>
@@ -1561,9 +1575,9 @@ function openNpSeg(id){const p=S.peds.get(id);if(!p)return;const g=npSeg(p),R=p.
     $("#nps-prov").addEventListener("input",ph);
     $("#nps-doc").addEventListener("input",()=>docHint($("#nps-doc"),$("#nps-doc-h")));
     foot();setTimeout(()=>$("#nps-prov").focus(),30);
-    ingresar.L=L;
+    ingresar.L=L;ingresar.RC=RC;const bg=$("#nps-go");if(bg&&!L.length)bg.innerHTML="Registrar y avisar a Compras";
   }
-  async function ingresar(){if(!guardWrite("deposito"))return;const L=ingresar.L||[];if(!L.length)return;
+  async function ingresar(){if(!guardWrite("deposito"))return;const L=ingresar.L||[],RC=ingresar.RC||[];if(!L.length&&!RC.length)return;
     const b=$("#nps-go"),adm=roleOk("admin"),txt=$("#nps-prov").value.trim(),docN=$("#nps-doc").value.trim(),f=$("#nps-fecha").value;
     const fecha=(!f||f===nowLocal())?new Date().toISOString():new Date(f).toISOString();
     if(new Date(fecha).getTime()>Date.now()+6e4){toast("La fecha no puede ser futura.");return}
@@ -1579,8 +1593,14 @@ function openNpSeg(id){const p=S.peds.get(id);if(!p)return;const g=npSeg(p),R=p.
         if(dk)body.docId=dk.id;if(SCOPES.metal.test(pr))body.nivel="metal";
         const r=await withRetry(()=>db.collection("movimientos").add(body));
         if(!S.movs.some(m=>m.id===r.id))S.movs.unshift(Object.assign({id:r.id},body));n++}
-      recompute();toast(`${n} ingreso${n===1?"":"s"} registrado${n===1?"":"s"} para ${pedNum(cur.numero)}${txt&&!pv?" (sin proveedor)":""}`);
-      openNpSeg(id);try{renderAll()}catch(e){}}
+      let nuevos=[];
+      if(RC.length){b.textContent="Registrando el pedido de recambio…";const now=new Date().toISOString();
+        nuevos=RC.map(i=>({id:Math.random().toString(36).slice(2,10),fecha,registrado:now,sku:i.sku,nombre:i.nombre,cantidad:i.q,unidad:i.unidad,motivo:i.mot,proveedor:pv?pv.razonSocial:txt,remito:docN,by:myId||""}));
+        const recs=((S.peds.get(id)||p).recambios||[]).concat(nuevos);
+        await withRetry(()=>db.doc("pedidos/"+id).update({recambios:recs,actualizado:now}));S.peds.set(id,Object.assign({},S.peds.get(id)||p,{recambios:recs}))}
+      recompute();toast(`${n?`${n} ingreso${n===1?"":"s"} registrado${n===1?"":"s"}`:"Sin ingresos"}${nuevos.length?` · ${nuevos.length} recambio${nuevos.length===1?"":"s"} pedido${nuevos.length===1?"":"s"}`:""} · ${pedNum(cur.numero)}${txt&&!pv&&n?" (sin proveedor)":""}`);
+      try{renderAll()}catch(e){}
+      if(nuevos.length)npRecambioWa(S.peds.get(id)||cur,nuevos,()=>openNpSeg(id));else openNpSeg(id)}
     catch(err){writeError(err);toast(`Se registraron ${n} de ${L.length}. Revisá el detalle antes de volver a ingresar.`);if(n)openNpSeg(id);else{b.disabled=false;b.innerHTML=ICON_IN+"Ingresar"}}
   }
   $$("[data-npscand]").forEach(x=>x.onclick=()=>{$("#nps-nro").value=x.dataset.npscand;$("#nps-nro").focus()});
@@ -1589,6 +1609,24 @@ function openNpSeg(id){const p=S.peds.get(id);if(!p)return;const g=npSeg(p),R=p.
     const nro=npComprasNorm($("#nps-nro").value),det=$("#nps-det").value.trim(),up={detalle:det,actualizado:new Date().toISOString()};
     if(nro!==(p.nroCompras||"")){up.nroCompras=nro;up.procesado=nro?new Date().toISOString():"";up.procesadoVia=nro?"manual":"";up.procesadoPor=myId||""}
     try{await db.doc("pedidos/"+id).update(up);S.peds.set(id,Object.assign({},S.peds.get(id)||p,up));toast(pedNum(p.numero)+" actualizada");closeModal();refreshNpDl();renderNpSeg()}catch(err){writeError(err)}});
+}
+/* aviso por WhatsApp a Compras: recambio o devolución de elementos recibidos con problemas */
+function npRecambioTxt(p,L){const h=new Date().getHours(),sal=h<12?"Buenos días":h<20?"Buenas tardes":"Buenas noches",r0=L[0]||{};
+  return `${sal}, desde Depósito solicitamos recambio o devolución de elementos recibidos de la *${pedNum(p.numero)}*${p.nroCompras?` (Compras ${p.nroCompras})`:""}.\n${[r0.proveedor?"Proveedor: "+r0.proveedor:"",r0.remito?"Remito/Factura: "+r0.remito:""].filter(Boolean).join(" · ")}${r0.proveedor||r0.remito?"\n":""}\n`+
+    L.map(r=>`.- ${r.sku} ${r.nombre||""} · ${fmtN(r.cantidad)} ${r.unidad||"u"} · Motivo: ${r.motivo||""}`).join("\n")+
+    `\n\nQuedamos a la espera para gestionar el cambio. Gracias.`}
+function npRecambioWa(p,L,onDone){
+  const tel=String(S.config.comprasWhatsapp||"").replace(/\D/g,"");
+  modal(`<div class="modal-h"><div><div class="meta">${pedNum(p.numero)}${p.nroCompras?" · Compras "+esc(p.nroCompras):""}</div><h3>Avisar a Compras por WhatsApp</h3></div><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
+   <div class="form" style="padding:18px">
+     <div class="field full"><label class="lb" for="rwa-t">Mensaje</label><textarea id="rwa-t" rows="10" style="font-family:var(--f-body)">${esc(npRecambioTxt(p,L))}</textarea><span class="hint">Podés corregir el texto antes de enviarlo.${tel?"":" Para abrir directo el chat de Compras, cargá su número en Administración › Ajustes generales."}</span></div>
+     <div class="form-actions" style="flex-wrap:wrap"><button type="button" class="btn" id="rwa-copy">Copiar texto</button><button type="button" class="btn" id="rwa-go" style="color:#1f8f4e">${tel?"Abrir el chat de Compras":"Abrir WhatsApp"}</button>${navigator.share?'<button type="button" class="btn primary" id="rwa-share" style="background:#1f8f4e;border-color:#1f8f4e">Compartir (elegí el chat)</button>':""}<button type="button" class="btn" id="rwa-ok">Listo</button></div>
+   </div>`,"wide");
+  const t=()=>$("#rwa-t").value.trim();
+  $("#rwa-copy").onclick=()=>{try{navigator.clipboard.writeText(t()).then(()=>toast("Texto copiado: pegalo en WhatsApp"),()=>{$("#rwa-t").select();toast("Seleccioné el texto: copialo")})}catch(e){$("#rwa-t").select();toast("Seleccioné el texto: copialo")}};
+  $("#rwa-go").onclick=()=>{const a=document.createElement("a");a.href=`https://wa.me/${tel}?text=`+encodeURIComponent(t());a.target="_blank";a.rel="noopener";document.body.appendChild(a);a.click();a.remove()};
+  const sh=$("#rwa-share");if(sh)sh.onclick=async()=>{try{await navigator.share({text:t()})}catch(e){if(e&&e.name==="AbortError")return;$("#rwa-go").click()}};
+  $("#rwa-ok").onclick=()=>{closeModal();if(onDone)onDone()};
 }
 /* app de Google: lectura automática de las respuestas de Compras */
 async function npMailInfo(){const box=$("#nps-auto");if(!box)return;
@@ -2304,12 +2342,12 @@ $("#btn-export-prov").addEventListener("click",()=>{
   save("proveedores-"+localDay(new Date().toISOString())+".csv",toCsv(rows))});
 
 /* ---------- config ---------- */
-function fillConfForm(){const c=S.config;$("#c-url").value=c.baseUrl||"";$("#c-orig").value=(c.origenes||[]).join("\n");$("#c-dest").value=(c.destinos||[]).join("\n");$("#c-cat").value=(c.categorias||[]).join("\n");$("#c-pers").value=(c.personas||[]).join("\n");$("#c-eq").value=(c.equipos||[]).join("\n");$("#c-compras").value=c.comprasEmail||"";$("#c-cont").value=(c.contactos||[]).map(fmtContacto).join("\n");$("#c-dep").value=(c.depositos&&c.depositos.length?c.depositos:["Deposito Central"]).join("\n");$("#c-trt").value=(c.trTipos&&c.trTipos.length?c.trTipos:DEF_TR_TIPOS).join("\n");$("#c-diam").value=(c.diametros&&c.diametros.length?c.diametros:DEF_DIAM).join(", ")}
+function fillConfForm(){const c=S.config;$("#c-compras-wa").value=c.comprasWhatsapp||"";$("#c-url").value=c.baseUrl||"";$("#c-orig").value=(c.origenes||[]).join("\n");$("#c-dest").value=(c.destinos||[]).join("\n");$("#c-cat").value=(c.categorias||[]).join("\n");$("#c-pers").value=(c.personas||[]).join("\n");$("#c-eq").value=(c.equipos||[]).join("\n");$("#c-compras").value=c.comprasEmail||"";$("#c-cont").value=(c.contactos||[]).map(fmtContacto).join("\n");$("#c-dep").value=(c.depositos&&c.depositos.length?c.depositos:["Deposito Central"]).join("\n");$("#c-trt").value=(c.trTipos&&c.trTipos.length?c.trTipos:DEF_TR_TIPOS).join("\n");$("#c-diam").value=(c.diametros&&c.diametros.length?c.diametros:DEF_DIAM).join(", ")}
 const lines=v=>uniq(v.split("\n"));
 $("#f-conf").addEventListener("submit",async e=>{e.preventDefault();if(!guardWrite("admin"))return;
   const url=$("#c-url").value.trim();
   if(url&&!/^https:\/\//.test(url)){toast("El enlace debe empezar con https://");return}
-  try{await db.doc("config/app").set({...S.config,baseUrl:url.split("#")[0],origenes:lines($("#c-orig").value),destinos:lines($("#c-dest").value),categorias:lines($("#c-cat").value),personas:lines($("#c-pers").value),equipos:lines($("#c-eq").value),comprasEmail:$("#c-compras").value.trim(),contactos:parseContactos($("#c-cont").value),depositos:lines($("#c-dep").value),trTipos:lines($("#c-trt").value),diametros:$("#c-diam").value.split(",").map(x=>x.trim()).filter(Boolean)});toast("Ajustes guardados")}catch(err){writeError(err)}});
+  try{await db.doc("config/app").set({...S.config,baseUrl:url.split("#")[0],origenes:lines($("#c-orig").value),destinos:lines($("#c-dest").value),categorias:lines($("#c-cat").value),personas:lines($("#c-pers").value),equipos:lines($("#c-eq").value),comprasEmail:$("#c-compras").value.trim(),comprasWhatsapp:$("#c-compras-wa").value.trim(),contactos:parseContactos($("#c-cont").value),depositos:lines($("#c-dep").value),trTipos:lines($("#c-trt").value),diametros:$("#c-diam").value.split(",").map(x=>x.trim()).filter(Boolean)});toast("Ajustes guardados")}catch(err){writeError(err)}});
 
 
 /* ---------- copia de seguridad ---------- */
@@ -5352,7 +5390,7 @@ async function pfGenerate(){
     solicita:uniq(items.map(i=>i.solicitante)).join(", "),area:uniq(items.map(i=>i.area)).join(", "),imputacion:uniq(items.map(i=>i.imputacion).filter(Boolean)).join(", "),
     prioridad:items.some(i=>i.prioridad==="urgente")?"urgente":"normal",necesario:lims[0]||"",obs:ex?ex.obs||"":"",items,detalle:($("#pf-det")?$("#pf-det").value.trim():"")||(ex&&ex.detalle)||"",
     enviado:ex?ex.enviado||"":"",enviadoA:ex?ex.enviadoA||"":"",recibido:ex?ex.recibido||"":"",by:ex?ex.by:(myId||""),actualizado:now,pdfs:ex?((S.peds.get(ex.id)||ex).pdfs||[]):[]};
-  if(ex){const cur=S.peds.get(ex.id)||ex;["nroCompras","procesado","procesadoVia","procesadoPor","respuestaCompras","enviadoPor"].forEach(k=>{if(cur[k]!=null&&cur[k]!=="")body[k]=cur[k]})}
+  if(ex){const cur=S.peds.get(ex.id)||ex;["nroCompras","procesado","procesadoVia","procesadoPor","respuestaCompras","enviadoPor","recambios"].forEach(k=>{if(cur[k]!=null&&cur[k]!=="")body[k]=cur[k]})}
   const b=$("#pf-go");b.disabled=true;
   try{let id=ex?ex.id:null;if(ex)await db.doc("pedidos/"+ex.id).set(body);else{const r=await db.collection("pedidos").add(body);id=r.id}
     const full=Object.assign({id},body);S.peds.set(id,full);if(!ex){PF.list=[];try{localStorage.removeItem(pfDraftKey)}catch(e){}}
