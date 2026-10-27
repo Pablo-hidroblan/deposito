@@ -731,7 +731,7 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
   </section>
   <section id="v-hist" data-view="hist" hidden>
     <div class="section-head">
-      <div><h2>Historial de movimientos de productos</h2><p class="sub" id="hist-sub"></p></div>
+      <div><h2>Historial de Insumos Equipos</h2><p class="sub" id="hist-sub"></p></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn need-adm" id="btn-imp-hist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3M7 8l5-5 5 5M4 21h16"/></svg>Importar historial desde Excel</button>
       <button class="btn" id="btn-export-hist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Exportar como…</button></div>
     </div>
@@ -1189,7 +1189,9 @@ function newScopedProduct(sc){const d=SCOPE_PRE[sc];let max=0;for(const k of S.p
   const ub=(prodList().find(scopeTest(sc))||{}).ubicacion||"Deposito Central";
   openProductForm(null,{scope:sc,prefix:d.prefix,categoria:d.categoria||"",sku:d.prefix+String(max+1).padStart(3,"0"),nombre:d.nombre,unidad:(prodList().find(scopeTest(sc))||{}).unidad||d.unidad,ubicacion:ub});
   setTimeout(()=>{const n=$("#p-nom");if(n){n.focus();n.setSelectionRange(n.value.length,n.value.length)}},50)}
-const scopeTest=sc=>sc&&SCOPES[sc]?SCOPES[sc].test:p=>!isInv(p);
+/* sin nivel (Insumos Equipos): todo menos inventario general e insumos metalúrgicos */
+const isEquipos=p=>!!p&&!isInv(p)&&!SCOPES.metal.test(p);
+const scopeTest=sc=>sc&&SCOPES[sc]?SCOPES[sc].test:isEquipos;
 const MENU=[
   {id:"inicio",name:"Inicio",ic:"home",view:"home"},
   {id:"diario",name:"Movimientos diarios",ic:"diario",items:[
@@ -1342,9 +1344,9 @@ $("#menu-btn").addEventListener("click",()=>setDrawer(!$("#side").classList.cont
 $("#side-scrim").addEventListener("click",()=>setDrawer(false));
 document.addEventListener("click",e=>{const g=e.target.closest("[data-goto]");if(g&&!e.target.closest("#tree")){e.preventDefault();if($("#scrim"))closeModal();go(g.dataset.goto)}});
 function grpStat(g){
-  const PA=prodList(),P=PA.filter(p=>!isInv(p)),dayN=S.movs.filter(m=>isToday(m.fecha)).length;
+  const PA=prodList(),P=PA.filter(isEquipos),dayN=S.movs.filter(m=>isToday(m.fecha)).length;
   if(g.id==="diario"){const td=S.bit.filter(e=>e.fecha===todayStr()).length;return S.bit.length?`<b>${S.bit.length}</b> novedades en la bitácora · <b>${td}</b> hoy`:"Bitácora vacía"}
-  if(g.id==="productos"){const z=P.filter(p=>estado(p)[0]==="bad").length,l=P.filter(p=>estado(p)[0]==="warn").length;const ni=PA.length-P.length;return `<b>${P.length}</b> productos · <b>${z}</b> sin stock${l?` · <b>${l}</b> bajo mínimo`:""}${ni?` · <b>${ni}</b> en inventario general`:""}`}
+  if(g.id==="productos"){const z=P.filter(p=>estado(p)[0]==="bad").length,l=P.filter(p=>estado(p)[0]==="warn").length;const ni=PA.filter(isInv).length;return `<b>${P.length}</b> productos · <b>${z}</b> sin stock${l?` · <b>${l}</b> bajo mínimo`:""}${ni?` · <b>${ni}</b> en inventario general`:""}`}
   if(g.id==="compras"){const pe=pedList().filter(p=>p.estado==="pendiente").length;return `<b>${pe}</b> nota${pe===1?"":"s"} pendiente${pe===1?"":"s"} de envío`}
   if(g.id==="catalogo_")return `<b>${P.length}</b> productos · <b>${provList().length}</b> proveedores · <b>${cliList().length}</b> clientes`;
   if(g.id==="trepanos"){const T=trList(),a=T.filter(t=>!trDesc0(t));return a.length||T.length?`<b>${a.length}</b> trépanos · <b>${a.filter(trInBase).length}</b> en base · <b>${a.filter(t=>t.ubicTipo==="equipo").length}</b> en equipos${a.some(t=>trK(t)==="nuevo")?` · <b>${a.filter(t=>trK(t)==="nuevo").length}</b> nuevos`:""}`:"Todavía no hay trépanos cargados"}
@@ -1626,14 +1628,14 @@ function parseSku(v){
 async function renderHist(){
   const q=$("#h-q").value.trim().toLowerCase(),t=$("#h-tipo").value,de=$("#h-desde").value,ha=$("#h-hasta").value;
   const rows=S.movs.filter(m=>{
-    if(movInv(m))return false;
+    if(!movEquipos(m))return false;
     if(t&&m.tipo!==t)return false;
     const day=(m.fecha||"").slice(0,10);
     if(de&&localDay(m.fecha)<de)return false;
     if(ha&&localDay(m.fecha)>ha)return false;
     if(q&&!([m.sku,m.nombre,m.origen,m.destino,m.autoriza,m.solicitante,m.remito,m.obs].join(" ").toLowerCase().includes(q)))return false;
     return true});
-  $("#hist-sub").textContent=S.loadedM?`${rows.length} de ${S.movs.filter(m=>!movInv(m)).length} movimientos`:"Cargando…";
+  $("#hist-sub").textContent=S.loadedM?`${rows.length} de ${S.movs.filter(movEquipos).length} movimientos`:"Cargando…";
   const tb=$("#t-hist tbody");
   if(S.loadedM&&!S.movs.length){tb.innerHTML=`<tr><td colspan="7" class="span"><div class="empty"><b>Sin movimientos todavía</b>Cada ingreso, egreso o ajuste que registres aparece acá con fecha, autorizante y observaciones.</div></td></tr>`;$("#h-more").hidden=true;return}
   if(S.loadedM&&!rows.length){tb.innerHTML=`<tr><td colspan="7" class="span"><div class="empty">Ningún movimiento coincide con el filtro.</div></td></tr>`;$("#h-more").hidden=true;return}
@@ -1657,6 +1659,8 @@ async function renderHist(){
 }
 /* movimientos del inventario general: no se mezclan con el historial de Insumos Equipos */
 function movInv(m){return isInv(S.products.get(m.sku))||/^INV-/i.test(m.sku||"")}
+/* movimientos que pertenecen a Insumos Equipos (sin inventario general ni insumos metalúrgicos) */
+function movEquipos(m){const p=S.products.get(m.sku);return p?isEquipos(p):!(m.nivel==="metal"||/^(T-MET-|INV-)/i.test(m.sku||""))}
 function localDay(iso){const d=new Date(iso);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 ["#h-q","#h-tipo","#h-desde","#h-hasta"].forEach(s=>$(s).addEventListener("input",()=>{histLimit=200;renderHist()}));
 $("#h-more").addEventListener("click",()=>{histLimit+=200;renderHist()});
@@ -1879,6 +1883,7 @@ $("#f-mov").addEventListener("submit",async e=>{
   if(pr&&!(Number.isInteger(q)&&q>0)){toast(`Indicá cuántas unidades de "${pr.n}" (número entero).`);$("#m-cant").focus();return}
   if(pr&&q>0)q=Math.round(q*pr.f*1000)/1000;
   if(!MOV_SCOPE&&isInv(p)&&movTipo!=="ajuste"){toast("Ese elemento es del Inventario general: registralo desde Insumos Equipos › Inventario general.");return}
+  if(!MOV_SCOPE&&SCOPES.metal.test(p)&&movTipo!=="ajuste"){toast("Ese elemento es de Insumos Metalúrgicos: registralo desde ese nivel.");return}
   if(MOV_SCOPE&&!SCOPES[MOV_SCOPE].test(p)){toast(`Ese elemento no es de ${SCOPES[MOV_SCOPE].name.toLowerCase()}. Registralo desde Insumos Equipos.`);return}
   if(!MOV_TIPOS.includes(movTipo)){toast("Este tipo de movimiento no está disponible acá.");return}
   if(!q||(movTipo!=="ajuste"&&q<0)){toast(movTipo==="ajuste"?"Indicá la diferencia de recuento (distinta de cero).":"Indicá una cantidad mayor a cero.");$("#m-cant").focus();return}
@@ -2435,7 +2440,7 @@ $("#btn-export-stock").addEventListener("click",()=>{
   const rows=[["SKU","Elemento","Categoría","Unidad","Ubicación","Stock actual","Stock mínimo","Estado"]].concat(prodList().filter(scopeTest(STOCK_SCOPE)).map(p=>[p.sku,p.nombre,p.categoria,p.unidad,p.ubicacion,fmtN(stockOf(p.sku)),p.minimo||"",estado(p)[1]]));
   save("stock-"+localDay(new Date().toISOString())+".csv",toCsv(rows))});
 $("#btn-export-hist").addEventListener("click",()=>{
-  const rows=[["Fecha","Tipo","SKU","Elemento","Cantidad","Unidad","Origen","Destino","Solicitó","Autorizó","Remito/Pedido","Observaciones"]].concat(S.movs.filter(m=>!movInv(m)).map(m=>{const p=S.products.get(m.sku);return[fmtD(m.fecha),m.tipo,m.sku,m.nombre,String(m.tipo==="egreso"?-m.cantidad:m.cantidad).replace(".",","),(p&&p.unidad)||"",m.origen,m.destino,m.solicitante,m.autoriza,m.remito,m.obs]}));
+  const rows=[["Fecha","Tipo","SKU","Elemento","Cantidad","Unidad","Origen","Destino","Solicitó","Autorizó","Remito/Pedido","Observaciones"]].concat(S.movs.filter(movEquipos).map(m=>{const p=S.products.get(m.sku);return[fmtD(m.fecha),m.tipo,m.sku,m.nombre,String(m.tipo==="egreso"?-m.cantidad:m.cantidad).replace(".",","),(p&&p.unidad)||"",m.origen,m.destino,m.solicitante,m.autoriza,m.remito,m.obs]}));
   save("movimientos-"+localDay(new Date().toISOString())+".csv",toCsv(rows))});
 
 /* ---------- carga / recuento de cantidades ---------- */
@@ -2450,7 +2455,7 @@ const CQ={vals:new Map(),only0:true};
 function openCarga(){
   if(!guardWrite("admin"))return;
   if(!prodList().length){toast("Primero cargá productos.");return}
-  CQ.vals=new Map();CQ.only0=prodList().some(p=>!isInv(p)&&stockOf(p.sku)<=0);
+  CQ.vals=new Map();CQ.only0=prodList().some(p=>isEquipos(p)&&stockOf(p.sku)<=0);
   modal(`<div class="modal-h"><div><h3>Cargar cantidades en stock</h3><div class="meta">Escribí la cantidad que hay hoy en el depósito. Solo se guardan las filas que cambies; cada cambio queda en el Historial como stock inicial o ajuste por recuento.</div></div><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
    <div style="padding:18px;display:grid;gap:12px">
      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
@@ -2475,7 +2480,7 @@ function openCarga(){
 }
 function renderCarga(){
   const q=$("#cq-q").value.trim().toLowerCase(),cat=$("#cq-cat").value;
-  const rows=prodList().filter(p=>!isInv(p)&&(!CQ.only0||stockOf(p.sku)<=0||CQ.vals.has(p.sku))&&(!cat||p.categoria===cat)&&(!q||(p.sku+" "+p.nombre+" "+(p.ubicacion||"")).toLowerCase().includes(q)));
+  const rows=prodList().filter(p=>isEquipos(p)&&(!CQ.only0||stockOf(p.sku)<=0||CQ.vals.has(p.sku))&&(!cat||p.categoria===cat)&&(!q||(p.sku+" "+p.nombre+" "+(p.ubicacion||"")).toLowerCase().includes(q)));
   $("#cq-t tbody").innerHTML=rows.length?rows.map(p=>{const v=CQ.vals.get(p.sku);return `<tr data-sku="${esc(p.sku)}">
     <td class="mono">${esc(p.sku)}</td><td class="wrap">${esc(p.nombre)}</td><td class="meta">${esc(p.ubicacion||"—")}</td>
     <td class="r num">${fmtN(stockOf(p.sku))} <span class="unit">${esc(p.unidad||"u")}</span></td>
