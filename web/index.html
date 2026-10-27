@@ -1510,20 +1510,82 @@ $("#nps-xls").addEventListener("click",async()=>{const L=npTracked();if(!L.lengt
   save(`seguimiento-np-${todayStr()}.xlsx`,new Blob([XLSX.write(wb,{bookType:"xlsx",type:"array"})]),{title:"Seguimiento de notas de pedido al "+todayStr().split("-").reverse().join("/")})});
 /* detalle de una nota */
 function openNpSeg(id){const p=S.peds.get(id);if(!p)return;const g=npSeg(p),R=p.respuestaCompras;
-  const items=Array.from(g.req.entries()).map(([sku,req])=>{const it=(p.items||[]).find(i=>i.sku===sku)||{},rec=g.rec.get(sku)||0;return {sku,nombre:it.nombre||sku,unidad:it.unidad||"u",req,rec}});
+  const items=Array.from(g.req.entries()).map(([sku,req])=>{const it=(p.items||[]).find(i=>i.sku===sku)||{},rec=g.rec.get(sku)||0,pr=S.products.get(sku);return {sku,nombre:(pr&&pr.nombre)||it.nombre||sku,unidad:(pr&&pr.unidad)||it.unidad||"u",req,rec,pend:Math.max(0,Math.round((req-rec)*1000)/1000),ok:!!pr}});
+  const pendientes=items.filter(i=>i.pend>1e-9&&i.ok);
+  /* ingreso manual: ING.sel = Map sku → cantidad */
+  const ING={on:false,sel:new Map()};
   modal(`<div class="modal-h"><div><div class="meta">Seguimiento · enviada ${esc(fmtD(p.enviado||p.fecha))}${p.enviadoA?" a "+esc(p.enviadoA):""}</div><h3>${pedNum(p.numero)}${p.detalle?" · "+esc(p.detalle):""}</h3><div style="margin-top:4px">${npsPill(g.k)}</div></div><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
    <form class="form" id="f-nps" autocomplete="off" style="padding:18px">
-     <div class="field"><label class="lb" for="nps-nro">Nº de NP de Compras</label><input type="text" id="nps-nro" value="${esc(p.nroCompras||"")}" placeholder="${window.DEP?"Se completa solo con la respuesta de Compras (ej.: NP-2026-0001)":"Número asignado por Compras (ej.: NP-2026-0001)"}"><span class="hint">${p.nroCompras?`Cargado ${p.procesadoVia==="correo"?"automáticamente desde el correo de Compras":"a mano"}${p.procesado?" el "+esc(fmtD(p.procesado)):""}`:window.DEP?"Se completa solo cuando llega la respuesta de Compras a la casilla de la app. También lo podés cargar a mano.":"Cargalo cuando Compras responda el correo."}</span></div>
-     <div class="field"><label class="lb" for="nps-det">Detalle del pedido</label><input type="text" id="nps-det" list="dl-npdet" value="${esc(p.detalle||"")}" placeholder="Insumos taller, Repuestos equipos, Librería…"></div>
-     ${R?`<div class="field full"><div class="banner ${R.revisar&&!p.nroCompras?"warn":"ok"}" style="margin:0;display:grid;gap:4px"><b>Respuesta de Compras · ${esc(fmtD(R.fecha))}${R.de?" · "+esc(R.de):""}</b>${R.revisar&&!p.nroCompras?"<span>No encontré el número con seguridad. Revisá el texto y cargalo arriba.</span>":""}<span class="meta" style="white-space:pre-wrap">${esc((R.extracto||"").slice(0,600))}</span>${(R.candidatos||[]).length&&!p.nroCompras?`<span>Posibles números: ${R.candidatos.map(c=>`<button type="button" class="btn sm" data-npscand="${esc(c)}">${esc(c)}</button>`).join(" ")}</span>`:""}</div></div>`:""}
-     <div class="field full"><div class="lb" style="margin-bottom:6px">Ítems de la nota (${g.full} de ${g.n} recibidos completos)</div>
-       <div class="card table-wrap"><table class="prev"><thead><tr><th>Elemento</th><th class="r">Pedido</th><th class="r">Recibido</th><th class="r">Pendiente</th></tr></thead><tbody>${items.map(i=>`<tr><td class="wrap"><div class="mono meta">${esc(i.sku)}</div>${esc(i.nombre)}</td><td class="r num">${fmtN(i.req)} <span class="unit">${esc(i.unidad)}</span></td><td class="r num"><b${i.rec>=i.req-1e-9?' style="color:var(--ok)"':""}>${fmtN(i.rec)}</b></td><td class="r num">${i.rec>=i.req-1e-9?'<span class="pill ok">Completo</span>':fmtN(Math.round((i.req-i.rec)*1000)/1000)}</td></tr>`).join("")}</tbody></table></div></div>
-     <div class="field full"><div class="lb" style="margin-bottom:6px">Entradas vinculadas (${g.movs.length})</div>${g.movs.length?`<div class="card table-wrap"><table class="prev"><tbody>${g.movs.map(m=>`<tr><td class="meta mono">${esc(fmtD(m.fecha))}</td><td><span class="mono meta">${esc(m.sku)}</span> ${esc(m.nombre||"")}</td><td class="r num">+${fmtN(m.cantidad)}</td><td class="meta">${esc(m.origen||"")}${m.remito?" · "+esc(m.remito):""}</td></tr>`).join("")}</tbody></table></div>`:'<div class="meta">Todavía no hay entradas vinculadas. Al registrar la Entrada de un elemento pedido, elegí esta nota en el campo «Nota de pedido».</div>'}</div>
-     <div class="form-actions" style="display:flex;flex-wrap:wrap"><button type="button" class="btn" id="nps-np" style="margin-right:auto">Ver la nota de pedido</button><button type="button" class="btn" data-close>Cerrar</button><button type="submit" class="btn primary need-dep">Guardar</button></div>
+     <div class="field nps-dat"><label class="lb" for="nps-nro">Nº de NP de Compras</label><input type="text" id="nps-nro" value="${esc(p.nroCompras||"")}" placeholder="${window.DEP?"Se completa solo con la respuesta de Compras (ej.: NP-2026-0001)":"Número asignado por Compras (ej.: NP-2026-0001)"}"><span class="hint">${p.nroCompras?`Cargado ${p.procesadoVia==="correo"?"automáticamente desde el correo de Compras":"a mano"}${p.procesado?" el "+esc(fmtD(p.procesado)):""}`:window.DEP?"Se completa solo cuando llega la respuesta de Compras a la casilla de la app. También lo podés cargar a mano.":"Cargalo cuando Compras responda el correo."}</span></div>
+     <div class="field nps-dat"><label class="lb" for="nps-det">Detalle del pedido</label><input type="text" id="nps-det" list="dl-npdet" value="${esc(p.detalle||"")}" placeholder="Insumos taller, Repuestos equipos, Librería…"></div>
+     ${R?`<div class="field full nps-dat"><div class="banner ${R.revisar&&!p.nroCompras?"warn":"ok"}" style="margin:0;display:grid;gap:4px"><b>Respuesta de Compras · ${esc(fmtD(R.fecha))}${R.de?" · "+esc(R.de):""}</b>${R.revisar&&!p.nroCompras?"<span>No encontré el número con seguridad. Revisá el texto y cargalo arriba.</span>":""}<span class="meta" style="white-space:pre-wrap">${esc((R.extracto||"").slice(0,600))}</span>${(R.candidatos||[]).length&&!p.nroCompras?`<span>Posibles números: ${R.candidatos.map(c=>`<button type="button" class="btn sm" data-npscand="${esc(c)}">${esc(c)}</button>`).join(" ")}</span>`:""}</div></div>`:""}
+     <div class="field full"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px"><div class="lb" id="nps-items-h"></div><button type="button" class="btn ghost sm" id="nps-all" hidden style="margin-left:auto">Seleccionar todo lo pendiente</button></div>
+       <div class="card table-wrap"><table class="prev" id="nps-items"></table></div></div>
+     <div class="field full" id="nps-ing" hidden></div>
+     <div class="field full nps-dat"><div class="lb" style="margin-bottom:6px">Entradas vinculadas (${g.movs.length})</div>${g.movs.length?`<div class="card table-wrap"><table class="prev"><tbody>${g.movs.map(m=>`<tr><td class="meta mono">${esc(fmtD(m.fecha))}</td><td><span class="mono meta">${esc(m.sku)}</span> ${esc(m.nombre||"")}</td><td class="r num">+${fmtN(m.cantidad)}</td><td class="meta">${esc(m.origen||"")}${m.remito?" · "+esc(m.remito):""}</td></tr>`).join("")}</tbody></table></div>`:'<div class="meta">Todavía no hay entradas vinculadas. Usá «Dar ingreso» o, al registrar la Entrada de un elemento pedido, elegí esta nota en el campo «Nota de pedido».</div>'}</div>
+     <div class="form-actions" style="display:flex;flex-wrap:wrap" id="nps-foot"></div>
    </form>`,"wide");
-  $$("[data-npscand]").forEach(b=>b.onclick=()=>{$("#nps-nro").value=b.dataset.npscand;$("#nps-nro").focus()});
-  $("#nps-np").onclick=()=>openPed(id);
-  $("#f-nps").addEventListener("submit",async e=>{e.preventDefault();if(!guardWrite("deposito"))return;
+  const draw=()=>{const sel=ING.sel;
+    $("#nps-items-h").textContent=ING.on?`Elegí qué llegó y cuánto (${sel.size} seleccionado${sel.size===1?"":"s"})`:`Ítems de la nota (${g.full} de ${g.n} recibidos completos)`;
+    $("#nps-all").hidden=!ING.on||!pendientes.length;
+    $("#nps-items").innerHTML=`<thead><tr>${ING.on?"<th></th>":""}<th>Elemento</th><th class="r">Pedido</th><th class="r">Recibido</th><th class="r">${ING.on?"Ingresar ahora":"Pendiente"}</th></tr></thead><tbody>${items.map(i=>{const done=i.pend<=1e-9,chk=sel.has(i.sku);
+      return `<tr${ING.on&&done?' style="opacity:.6"':""}>${ING.on?`<td>${done?"":i.ok?`<input type="checkbox" data-npsck="${esc(i.sku)}"${chk?" checked":""} aria-label="Ingresar ${esc(i.nombre)}">`:'<span class="meta" title="El producto ya no está en el catálogo">—</span>'}</td>`:""}<td class="wrap"><div class="mono meta">${esc(i.sku)}</div>${esc(i.nombre)}</td><td class="r num">${fmtN(i.req)} <span class="unit">${esc(i.unidad)}</span></td><td class="r num"><b${done?' style="color:var(--ok)"':""}>${fmtN(i.rec)}</b></td>
+        <td class="r num">${done?'<span class="pill ok">Completo</span>':ING.on?(chk?`<input type="text" inputmode="decimal" data-npsq="${esc(i.sku)}" value="${String(sel.get(i.sku)).replace(".",",")}" style="width:90px;text-align:right"> <span class="unit">${esc(i.unidad)}</span>`:`<span class="meta">pend. ${fmtN(i.pend)}</span>`):fmtN(i.pend)}</td></tr>`}).join("")}</tbody>`;
+    foot()};
+  const foot=()=>{const f=$("#nps-foot");
+    if(!ING.on){f.innerHTML=`<button type="button" class="btn" id="nps-np" style="margin-right:auto">Ver la nota de pedido</button><button type="button" class="btn" data-close>Cerrar</button>${pendientes.length?`<button type="button" class="btn in need-dep" id="nps-ing-b">${ICON_IN}Dar ingreso</button>`:""}<button type="submit" class="btn primary need-dep">Guardar</button>`;
+      $("#nps-np").onclick=()=>openPed(id);const b=$("#nps-ing-b");if(b)b.onclick=()=>{if(!guardWrite("deposito"))return;ING.on=true;$$(".nps-dat").forEach(x=>x.hidden=true);draw()};return}
+    if($("#nps-ing").hidden){f.innerHTML=`<button type="button" class="btn" id="nps-x" style="margin-right:auto">Cancelar ingreso</button><button type="button" class="btn primary" id="nps-cont"${ING.sel.size?"":" disabled"}>Continuar</button>`;
+      $("#nps-x").onclick=()=>{ING.on=false;ING.sel.clear();$$(".nps-dat").forEach(x=>x.hidden=false);draw()};$("#nps-cont").onclick=step3;return}
+    f.innerHTML=`<button type="button" class="btn" id="nps-back" style="margin-right:auto">‹ Volver a los ítems</button><button type="button" class="btn in" id="nps-go">${ICON_IN}Ingresar</button>`;
+    $("#nps-back").onclick=()=>{$("#nps-ing").hidden=true;$("#nps-items").closest(".field").hidden=false;foot()};$("#nps-go").onclick=ingresar};
+  /* selección y cantidades */
+  $("#nps-items").addEventListener("change",e=>{const ck=e.target.dataset.npsck;if(!ck)return;const it=items.find(i=>i.sku===ck);if(e.target.checked)ING.sel.set(ck,it.pend);else ING.sel.delete(ck);draw();if(e.target.checked){const q=$(`[data-npsq="${CSS.escape(ck)}"]`);if(q){q.focus();q.select()}}});
+  $("#nps-items").addEventListener("input",e=>{const k=e.target.dataset.npsq;if(!k)return;const v=parseNum(e.target.value);ING.sel.set(k,v==null?0:v)});
+  $("#nps-all").onclick=()=>{pendientes.forEach(i=>{if(!ING.sel.has(i.sku))ING.sel.set(i.sku,i.pend)});draw()};
+  /* paso 3: proveedor, Nº de registro y fecha */
+  function step3(){
+    for(const [sku,q] of ING.sel){if(!(q>0)){const it=items.find(i=>i.sku===sku);toast(`Indicá una cantidad mayor a cero para ${it?it.nombre:sku}.`);const el=$(`[data-npsq="${CSS.escape(sku)}"]`);if(el)el.focus();return}}
+    const adm=roleOk("admin"),L=Array.from(ING.sel.entries()).map(([sku,q])=>Object.assign({},items.find(i=>i.sku===sku),{q}));
+    $("#nps-items").closest(".field").hidden=true;const box=$("#nps-ing");box.hidden=false;
+    box.innerHTML=`<div class="card" style="padding:14px;display:grid;gap:12px;background:var(--surface-2)">
+      <div class="lb">Se van a ingresar ${L.length} elemento${L.length===1?"":"s"}</div>
+      <div class="card table-wrap"><table class="prev"><tbody>${L.map(i=>`<tr><td class="wrap"><span class="mono meta">${esc(i.sku)}</span> ${esc(i.nombre)}</td><td class="r num"><b class="qty ingreso">+${fmtN(i.q)}</b> <span class="unit">${esc(i.unidad)}</span></td><td class="meta">${i.q>=i.pend-1e-9?(i.q>i.pend+1e-9?"más de lo pendiente":"completa el ítem"):(()=>{const r=Math.round((i.pend-i.q)*1000)/1000;return r===1?"queda 1 pendiente":`quedan ${fmtN(r)} pendientes`})()}</td></tr>`).join("")}</tbody></table></div>
+      <div class="form" style="padding:0">
+        <div class="field"><label class="lb" for="nps-prov">Proveedor <span class="meta" style="font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></label><input type="text" id="nps-prov" list="dl-npsprov" placeholder="${adm?"Elegí de la lista o escribí uno nuevo":"Elegí de la lista de proveedores"}"><datalist id="dl-npsprov">${provList().filter(v=>v.activo!==false).map(v=>`<option value="${esc(v.razonSocial)}"${v.cuit?` label="CUIT ${esc(v.cuit)}"`:""}></option>`).join("")}</datalist><span class="hint" id="nps-prov-h">${adm?"Si no está en la lista, se agrega a Proveedores.":"Si no está en la lista, dejalo vacío: un Administrador lo puede completar después editando la entrada."}</span></div>
+        <div class="field"><label class="lb" for="nps-doc">Nº de registro (remito / factura) <span class="meta" style="font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></label><input type="text" id="nps-doc" list="dl-docnum" placeholder="Ej.: R-04-0567"><span class="hint" id="nps-doc-h"></span></div>
+        <div class="field"><label class="lb" for="nps-fecha">Fecha y hora</label><input type="datetime-local" id="nps-fecha" value="${nowLocal()}"></div>
+      </div></div>`;
+    const ph=()=>{const v=$("#nps-prov").value.trim(),h=$("#nps-prov-h");if(!v){h.innerHTML=adm?"Si no está en la lista, se agrega a Proveedores.":"Si no está en la lista, dejalo vacío: un Administrador lo puede completar después editando la entrada.";return}
+      const pv=findProv(v);h.innerHTML=pv?(pv.activo===false?'<span style="color:var(--warn)">Ese proveedor está inactivo.</span>':'<span style="color:var(--ok)">✓ Proveedor del listado</span>'):adm?`<span style="color:var(--accent)">Proveedor nuevo: se agrega a Proveedores al ingresar.</span>`:'<span style="color:var(--warn)">No está en el listado: la entrada se registra sin proveedor (un Administrador lo puede completar después).</span>'};
+    $("#nps-prov").addEventListener("input",ph);
+    $("#nps-doc").addEventListener("input",()=>docHint($("#nps-doc"),$("#nps-doc-h")));
+    foot();setTimeout(()=>$("#nps-prov").focus(),30);
+    ingresar.L=L;
+  }
+  async function ingresar(){if(!guardWrite("deposito"))return;const L=ingresar.L||[];if(!L.length)return;
+    const b=$("#nps-go"),adm=roleOk("admin"),txt=$("#nps-prov").value.trim(),docN=$("#nps-doc").value.trim(),f=$("#nps-fecha").value;
+    const fecha=(!f||f===nowLocal())?new Date().toISOString():new Date(f).toISOString();
+    if(new Date(fecha).getTime()>Date.now()+6e4){toast("La fecha no puede ser futura.");return}
+    let pv=txt?findProv(txt):null;
+    if(pv&&pv.activo===false){toast("Ese proveedor está inactivo. Reactivalo en Proveedores o elegí otro.");return}
+    b.disabled=true;let n=0;
+    try{
+      if(txt&&!pv&&adm){const now=new Date().toISOString(),body={razonSocial:txt,fantasia:"",cuit:"",iva:"",rubro:"",contacto:"",telefono:"",email:"",pago:"",direccion:"",localidad:"",obs:"Alta desde Seguimiento NP ("+pedNum(p.numero)+")",activo:true,creado:now,actualizado:now};
+        const r=await withRetry(()=>db.collection("proveedores").add(body));pv=Object.assign({id:r.id},body);S.provs.set(r.id,pv)}
+      const cur=S.peds.get(id)||p,origen=pv?pv.razonSocial:`Compras · ${pedNum(cur.numero)}${cur.nroCompras?" ("+cur.nroCompras+")":""}`,dk=docN?docByKey(docN):null;
+      for(const i of L){b.textContent=`Ingresando ${n+1} de ${L.length}…`;const pr=S.products.get(i.sku);if(!pr)continue;
+        const body={obra:"",sku:i.sku,nombre:pr.nombre,tipo:"ingreso",cantidad:i.q,origen,proveedorId:pv?pv.id:"",destino:"",solicitante:"",autoriza:"",remito:docN,obs:`Ingreso desde Seguimiento NP${cur.nroCompras?" · Compras "+cur.nroCompras:""}`,fecha,by:myId||"",npId:id,np:pedNum(cur.numero)};
+        if(dk)body.docId=dk.id;if(SCOPES.metal.test(pr))body.nivel="metal";
+        const r=await withRetry(()=>db.collection("movimientos").add(body));
+        if(!S.movs.some(m=>m.id===r.id))S.movs.unshift(Object.assign({id:r.id},body));n++}
+      recompute();toast(`${n} ingreso${n===1?"":"s"} registrado${n===1?"":"s"} para ${pedNum(cur.numero)}${txt&&!pv?" (sin proveedor)":""}`);
+      openNpSeg(id);try{renderAll()}catch(e){}}
+    catch(err){writeError(err);toast(`Se registraron ${n} de ${L.length}. Revisá el detalle antes de volver a ingresar.`);if(n)openNpSeg(id);else{b.disabled=false;b.innerHTML=ICON_IN+"Ingresar"}}
+  }
+  $$("[data-npscand]").forEach(x=>x.onclick=()=>{$("#nps-nro").value=x.dataset.npscand;$("#nps-nro").focus()});
+  draw();
+  $("#f-nps").addEventListener("submit",async e=>{e.preventDefault();if(ING.on)return;if(!guardWrite("deposito"))return;
     const nro=npComprasNorm($("#nps-nro").value),det=$("#nps-det").value.trim(),up={detalle:det,actualizado:new Date().toISOString()};
     if(nro!==(p.nroCompras||"")){up.nroCompras=nro;up.procesado=nro?new Date().toISOString():"";up.procesadoVia=nro?"manual":"";up.procesadoPor=myId||""}
     try{await db.doc("pedidos/"+id).update(up);S.peds.set(id,Object.assign({},S.peds.get(id)||p,up));toast(pedNum(p.numero)+" actualizada");closeModal();refreshNpDl();renderNpSeg()}catch(err){writeError(err)}});
@@ -4036,7 +4098,7 @@ function openMovEdit(id){
     const fv=$("#me-f").value,fecha=fv?new Date(fv).toISOString():m.fecha;
     const patch={cantidad:q,fecha,autoriza:$("#me-a").value.trim(),remito:$("#me-r").value.trim(),obs:$("#me-obs").value.trim()};
     if($("#me-np")){const np=S.peds.get($("#me-np").value);patch.npId=np?np.id:"";patch.np=np?pedNum(np.numero):""}
-    if(isIn)patch.origen=normEq($("#me-o").value);
+    if(isIn){patch.origen=normEq($("#me-o").value);const pv=findProv(patch.origen);patch.proveedorId=pv?pv.id:""}
     if(isOut){patch.destino=normEq($("#me-d").value);patch.solicitante=$("#me-s").value.trim();patch.obra=$("#me-ob").value.trim()}
     if(!lockQty&&!isAdj){if(pr){patch.presN=pr.n;patch.presCant=parseNum($("#me-cant").value);patch.presF=+pr.f}else{patch.presN=null;patch.presCant=null;patch.presF=null}}
     /* stock resultante si cambia la cantidad */
