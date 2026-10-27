@@ -612,7 +612,7 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
       <form class="card form" id="rec-f" hidden autocomplete="off">
         <div class="field"><label class="lb" for="rec-fecha">Fecha <em>*</em></label><input type="date" id="rec-fecha"></div>
         <div class="field"><label class="lb" for="rec-who">Realiza el recuento <em>*</em></label><input type="text" id="rec-who" list="dl-personas" placeholder="Nombre y apellido"></div>
-        <div class="field full"><label class="lb" for="rec-alc">Recuento de <em>*</em></label><select id="rec-alc"><option value="">Elegí qué se va a contar…</option><option value="repuestos">Stock repuestos</option><option value="metal">Insumos de taller metalúrgico</option></select><span class="hint">Stock repuestos incluye grava, bentonita y tripolifosfato.</span></div>
+        <div class="field full"><label class="lb" for="rec-alc">Recuento de <em>*</em></label><select id="rec-alc"><option value="">Elegí qué se va a contar…</option><option value="repuestos">Stock repuestos</option><option value="metal">Insumos de taller metalúrgico</option><option value="inv">Inventario general</option></select><span class="hint">Stock repuestos incluye grava, bentonita y tripolifosfato.</span></div>
         <div class="field full"><span class="hint" id="rec-name-h"></span></div>
         <div class="form-actions"><button type="button" class="btn" id="rec-f-x">Cancelar</button><button type="submit" class="btn primary">Iniciar recuento</button></div>
       </form>
@@ -660,6 +660,12 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
         <div class="meta" id="bk-drive-st">Todos los días a las 20 h se actualizan las planillas de stock e historiales y se guarda una copia completa con fecha.</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn" id="bk-drive-open" target="_blank" rel="noopener" hidden>Abrir la carpeta en Drive</a><button class="btn" id="bk-drive-now">Actualizar Drive ahora</button></div>
       </div>
+      <div class="card" id="bk-sem" style="padding:12px 14px;display:grid;gap:8px;background:var(--surface-2)">
+        <div class="lb">Copia de seguridad semanal automática</div>
+        <div class="meta" id="bk-sem-st">Todos los viernes a las 22 h se guarda una copia completa (Excel) en Drive › Control y Backup › 11 Backup semanal. Se conservan las últimas 12.</div>
+        <div id="bk-sem-last"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn" id="bk-sem-open" target="_blank" rel="noopener" hidden>Abrir la carpeta del backup semanal</a><button class="btn need-adm" id="bk-sem-now">Hacer la copia semanal ahora</button></div>
+      </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="btn primary" id="bk-go">Descargar copia completa (Excel)</button><button class="btn" id="bk-zip">Descargar fotos y PDF (ZIP)</button> <span class="meta" id="bk-st"></span></div>
     </div>
   </section>
@@ -695,13 +701,13 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
         <div class="ct-t"><b>C · Foto de la galería</b><span class="meta">Elegís una foto ya sacada con la app Cámara.</span><label class="btn primary" for="ct-gal">Probar galería</label><input type="file" id="ct-gal" accept="image/*" hidden><span class="ct-r" id="ct-r-gal"></span></div>
       </div>
       <div class="ct-video" id="ct-vbox" hidden><video id="ct-v" playsinline muted></video><div class="qr-frame"></div><button class="btn sm" id="ct-stop">Detener</button></div>
-      <p class="meta" style="margin:0">Para probar, usá cualquier etiqueta QR impresa desde Catálogo › Etiquetas, o el QR de la ficha de un producto en otra pantalla.</p>
+      <p class="meta" style="margin:0">Para probar, usá cualquier etiqueta QR impresa desde Administración › Catálogo › Etiquetas, o el QR de la ficha de un producto en otra pantalla.</p>
     </div>
     <div class="card" style="padding:14px 16px;display:grid;gap:8px;margin-top:14px" id="ct-advice"></div>
   </section>
   <section id="v-docload" data-view="docload" hidden>
-    <div class="section-head"><div><h2>Carga de registros</h2><p class="sub">Subí los remitos y facturas de la jornada, cada uno con su número de referencia. Los movimientos solo indican ese número y quedan vinculados al registro.</p></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-goto="diario/verregistro">Ver registro</button></div></div>
+    <div class="section-head"><div><h2>Cargar documentos</h2><p class="sub">Subí los remitos y facturas de la jornada, cada uno con su número de referencia. Los movimientos solo indican ese número y quedan vinculados al registro.</p></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-goto="diario/verregistro">Documentación cargada</button></div></div>
     <div class="grid2" style="display:grid;gap:16px">
       <form class="card form" id="f-dl" autocomplete="off" style="display:grid;gap:12px">
         <div class="field"><label class="lb" for="dl-fecha">Fecha de los registros <em>*</em></label><input type="date" id="dl-fecha"></div>
@@ -713,8 +719,8 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
     </div>
   </section>
   <section id="v-docs" data-view="docs" hidden>
-    <div class="section-head"><div><h2>Ver registro</h2><p class="sub" id="dc-sub"></p></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary need-dep" id="dc-new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Carga de registros</button></div></div>
+    <div class="section-head"><div><h2>Documentación cargada</h2><p class="sub" id="dc-sub"></p></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary need-dep" id="dc-new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Cargar documentos</button></div></div>
     <div class="toolbar"><input class="grow" type="search" id="dc-q" placeholder="Nº de referencia completo o parcial (ej.: R-04-0567 o 0567), proveedor o destino" autocomplete="off"><select id="dc-tipo" style="width:auto"><option value="">Todos los tipos</option><option>Remito</option><option>Factura</option><option>Vale de retiro</option><option>Otro</option></select><input type="date" id="dc-desde" style="width:auto" aria-label="Desde"><input type="date" id="dc-hasta" style="width:auto" aria-label="Hasta"></div>
     <div id="dc-list" style="display:grid;gap:12px"></div>
   </section>
@@ -750,6 +756,31 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
     <div class="toolbar"><input class="grow" type="search" id="p-q" placeholder="Buscar producto"></div>
     <div class="card"><div class="table-wrap"><table class="cards" id="t-prod">
       <thead><tr><th>SKU</th><th>Elemento</th><th>Categoría</th><th>Unidad</th><th class="r">Mínimo</th><th>Ubicación</th><th></th></tr></thead>
+      <tbody></tbody>
+    </table></div></div>
+  </section>
+
+  <!-- INVENTARIO GENERAL -->
+  <section id="v-inv" data-view="inv" hidden>
+    <div class="section-head">
+      <div><h2>Inventario general</h2><p class="sub" id="inv-sub">Elementos y repuestos de uso no frecuente. Se mueven igual que cualquier otro elemento, pero no se mezclan con el stock diario.</p></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn need-dep" id="inv-imp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3M7 8l5-5 5 5M4 21h16"/></svg>Importar Excel</button>
+        <button class="btn" id="inv-tpl">Plantilla Excel</button><input type="file" id="inv-file" accept=".xlsx,.xls,.csv,.ods" hidden>
+        <button class="btn" id="inv-xls"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Exportar como…</button>
+        <button class="btn in need-dep" data-goto="productos/inv-entrada" id="inv-in"></button>
+        <button class="btn out need-dep" data-goto="productos/inv-salida" id="inv-out"></button>
+        <button class="btn primary need-dep" id="inv-new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Nuevo elemento</button>
+      </div>
+    </div>
+    <div class="toolbar">
+      <div class="scan-row grow"><input type="search" id="inv-q" placeholder="Buscar por código, nombre, marca, equipo o ubicación · o escanear el QR" autocomplete="off"><button type="button" class="btn scan-btn" data-scan="inv-q" title="Escanear QR con la cámara" aria-label="Escanear QR con la cámara"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 8V5a1 1 0 011-1h3M16 4h3a1 1 0 011 1v3M20 16v3a1 1 0 01-1 1h-3M8 20H5a1 1 0 01-1-1v-3"/><path d="M8 12h8"/></svg><span>Cámara</span></button></div>
+      <select id="inv-est" style="width:auto"><option value="">Todos los estados</option><option value="nuevo">Nuevo</option><option value="usado">Usado</option><option value="reparar">A reparar</option><option value="fuera">Fuera de servicio</option></select>
+      <select id="inv-eq" style="width:auto;max-width:200px"></select>
+      <select id="inv-ub" style="width:auto;max-width:200px"></select>
+    </div>
+    <div class="card"><div class="table-wrap"><table class="cards" id="t-inv">
+      <thead><tr><th>Código</th><th>Elemento</th><th>Equipo</th><th>Estado</th><th>Ubicación</th><th class="r">Cantidad</th><th>Última salida</th></tr></thead>
       <tbody></tbody>
     </table></div></div>
   </section>
@@ -1066,6 +1097,7 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
 <datalist id="dl-prod"></datalist>
 <datalist id="dl-origen"></datalist>
 <datalist id="dl-docnum"></datalist>
+<datalist id="dl-invmarca"></datalist>
 <datalist id="dl-destino"></datalist>
 <datalist id="dl-personas"></datalist>
 <datalist id="dl-cat"></datalist>
@@ -1116,47 +1148,51 @@ const IC={
   metal:'<path d="M14.7 6.3a4 4 0 00-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 005.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/>',
   admin:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>'
 };
+/* inventario general: elementos o repuestos de uso no frecuente, separados del stock diario */
+const INV_CAT="Inventario general";
+const isInv=p=>!!p&&(p.inventario===true||/^INV-/i.test(p.sku||""));
 const SCOPES={
-  grava:{name:"Grava",test:p=>/grava/i.test(p.nombre||"")||/^T-GRAV/i.test(p.sku)},
-  bentonita:{name:"Bentonita",test:p=>/bentonit/i.test(p.nombre||"")||/^T-BENT/i.test(p.sku)},
-  tripolifosfato:{name:"Tripolifosfato",test:p=>/tripoli/i.test(p.nombre||"")||/^T-TRI-/i.test(p.sku)},
-  metal:{name:"Insumos metalúrgicos",many:true,test:p=>/metal[uú]rg/i.test((p&&p.categoria)||"")||/^T-MET-/i.test((p&&p.sku)||"")}
+  grava:{name:"Grava",test:p=>!isInv(p)&&(/grava/i.test(p.nombre||"")||/^T-GRAV/i.test(p.sku))},
+  bentonita:{name:"Bentonita",test:p=>!isInv(p)&&(/bentonit/i.test(p.nombre||"")||/^T-BENT/i.test(p.sku))},
+  tripolifosfato:{name:"Tripolifosfato",test:p=>!isInv(p)&&(/tripoli/i.test(p.nombre||"")||/^T-TRI-/i.test(p.sku))},
+  metal:{name:"Insumos metalúrgicos",many:true,test:p=>!isInv(p)&&(/metal[uú]rg/i.test((p&&p.categoria)||"")||/^T-MET-/i.test((p&&p.sku)||""))},
+  inv:{name:"Inventario general",many:true,test:isInv}
 };
+const INV_EST={nuevo:["ok","Nuevo"],usado:["info","Usado"],reparar:["warn","A reparar"],fuera:["bad","Fuera de servicio"]};
 const MET_CAT="Taller metalúrgico";
-const SCOPE_PRE={grava:{prefix:"T-GRAV-",nombre:"Grava ",unidad:"BigBag"},bentonita:{prefix:"T-BENT-",nombre:"Bentonita ",unidad:"pallets"},tripolifosfato:{prefix:"T-TRI-",nombre:"Tripolifosfato ",unidad:"bolsas"},metal:{prefix:"T-MET-",nombre:"",unidad:"u",categoria:"Taller metalúrgico"}};
+const SCOPE_PRE={grava:{prefix:"T-GRAV-",nombre:"Grava ",unidad:"BigBag"},bentonita:{prefix:"T-BENT-",nombre:"Bentonita ",unidad:"pallets"},tripolifosfato:{prefix:"T-TRI-",nombre:"Tripolifosfato ",unidad:"bolsas"},metal:{prefix:"T-MET-",nombre:"",unidad:"u",categoria:"Taller metalúrgico"},inv:{prefix:"INV-",nombre:"",unidad:"u",categoria:INV_CAT}};
 /* nomenclatura única de equipos: T48, tec 48, TEC-48 → TEC48 */
 const normEq=v=>{v=String(v==null?"":v).trim();const m=/^(?:T|TEC)\s*-?\s*(\d+)$/i.exec(v);return m?"TEC"+m[1]:v};
 function newScopedProduct(sc){const d=SCOPE_PRE[sc];let max=0;for(const k of S.products.keys()){const m=new RegExp("^"+d.prefix.replace(/-/g,"\\-")+"(\\d+)$","i").exec(k);if(m)max=Math.max(max,+m[1])}
   const ub=(prodList().find(scopeTest(sc))||{}).ubicacion||"Deposito Central";
   openProductForm(null,{scope:sc,prefix:d.prefix,categoria:d.categoria||"",sku:d.prefix+String(max+1).padStart(3,"0"),nombre:d.nombre,unidad:(prodList().find(scopeTest(sc))||{}).unidad||d.unidad,ubicacion:ub});
   setTimeout(()=>{const n=$("#p-nom");if(n){n.focus();n.setSelectionRange(n.value.length,n.value.length)}},50)}
-const scopeTest=sc=>sc&&SCOPES[sc]?SCOPES[sc].test:()=>true;
+const scopeTest=sc=>sc&&SCOPES[sc]?SCOPES[sc].test:p=>!isInv(p);
 const MENU=[
   {id:"inicio",name:"Inicio",ic:"home",view:"home"},
   {id:"diario",name:"Movimientos diarios",ic:"diario",items:[
     {id:"registrar",name:"Registrar movimiento",view:"bit-reg",need:"deposito"},
     {id:"historial",name:"Historial de movimientos",view:"bit-hist"},
-    {id:"cargaregistros",name:"Carga de registros",view:"docload",need:"deposito",sec:"Registros de entrada y salida"},
-    {id:"verregistro",name:"Ver registro",view:"docs",sec:"Registros de entrada y salida"}]},
-  {id:"productos",name:"Movimientos de productos",ic:"productos",items:[
+    {id:"cargaregistros",name:"Cargar documentos",view:"docload",need:"deposito",sec:"Registros de entrada y salida"},
+    {id:"verregistro",name:"Documentación cargada",view:"docs",sec:"Registros de entrada y salida"}]},
+  {id:"productos",name:"Insumos Equipos",ic:"productos",items:[
     {id:"entrada",name:"Entrada",view:"mov",need:"deposito",tipos:["ingreso"],title:"Entrada de productos",sub:"Ingreso de productos al depósito: compra a proveedor, devolución o transferencia."},
     {id:"salida",name:"Salida",view:"mov",need:"deposito",tipos:["egreso"],title:"Salida de productos",sub:"Egreso de productos hacia un área, equipo, pozo o cliente."},
     {id:"stock",name:"Stock",view:"stock"},
     {id:"historial",name:"Historial",view:"hist"},
     {id:"recuento",name:"Recuento de stock",view:"rec"},
     {id:"ajuste",name:"Ajuste por recuento",view:"mov",need:"admin",tipos:["ajuste"],hidden:true,title:"Ajuste por recuento",sub:"Corrige el stock de un producto según lo contado en el depósito."},
-    {id:"altabaja",name:"Alta / Baja de producto",view:"prod",need:"admin",title:"Alta / Baja de producto",sub:"Dar de alta productos nuevos, editarlos o darlos de baja."}]},
-  {id:"metal",name:"Movimiento insumos metalúrgicos",ic:"metal",scope:"metal",items:[
+    {id:"altabaja",name:"Alta / Baja de producto",view:"prod",need:"admin",title:"Alta / Baja de producto",sub:"Dar de alta productos nuevos, editarlos o darlos de baja."},
+    {id:"inventario",name:"Listado",view:"inv",scope:"inv",sec:"Inventario general"},
+    {id:"inv-entrada",name:"Entrada",view:"mov",scope:"inv",need:"deposito",tipos:["ingreso"],title:"Entrada a Inventario general",sub:"Ingreso de elementos o repuestos de uso no frecuente: compra, devolución de un equipo o traslado.",sec:"Inventario general"},
+    {id:"inv-salida",name:"Salida",view:"mov",scope:"inv",need:"deposito",tipos:["egreso"],title:"Salida de Inventario general",sub:"Egreso de elementos del inventario general hacia un equipo, obra, taller o cliente.",sec:"Inventario general"},
+    {id:"inv-historial",name:"Historial",view:"shist",scope:"inv",sec:"Inventario general"}]},
+  {id:"metal",name:"Insumos Metalúrgicos",ic:"metal",scope:"metal",items:[
     {id:"entrada",name:"Entrada",view:"mov",need:"deposito",tipos:["ingreso"],title:"Entrada de insumos metalúrgicos",sub:"Ingreso de insumos del taller metalúrgico."},
     {id:"salida",name:"Salida",view:"mov",need:"deposito",tipos:["egreso"],title:"Salida de insumos metalúrgicos",sub:"Retiro de insumos del taller metalúrgico, en unidades o en cajas."},
     {id:"stock",name:"Stock",view:"stock",title:"Stock de insumos metalúrgicos"},
     {id:"historial",name:"Historial",view:"shist"}]},
   {id:"compras",name:"Compras",ic:"compras",items:[{id:"pedido",name:"Nota de pedido",view:"ped"}]},
-  {id:"catalogo",name:"Catálogo",ic:"catalogo",items:[
-    {id:"productos",name:"Productos",view:"prod",title:"Productos",sub:"Catálogo de elementos del depósito, importación desde Excel y etiquetas."},
-    {id:"proveedores",name:"Proveedores",view:"prov"},
-    {id:"clientes",name:"Clientes",view:"cli"},
-    {id:"etiquetas",name:"Etiquetas / QR",view:"lbl"}]},
   {id:"trepanos",name:"Trépanos",ic:"trepanos",items:[
     {id:"stock",name:"Listado de stock",view:"tr-stock"},
     {id:"entrada",name:"Entrada",view:"tr-in",need:"deposito"},
@@ -1190,10 +1226,14 @@ const MENU=[
     {id:"mapa",name:"Mapa de la aplicación",view:"map"},
     {id:"camara",name:"Prueba de cámara",view:"camtest"},
     {id:"respaldo",name:"Copia de seguridad",view:"backup",need:"admin"},
-    {id:"migrar",name:"Pasar datos de la planilla anterior",view:"migrar",need:"admin"}]}
+    {id:"migrar",name:"Pasar datos de la planilla anterior",view:"migrar",need:"admin"},
+    {id:"productos",name:"Productos",view:"prod",title:"Productos",sub:"Catálogo de elementos del depósito, importación desde Excel y etiquetas.",sec:"Catálogo"},
+    {id:"proveedores",name:"Proveedores",view:"prov",sec:"Catálogo"},
+    {id:"clientes",name:"Clientes",view:"cli",sec:"Catálogo"},
+    {id:"etiquetas",name:"Etiquetas / QR",view:"lbl",sec:"Catálogo"}]}
 ];
 const LEVELS=MENU.filter(g=>g.id!=="inicio");
-const OLD_TABS={docs:"diario/verregistro","docs/lista":"diario/verregistro","docs/nuevo":"diario/cargaregistros",stock:"productos/stock",mov:"productos/entrada",hist:"productos/historial",prod:"catalogo/productos",prov:"catalogo/proveedores",ped:"compras/pedido",conf:"admin",home:"inicio"};
+const OLD_TABS={catalogo:"admin/productos","catalogo/productos":"admin/productos","catalogo/proveedores":"admin/proveedores","catalogo/clientes":"admin/clientes","catalogo/etiquetas":"admin/etiquetas",docs:"diario/verregistro","docs/lista":"diario/verregistro","docs/nuevo":"diario/cargaregistros",stock:"productos/stock",mov:"productos/entrada",hist:"productos/historial",prod:"admin/productos",prov:"admin/proveedores",ped:"compras/pedido",conf:"admin",home:"inicio"};
 let ROUTE={key:"inicio",grp:MENU[0],it:null},STOCK_SCOPE=null,MOV_SCOPE=null,MOV_TIPOS=["ingreso","egreso","ajuste"];
 const expanded=new Set();
 function findRoute(key){const [g,i]=String(key||"").split("/");const grp=MENU.find(x=>x.id===g);if(!grp)return null;
@@ -1210,7 +1250,7 @@ function renderTree(){
     return `<button class="grp${on?" on":""}" data-grp="${g.id}" aria-expanded="${ex}">${svgIc(g.ic)}<span>${esc(g.name)}</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
       <div class="subs"${ex?"":" hidden"}>${secItems(g.items.filter(it=>!it.hidden&&roleOk(it.need||"consulta")),(it,sub)=>`<button class="it${sub?" in-sec":""}" data-route="${g.id}/${it.id}"${ROUTE.key===g.id+"/"+it.id?' aria-current="page"':""}>${esc(it.name)}</button>`,h=>`<div class="it-sec">${esc(h)}</div>`)}</div>`}).join("");
 }
-function crumbHtml(){return ROUTE.it?`<span>${esc(ROUTE.grp.name)}</span><span>›</span><b>${esc(ROUTE.it.name)}</b>`:`<b>${esc(ROUTE.grp.name)}</b>`}
+function crumbHtml(){return ROUTE.it?`<span>${esc(ROUTE.grp.name)}</span><span>›</span>${ROUTE.it.sec?`<span>${esc(ROUTE.it.sec)}</span><span>›</span>`:""}<b>${esc(ROUTE.it.name)}</b>`:`<b>${esc(ROUTE.grp.name)}</b>`}
 function setDrawer(open){$("#side").classList.toggle("open",open);$("#side-scrim").hidden=!open;$("#menu-btn").setAttribute("aria-expanded",open?"true":"false")}
 /* volver atrás: botón propio y botón "atrás" del celular (en la app instalada) */
 const NAVS=[],HIST_OK=!!window.DEP;
@@ -1239,8 +1279,8 @@ function go(key,opt){
 }
 function showTab(name){go(name)}
 function enterView(view,r,opt){
-  const sc=r.grp.scope||null,it=r.it||{};
-  if(view==="mov"){MOV_SCOPE=sc;$("#m-obra-wrap").hidden=!sc||sc==="metal";MOV_TIPOS=it.tipos||["ingreso","egreso","ajuste"];
+  const it=r.it||{},sc=it.scope||r.grp.scope||null;
+  if(view==="mov"){MOV_SCOPE=sc;$("#m-obra-wrap").hidden=!sc||sc==="metal"||sc==="inv";MOV_TIPOS=it.tipos||["ingreso","egreso","ajuste"];
     $("#m-title").textContent=it.title||"Registrar movimiento";$("#m-sub").textContent=it.sub||"";
     $$("#m-tipo button").forEach(b=>b.hidden=!MOV_TIPOS.includes(b.dataset.t));$("#m-tipo-wrap").hidden=MOV_TIPOS.length<2;
     renderLists();
@@ -1253,6 +1293,7 @@ function enterView(view,r,opt){
     stockFilter="all";renderStock();if(it.openNew)setTimeout(()=>newScopedProduct(sc),0)}
   if(view==="prod"){$("#pr-title").textContent=it.title||"Productos";$("#pr-sub").textContent=it.sub||"";renderProd()}
   if(view==="hist")renderHist();
+  if(view==="inv")renderInv();
   if(view==="conf")fillConfForm();
   if(view==="map")renderMap();
   if(view==="users")renderUsers();
@@ -1278,15 +1319,15 @@ $("#menu-btn").addEventListener("click",()=>setDrawer(!$("#side").classList.cont
 $("#side-scrim").addEventListener("click",()=>setDrawer(false));
 document.addEventListener("click",e=>{const g=e.target.closest("[data-goto]");if(g&&!e.target.closest("#tree")){e.preventDefault();if($("#scrim"))closeModal();go(g.dataset.goto)}});
 function grpStat(g){
-  const P=prodList(),dayN=S.movs.filter(m=>isToday(m.fecha)).length;
+  const PA=prodList(),P=PA.filter(p=>!isInv(p)),dayN=S.movs.filter(m=>isToday(m.fecha)).length;
   if(g.id==="diario"){const td=S.bit.filter(e=>e.fecha===todayStr()).length;return S.bit.length?`<b>${S.bit.length}</b> novedades en la bitácora · <b>${td}</b> hoy`:"Bitácora vacía"}
-  if(g.id==="productos"){const z=P.filter(p=>estado(p)[0]==="bad").length,l=P.filter(p=>estado(p)[0]==="warn").length;return `<b>${P.length}</b> productos · <b>${z}</b> sin stock${l?` · <b>${l}</b> bajo mínimo`:""}`}
+  if(g.id==="productos"){const z=P.filter(p=>estado(p)[0]==="bad").length,l=P.filter(p=>estado(p)[0]==="warn").length;const ni=PA.length-P.length;return `<b>${P.length}</b> productos · <b>${z}</b> sin stock${l?` · <b>${l}</b> bajo mínimo`:""}${ni?` · <b>${ni}</b> en inventario general`:""}`}
   if(g.id==="compras"){const pe=pedList().filter(p=>p.estado==="pendiente").length;return `<b>${pe}</b> nota${pe===1?"":"s"} pendiente${pe===1?"":"s"} de envío`}
-  if(g.id==="catalogo")return `<b>${P.length}</b> productos · <b>${provList().length}</b> proveedores · <b>${cliList().length}</b> clientes`;
+  if(g.id==="catalogo_")return `<b>${P.length}</b> productos · <b>${provList().length}</b> proveedores · <b>${cliList().length}</b> clientes`;
   if(g.id==="trepanos"){const T=trList(),a=T.filter(t=>!trDesc0(t));return a.length||T.length?`<b>${a.length}</b> trépanos · <b>${a.filter(trInBase).length}</b> en base · <b>${a.filter(t=>t.ubicTipo==="equipo").length}</b> en equipos${a.some(t=>trK(t)==="nuevo")?` · <b>${a.filter(t=>trK(t)==="nuevo").length}</b> nuevos`:""}`:"Todavía no hay trépanos cargados"}
   if(g.scope&&SCOPES[g.scope].many){const L=P.filter(scopeTest(g.scope)),z=L.filter(p=>stockOf(p.sku)<=0).length,l=L.filter(p=>estado(p)[0]==="warn").length,mt=S.movs.filter(m=>isToday(m.fecha)&&L.some(p=>p.sku===m.sku)).length;return L.length?`<b>${L.length}</b> productos · <b>${z}</b> sin stock${l?` · <b>${l}</b> bajo mínimo`:""}${mt?` · <b>${mt}</b> movimiento${mt===1?"":"s"} hoy`:""}`:"Sin productos de "+esc(g.name.toLowerCase())+" en el catálogo"}
   if(g.scope){const L=P.filter(scopeTest(g.scope));return L.length?L.map(p=>`${esc(p.nombre)}: <b>${fmtN(stockOf(p.sku))}</b> ${esc(p.unidad||"u")}`).join("<br>"):"Sin productos de "+esc(g.name.toLowerCase())+" en el catálogo"}
-  if(g.id==="admin"){const ab=sgList().filter(s=>s.estado==="pendiente"||s.estado==="revision").length;return `Ajustes, equipos y depósitos · <b>${ab}</b> sugerencia${ab===1?"":"s"} abierta${ab===1?"":"s"}`}
+  if(g.id==="admin"){const ab=sgList().filter(s=>s.estado==="pendiente"||s.estado==="revision").length;return `Catálogo: <b>${PA.length}</b> productos · <b>${provList().length}</b> proveedores · <b>${cliList().length}</b> clientes<br>Ajustes, equipos y depósitos · <b>${ab}</b> sugerencia${ab===1?"":"s"} abierta${ab===1?"":"s"}`}
   return "";
 }
 function renderHome(){
@@ -1299,6 +1340,95 @@ function renderHome(){
 document.addEventListener("click",e=>{const b=e.target.closest("[data-newscope]");if(b)newScopedProduct(b.dataset.newscope)});
 $("#home-grid").addEventListener("click",e=>{const b=e.target.closest("[data-route-h]");if(b)go(b.dataset.routeH)});
 $("#home-bk").addEventListener("click",e=>{const b=e.target.closest("[data-route-h]");if(b)go(b.dataset.routeH)});
+
+/* ---------- inventario general (Insumos Equipos › Inventario general) ---------- */
+const invList=()=>prodList().filter(isInv);
+const invEstPill=p=>{const [c,t]=INV_EST[p.estadoInv]||INV_EST.nuevo;return `<span class="pill ${c}"${c==="info"?' style="background:var(--accent-soft);color:var(--accent)"':""}>${t}</span>`};
+const invLast=p=>{for(const m of S.movs)if(m.sku===p.sku&&m.tipo==="egreso"&&!m.historico)return m;return null};
+const invLastTxt=p=>{const m=invLast(p);return m?`${esc(m.destino||"—")} <span class="meta">· ${esc(fmtD(m.fecha).split(" ")[0])} · ${fmtN(Math.abs(m.cantidad))} ${esc(p.unidad||"u")}</span>`:""};
+function renderInv(){
+  if($("#v-inv").hidden)return;
+  $("#inv-in").innerHTML=ICON_IN+"Entrada";$("#inv-out").innerHTML=ICON_OUT+"Salida";
+  const all=invList(),q=norm($("#inv-q").value),est=$("#inv-est").value,eq=$("#inv-eq").value,ub=$("#inv-ub").value;
+  const fill=(sel,vals,lbl)=>{const cur=sel.value;sel.innerHTML=`<option value="">${lbl}</option>`+vals.map(v=>`<option${v===cur?" selected":""}>${esc(v)}</option>`).join("")};
+  fill($("#inv-eq"),uniq(all.map(p=>p.equipo||"").filter(Boolean)).sort((a,b)=>a.localeCompare(b,"es",{numeric:true})),"Todos los equipos");
+  fill($("#inv-ub"),uniq(all.map(p=>p.ubicacion||"").filter(Boolean)).sort(),"Todas las ubicaciones");
+  trDl("dl-invmarca",uniq(all.map(p=>p.marca||"").filter(Boolean)).map(v=>`<option value="${esc(v)}"></option>`).join(""));
+  const con=all.filter(p=>stockOf(p.sku)>0);
+  const rows=all.filter(p=>(!est||(p.estadoInv||"nuevo")===est)&&(!eq||p.equipo===eq)&&(!ub||p.ubicacion===ub)&&(!q||norm([p.sku,p.nombre,p.marca,p.equipo,p.ubicacion,p.obs].join(" ")).includes(q)));
+  $("#inv-sub").textContent=S.loadedP?`${all.length} elemento${all.length===1?"":"s"} · ${con.length} con existencia en base · ${S.movs.filter(m=>all.some(p=>p.sku===m.sku)).length} movimientos registrados`:"Cargando…";
+  const tb=$("#t-inv tbody");
+  if(!S.loadedP){tb.innerHTML='<tr><td colspan="7" class="span"><div class="empty">Cargando…</div></td></tr>';return}
+  if(!all.length){tb.innerHTML='<tr><td colspan="7" class="span"><div class="empty"><b>Todavía no hay elementos en el inventario general</b>Agregalos uno a uno con <em>Nuevo elemento</em> o cargá un listado con <em>Importar Excel</em> (bajá primero la plantilla).</div></td></tr>';return}
+  if(!rows.length){tb.innerHTML='<tr><td colspan="7" class="span"><div class="empty">Ningún elemento coincide con el filtro.</div></td></tr>';return}
+  tb.innerHTML=rows.map(p=>{const st=stockOf(p.sku);return `<tr class="click" data-sku="${esc(p.sku)}">
+    <td class="mono">${esc(p.sku)}</td>
+    <td class="span"><div class="name">${esc(p.nombre)}</div>${p.marca?`<div class="meta">${esc(p.marca)}</div>`:""}</td>
+    <td>${esc(p.equipo||"—")}</td>
+    <td>${invEstPill(p)}</td>
+    <td class="meta">${esc(p.ubicacion||"—")}</td>
+    <td class="r"><span class="stockv"${st<=0?' style="color:var(--muted)"':""}>${fmtN(st)}</span><span class="unit">${esc(p.unidad||"u")}</span></td>
+    <td class="span meta">${invLastTxt(p)||"—"}</td></tr>`}).join("");
+}
+["#inv-q","#inv-est","#inv-eq","#inv-ub"].forEach(x=>$(x).addEventListener("input",renderInv));
+$("#inv-q").addEventListener("keydown",e=>{if(e.key!=="Enter")return;const sku=parseSku(e.target.value);if(sku&&isInv(S.products.get(sku))){e.target.value="";renderInv();openProduct(sku)}});
+$("#t-inv").addEventListener("click",e=>{const r=e.target.closest("tr[data-sku]");if(r)openProduct(r.dataset.sku)});
+$("#inv-new").addEventListener("click",()=>{if(!guardWrite("deposito"))return;newScopedProduct("inv")});
+/* plantilla y exportación */
+const INV_COLS=["Código","Elemento","Marca / modelo","Equipo","Estado","Ubicación","Cantidad","Unidad","Observaciones"];
+$("#inv-tpl").addEventListener("click",()=>loadXlsx().then(()=>{const ws=XLSX.utils.aoa_to_sheet([INV_COLS,["","Bomba de agua motor","Caterpillar 3306","TEC48","Usado","Estantería C · Nivel 1",1,"u","Retirada en buen estado"],["INV-0100","Juego de juntas tapa de cilindros","Deutz F6L912","Compresor","Nuevo","Depósito Central",2,"juego",""]]);ws["!cols"]=[{wch:11},{wch:40},{wch:22},{wch:14},{wch:16},{wch:22},{wch:9},{wch:8},{wch:30}];
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Inventario general");
+  const w2=XLSX.utils.aoa_to_sheet([["Cómo completar"],["Código: opcional. Si lo dejás vacío se asigna el siguiente INV-. Si el código (o el mismo elemento con la misma marca) ya existe, se actualizan sus datos (no la cantidad)."],["Elemento: obligatorio."],["Estado: Nuevo, Usado, A reparar o Fuera de servicio (si queda vacío: Nuevo)."],["Cantidad: se registra como entrada inicial solo para los elementos nuevos."]]);w2["!cols"]=[{wch:110}];XLSX.utils.book_append_sheet(wb,w2,"Instrucciones");
+  save("plantilla-inventario-general.xlsx",new Blob([XLSX.write(wb,{bookType:"xlsx",type:"array"})]))}).catch(()=>toast("No se pudo cargar el generador de Excel.")));
+$("#inv-xls").addEventListener("click",async()=>{const L=invList();if(!L.length){toast("El inventario general está vacío.");return}
+  try{await loadXlsx()}catch(e){toast("No se pudo cargar el generador de Excel.");return}
+  const a=[["Código","Elemento","Marca / modelo","Equipo","Estado","Ubicación","Cantidad","Unidad","Última salida","Fecha última salida","Observaciones"]].concat(L.map(p=>{const m=invLast(p);return [p.sku,p.nombre,p.marca||"",p.equipo||"",(INV_EST[p.estadoInv]||INV_EST.nuevo)[1],p.ubicacion||"",stockOf(p.sku),p.unidad||"u",m?m.destino||"":"",m?fmtD(m.fecha).split(" ")[0]:"",p.obs||""]}));
+  const ws=XLSX.utils.aoa_to_sheet(a);ws["!cols"]=[{wch:11},{wch:40},{wch:22},{wch:14},{wch:16},{wch:22},{wch:9},{wch:8},{wch:18},{wch:12},{wch:30}];ws["!autofilter"]={ref:"A1:K"+a.length};
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Inventario general");
+  save(`inventario-general-${todayStr()}.xlsx`,new Blob([XLSX.write(wb,{bookType:"xlsx",type:"array"})]),{title:"Inventario general al "+todayStr().split("-").reverse().join("/")})});
+/* importar listado */
+const invEstKey=v=>{const t=norm(v||"");if(!t)return "nuevo";if(/fuera|baja|servicio/.test(t))return "fuera";if(/repar|taller|roto/.test(t))return "reparar";if(/usad/.test(t))return "usado";if(/nuev/.test(t))return "nuevo";return null};
+$("#inv-imp").addEventListener("click",()=>{if(!guardWrite("deposito"))return;$("#inv-file").click()});
+$("#inv-file").addEventListener("change",async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;
+  try{await loadXlsx()}catch(err){toast("No se pudo cargar el lector de Excel.");return}
+  let wb;try{wb=XLSX.read(await f.arrayBuffer(),{type:"array"})}catch(err){toast("No se pudo leer el archivo.");return}
+  const raw=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:"",raw:false,blankrows:false});
+  const hi=raw.findIndex(r=>r.some(c=>/^(elemento|descripcion|nombre|item|producto)/.test(norm(c))));
+  if(hi<0){toast("No encontré la columna Elemento. Usá la plantilla.");return}
+  const H=raw[hi].map(norm),col=rx=>H.findIndex(h=>rx.test(h));
+  const C={cod:col(/^(codigo|cod|sku|id)/),nom:col(/^(elemento|descripcion|nombre|item|producto)/),mar:col(/^(marca|modelo)/),eq:col(/^equipo/),est:col(/^estado/),ub:col(/^ubicacion/),cant:col(/^(cantidad|cant|stock)/),un:col(/^unidad/),obs:col(/^(observ|obs|notas)/)};
+  const g=(r,k)=>C[k]>=0?String(r[C[k]]||"").trim():"";
+  let max=0;for(const k of S.products.keys()){const m=/^INV-(\d+)$/i.exec(k);if(m)max=Math.max(max,+m[1])}
+  const usados=new Set(),plan=raw.slice(hi+1).map((r,i)=>{const nom=g(r,"nom");if(!nom&&!g(r,"cod"))return null;
+    let cod=g(r,"cod").replace(/\s+/g,""),ex=cod?S.products.get(parseSku(cod)||""):invList().find(p=>norm(p.nombre)===norm(nom)&&norm(p.marca||"")===norm(g(r,"mar")))||null,err="";
+    if(!nom&&!ex)err="Falta el elemento";
+    if(cod&&!SKU_RE.test(cod))err="Código con caracteres no válidos";
+    if(ex&&!isInv(ex))err=`El código ${ex.sku} ya es de otro nivel (${ex.nombre})`;
+    if(!cod){do{max++;cod="INV-"+String(max).padStart(3,"0")}while(S.products.has(cod)||usados.has(cod))}
+    if(usados.has(cod.toUpperCase()))err="Código repetido en el archivo";usados.add(cod.toUpperCase());
+    const ek=invEstKey(g(r,"est"));if(!ek)err=err||`Estado "${g(r,"est")}" no reconocido`;
+    const cant=parseNum(g(r,"cant")||"0");if(cant==null||cant<0)err=err||"Cantidad no válida";
+    return {fila:hi+2+i,sku:ex?ex.sku:cod,ex,nombre:nom||(ex&&ex.nombre)||"",marca:g(r,"mar"),equipo:normEq(g(r,"eq")),estadoInv:ek||"nuevo",ubicacion:g(r,"ub"),cant:cant||0,unidad:g(r,"un")||"u",obs:g(r,"obs"),err}}).filter(Boolean);
+  if(!plan.length){toast("El archivo no tiene filas para importar.");return}
+  const ok=plan.filter(x=>!x.err),nu=ok.filter(x=>!x.ex),up=ok.filter(x=>x.ex),bad=plan.filter(x=>x.err);
+  modal(`<div class="modal-h"><div><div class="meta">${esc(f.name)}</div><h3>Importar al inventario general</h3></div><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
+   <div style="padding:18px;display:grid;gap:12px">
+     <div class="imp-sum"><span class="pill ok">${nu.length} nuevo${nu.length===1?"":"s"}</span><span class="pill" style="background:var(--surface-2)">${up.length} ya existente${up.length===1?"":"s"} (se actualizan los datos)</span>${bad.length?`<span class="pill bad">${bad.length} con error (no se importan)</span>`:""}</div>
+     ${bad.length?`<div class="banner warn" style="margin:0">${bad.slice(0,10).map(x=>`Fila ${x.fila}: ${esc(x.err)}`).join("<br>")}${bad.length>10?"<br>…":""}</div>`:""}
+     <div class="card table-wrap" style="max-height:300px;overflow:auto"><table class="prev"><thead><tr><th>Código</th><th>Elemento</th><th>Equipo</th><th>Estado</th><th>Ubicación</th><th class="r">Cant.</th></tr></thead><tbody>${ok.slice(0,200).map(x=>`<tr><td class="mono">${esc(x.sku)}${x.ex?' <span class="meta">(existe)</span>':""}</td><td>${esc(x.nombre)}${x.marca?`<div class="meta">${esc(x.marca)}</div>`:""}</td><td>${esc(x.equipo)}</td><td>${(INV_EST[x.estadoInv]||[])[1]||""}</td><td class="meta">${esc(x.ubicacion)}</td><td class="r num">${x.ex?'<span class="meta">—</span>':fmtN(x.cant)+" "+esc(x.unidad)}</td></tr>`).join("")}</tbody></table></div>
+     <p class="meta" style="margin:0">A los elementos nuevos con cantidad se les registra una entrada inicial ("Alta en inventario general"). En los existentes se actualizan nombre, marca, equipo, estado, ubicación y observaciones; la cantidad se cambia con Entrada / Salida.</p>
+     <div class="form-actions" style="display:flex"><button class="btn" data-close>Cancelar</button><button class="btn primary" id="invi-go"${ok.length?"":" disabled"}>Importar ${ok.length} elemento${ok.length===1?"":"s"}</button></div>
+   </div>`,"wide");
+  $("#invi-go").onclick=async()=>{if(!guardWrite("deposito"))return;const b=$("#invi-go");b.disabled=true;let n=0;const now=new Date().toISOString();
+    try{for(const x of ok){b.textContent=`Importando ${n+1} de ${ok.length}…`;
+        const base=x.ex?Object.assign({},x.ex):{sku:x.sku,creado:now,minimo:0,presentaciones:[],soloPres:false};delete base.id;
+        const body=Object.assign(base,{sku:x.sku,nombre:x.nombre,categoria:(x.ex&&x.ex.categoria)||INV_CAT,unidad:x.ex?(x.ex.unidad||"u"):x.unidad,ubicacion:x.ubicacion||(x.ex&&x.ex.ubicacion)||"",marca:x.marca||(x.ex&&x.ex.marca)||"",equipo:x.equipo||(x.ex&&x.ex.equipo)||"",estadoInv:x.estadoInv,obs:x.obs||(x.ex&&x.ex.obs)||"",inventario:true,actualizado:now});
+        await withRetry(()=>db.doc("products/"+x.sku).set(body));S.products.set(x.sku,body);
+        if(!x.ex&&x.cant>0)await withRetry(()=>db.collection("movimientos").add({sku:x.sku,nombre:x.nombre,tipo:"ingreso",cantidad:x.cant,origen:"Stock inicial",destino:"",autoriza:"Alta en inventario general",solicitante:"",remito:"",obs:"Importación "+f.name,fecha:now,by:myId||""}));
+        n++}
+      closeModal();toast(`${n} elemento${n===1?"":"s"} importado${n===1?"":"s"} al inventario general`);renderAll()}
+    catch(err){writeError(err);toast(`Se importaron ${n} de ${ok.length}. Volvé a importar el archivo: los ya cargados se reconocen por código o por nombre y marca, y no se duplican.`);b.disabled=false;b.textContent="Reintentar"}};
+});
 
 /* ---------- QR ---------- */
 function qrText(sku){const b=(S.config.baseUrl||"").trim();return b?b.split("#")[0]+"#"+sku:sku}
@@ -1358,7 +1488,7 @@ function renderStock(){
     return true});
   const tb=$("#t-stock tbody");
   if(!S.loadedP){tb.innerHTML=`<tr><td colspan="6" class="span"><div class="empty">Cargando…</div></td></tr>`;return}
-  if(!all.length&&STOCK_SCOPE){tb.innerHTML=`<tr><td colspan="6" class="span"><div class="empty"><b>No hay productos de ${esc(SCOPES[STOCK_SCOPE].name.toLowerCase())} en el catálogo</b>Se incluyen los productos cuyo nombre dice "${esc(SCOPES[STOCK_SCOPE].name)}". Podés darlos de alta en <a href="#" data-goto="catalogo/productos">Catálogo › Productos</a>.</div></td></tr>`;return}
+  if(!all.length&&STOCK_SCOPE){tb.innerHTML=`<tr><td colspan="6" class="span"><div class="empty"><b>No hay productos de ${esc(SCOPES[STOCK_SCOPE].name.toLowerCase())} en el catálogo</b>Se incluyen los productos cuyo nombre dice "${esc(SCOPES[STOCK_SCOPE].name)}". Podés darlos de alta en <a href="#" data-goto="admin/productos">Administración › Catálogo › Productos</a>.</div></td></tr>`;return}
   if(!all.length){tb.innerHTML=`<tr><td colspan="6" class="span"><div class="empty"><b>Todavía no hay productos cargados</b>Andá a <a href="#" data-goto="prod">Productos</a> para dar de alta el primer elemento con su SKU y código QR.</div></td></tr>`;return}
   if(!rows.length){tb.innerHTML=`<tr><td colspan="6" class="span"><div class="empty">Ningún producto coincide con el filtro.</div></td></tr>`;return}
   tb.innerHTML=rows.map(p=>{const [c,t]=estado(p);return `<tr class="click" data-sku="${esc(p.sku)}">
@@ -1392,13 +1522,14 @@ function parseSku(v){
 async function renderHist(){
   const q=$("#h-q").value.trim().toLowerCase(),t=$("#h-tipo").value,de=$("#h-desde").value,ha=$("#h-hasta").value;
   const rows=S.movs.filter(m=>{
+    if(movInv(m))return false;
     if(t&&m.tipo!==t)return false;
     const day=(m.fecha||"").slice(0,10);
     if(de&&localDay(m.fecha)<de)return false;
     if(ha&&localDay(m.fecha)>ha)return false;
     if(q&&!([m.sku,m.nombre,m.origen,m.destino,m.autoriza,m.solicitante,m.remito,m.obs].join(" ").toLowerCase().includes(q)))return false;
     return true});
-  $("#hist-sub").textContent=S.loadedM?`${rows.length} de ${S.movs.length} movimientos`:"Cargando…";
+  $("#hist-sub").textContent=S.loadedM?`${rows.length} de ${S.movs.filter(m=>!movInv(m)).length} movimientos`:"Cargando…";
   const tb=$("#t-hist tbody");
   if(S.loadedM&&!S.movs.length){tb.innerHTML=`<tr><td colspan="7" class="span"><div class="empty"><b>Sin movimientos todavía</b>Cada ingreso, egreso o ajuste que registres aparece acá con fecha, autorizante y observaciones.</div></td></tr>`;$("#h-more").hidden=true;return}
   if(S.loadedM&&!rows.length){tb.innerHTML=`<tr><td colspan="7" class="span"><div class="empty">Ningún movimiento coincide con el filtro.</div></td></tr>`;$("#h-more").hidden=true;return}
@@ -1420,6 +1551,8 @@ async function renderHist(){
       <td class="span meta">${esc(m.obs||"")}${m.ediciones&&m.ediciones.length?`<div class="meta">✎ editado</div>`:""}${movEditBtn(m)}</td></tr>`}).join("");
   $("#h-more").hidden=rows.length<=histLimit;
 }
+/* movimientos del inventario general: no se mezclan con el historial de Insumos Equipos */
+function movInv(m){return isInv(S.products.get(m.sku))||/^INV-/i.test(m.sku||"")}
 function localDay(iso){const d=new Date(iso);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 ["#h-q","#h-tipo","#h-desde","#h-hasta"].forEach(s=>$(s).addEventListener("input",()=>{histLimit=200;renderHist()}));
 $("#h-more").addEventListener("click",()=>{histLimit+=200;renderHist()});
@@ -1442,7 +1575,7 @@ $("#p-q").addEventListener("input",renderProd);
 $("#t-prod").addEventListener("click",e=>{const ed=e.target.closest("[data-edit]");if(ed){e.stopPropagation();openProductForm(ed.dataset.edit);return}const r=e.target.closest("tr[data-sku]");if(r)openProduct(r.dataset.sku)});
 $("#btn-new-prod").addEventListener("click",()=>openProductForm(null));
 
-function renderAll(){if(ROUTE.it&&ROUTE.it.view==="shist")setTimeout(renderSHist,0);if(ROUTE.it&&ROUTE.it.view==="lbl"&&!$("#l-rows"))openLabels([],$("#lbl-host"));recompute();renderLists();renderStock();renderProd();renderProv();renderPed();renderHome();origenHint();if(!$("#v-hist").hidden)renderHist();updatePreview();if(currentModalSku&&S.products.has(currentModalSku))openProduct(currentModalSku,true)}
+function renderAll(){if(ROUTE.it&&ROUTE.it.view==="shist")setTimeout(renderSHist,0);if(ROUTE.it&&ROUTE.it.view==="lbl"&&!$("#l-rows"))openLabels([],$("#lbl-host"));recompute();renderLists();renderStock();renderInv();renderProd();renderProv();renderPed();renderHome();origenHint();if(!$("#v-hist").hidden)renderHist();updatePreview();if(currentModalSku&&S.products.has(currentModalSku))openProduct(currentModalSku,true)}
 
 /* ---------- modal ---------- */
 let currentModalSku=null;
@@ -1464,16 +1597,16 @@ function openProduct(sku,refresh){
     <div style="min-width:0">
       <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:12px"><span class="stockv" style="font-size:40px">${fmtN(stockOf(sku))}</span><span class="unit" style="font-size:15px">${esc(p.unidad||"u")} en stock</span><span class="pill ${c}">${t}</span></div>
       <dl class="kv">
-        <dt>Categoría</dt><dd>${esc(p.categoria||"—")}</dd>
+        ${isInv(p)?`<dt>Nivel</dt><dd>Inventario general</dd><dt>Marca / modelo</dt><dd>${esc(p.marca||"—")}</dd><dt>Equipo</dt><dd>${esc(p.equipo||"—")}</dd><dt>Estado</dt><dd>${invEstPill(p)}</dd><dt>Ubicación</dt><dd>${esc(p.ubicacion||"—")}</dd>${invLast(p)?`<dt>Última salida</dt><dd>${invLastTxt(p)}</dd>`:""}`:`<dt>Categoría</dt><dd>${esc(p.categoria||"—")}</dd>
         <dt>Ubicación</dt><dd>${esc(p.ubicacion||"—")}</dd>
-        <dt>Stock mínimo</dt><dd class="num">${p.minimo?fmtN(p.minimo)+" "+esc(p.unidad||"u"):"—"}</dd>
+        <dt>Stock mínimo</dt><dd class="num">${p.minimo?fmtN(p.minimo)+" "+esc(p.unidad||"u"):"—"}</dd>`}
         ${p.obs?`<dt>Notas</dt><dd>${esc(p.obs)}</dd>`:""}
       </dl>
       <div class="big-actions need-dep">
         <button class="btn in" data-quick="ingreso">${ICON_IN}Ingreso</button>
         <button class="btn out" data-quick="egreso">${ICON_OUT}Egreso</button>
       </div>
-      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap"><button class="btn sm need-adm" data-quick="ajuste">Ajuste por recuento</button><button class="btn sm need-adm" id="d-edit">Editar producto</button></div>
+      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap"><button class="btn sm need-adm" data-quick="ajuste">Ajuste por recuento</button><button class="btn sm ${isInv(p)?"need-dep":"need-adm"}" id="d-edit">${isInv(p)?"Editar elemento":"Editar producto"}</button></div>
       <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center"><span class="lb" style="margin-right:2px">Historial</span><button class="btn sm" id="d-hx"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M8 8l3 4-3 4M13 16h3"/></svg>Exportar como…</button><button class="btn sm" id="d-hm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="1"/><path d="M3 7l9 6 9-6"/></svg>Enviar por correo</button></div>
     </div>
   </div>
@@ -1492,25 +1625,28 @@ function openProduct(sku,refresh){
 /* ---------- product form ---------- */
 function nextSku(){let max=0;for(const k of S.products.keys()){const m=/^HB-(\d+)$/i.exec(k);if(m)max=Math.max(max,+m[1])}return "HB-"+String(max+1).padStart(4,"0")}
 function openProductForm(sku,pre){
-  const p=sku?S.products.get(sku):null;pre=p?{}:(pre||{});
-  modal(`<div class="modal-h"><h3>${p?"Editar producto":"Nuevo producto"+(pre.scope?" de "+esc(SCOPES[pre.scope].name.toLowerCase()):"")}</h3><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
+  const p=sku?S.products.get(sku):null;pre=p?{}:(pre||{});const INVF=p?isInv(p):pre.scope==="inv";
+  modal(`<div class="modal-h"><h3>${INVF?(p?"Editar elemento del inventario general":"Nuevo elemento del inventario general"):p?"Editar producto":"Nuevo producto"+(pre.scope?" de "+esc(SCOPES[pre.scope].name.toLowerCase()):"")}</h3><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
   <form class="form" id="f-prod" autocomplete="off">
-    <div class="field"><label class="lb" for="p-sku">SKU interno <em>*</em></label><input type="text" id="p-sku" class="mono" value="${esc(p?p.sku:(pre.sku||nextSku()))}" ${p?"disabled":""}><span class="hint">${p?"El SKU no se cambia porque identifica al QR y al historial.":"Letras, números, guion o punto. Se sugiere el siguiente HB-."}</span></div>
+    <div class="field"><label class="lb" for="p-sku">SKU interno <em>*</em></label><input type="text" id="p-sku" class="mono" value="${esc(p?p.sku:(pre.sku||nextSku()))}" ${p?"disabled":""}><span class="hint">${p?"El SKU no se cambia porque identifica al QR y al historial.":INVF?"Se sugiere el siguiente INV-. Podés usar el código que ya tenga el repuesto.":"Letras, números, guion o punto. Se sugiere el siguiente HB-."}</span></div>
     <div class="field"><label class="lb" for="p-cat">Categoría</label><input type="text" id="p-cat" list="dl-cat" value="${esc(p?p.categoria:(pre.categoria||""))}" placeholder="EPP, Lubricantes, Ferretería…"></div>
     <div class="field full"><label class="lb" for="p-nom">Nombre detallado del elemento <em>*</em></label><input type="text" id="p-nom" value="${esc(p?p.nombre:(pre.nombre||""))}" placeholder="Ej.: Guante de vaqueta reforzado talle 9"></div>
     <div class="field"><label class="lb" for="p-uni">Unidad de medida</label><input type="text" id="p-uni" list="dl-uni" value="${esc(p?p.unidad:(pre.unidad||"u"))}"><datalist id="dl-uni"><option value="u"><option value="par"><option value="m"><option value="kg"><option value="l"><option value="caja"><option value="rollo"><option value="bolsa"><option value="BigBag"><option value="tambor"></datalist></div>
-    <div class="field"><label class="lb" for="p-min">Stock mínimo</label><input type="number" id="p-min" step="any" min="0" inputmode="decimal" value="${p&&p.minimo?p.minimo:""}" placeholder="Aviso de reposición"></div>
+    ${INVF?`<div class="field"><label class="lb" for="p-marca">Marca / modelo</label><input type="text" id="p-marca" list="dl-invmarca" value="${esc(p?p.marca||"":"")}" placeholder="Ej.: Caterpillar 3306"></div>
+    <div class="field"><label class="lb" for="p-equipo">Equipo al que pertenece</label><input type="text" id="p-equipo" list="dl-equipos" value="${esc(p?p.equipo||"":"")}" placeholder="Ej.: TEC48, compresor, grupo electrógeno"></div>
+    <div class="field"><label class="lb" for="p-estinv">Estado</label><select id="p-estinv">${Object.entries(INV_EST).map(([k,v])=>`<option value="${k}"${(p?p.estadoInv||"nuevo":"nuevo")===k?" selected":""}>${v[1]}</option>`).join("")}</select></div>`:""}
+    <div class="field"${INVF?" hidden":""}><label class="lb" for="p-min">Stock mínimo</label><input type="number" id="p-min" step="any" min="0" inputmode="decimal" value="${p&&p.minimo?p.minimo:""}" placeholder="Aviso de reposición"></div>
     <div class="field"><label class="lb" for="p-ubi">Ubicación en depósito</label><input type="text" id="p-ubi" value="${esc(p?p.ubicacion:(pre.ubicacion||""))}" placeholder="Estantería A · Nivel 2"></div>
     ${p?`<div class="field"><label class="lb" for="p-stk">Cantidad en depósito</label><input type="text" id="p-stk" inputmode="decimal" value="${String(stockOf(p.sku)).replace(".",",")}"><span class="hint">Stock actual: ${fmtN(stockOf(p.sku))} ${esc(p.unidad||"u")}. Si lo cambiás, queda registrado como ajuste.</span></div>
     <div class="field" id="p-stk-aut-w" hidden><label class="lb" for="p-stk-aut">Autoriza el cambio de stock <em>*</em></label><input type="text" id="p-stk-aut" list="dl-personas" placeholder="Nombre y apellido"></div>`:""}
     ${p?"":`<div class="field"><label class="lb" for="p-ini">Stock inicial</label><input type="number" id="p-ini" step="any" min="0" inputmode="decimal" placeholder="0"><span class="hint">Se registra como ingreso con origen "Stock inicial".</span></div>`}
-    <div class="field full"><span class="lb">Presentaciones <span class="meta" style="font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></span>
+    <div class="field full"${INVF?" hidden":""}><span class="lb">Presentaciones <span class="meta" style="font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></span>
       <div id="p-pres" class="pres-ed"></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button type="button" class="btn sm" id="p-pres-add">+ Agregar presentación</button>
       <label class="chk"><input type="checkbox" id="p-solo"${p&&p.soloPres?" checked":""}> En las salidas, entregar solo en estas presentaciones</label></div>
       <span class="hint">Ej.: "Caja 20 kg" = 20 (en la unidad del producto). Al registrar entradas, salidas o recuentos se escribe la cantidad y después se elige la unidad: la del producto o una presentación. El stock se lleva siempre en la unidad del producto.</span></div>
-    <div class="field full"><label class="lb" for="p-obs">Notas del producto</label><textarea id="p-obs" placeholder="Marca, especificación, proveedor habitual…">${esc(p?p.obs:"")}</textarea></div>
-    <div class="form-actions">${p?`<button type="button" class="btn danger" id="p-del" style="margin-right:auto">Eliminar</button>`:""}<button type="button" class="btn" data-close>Cancelar</button><button type="submit" class="btn primary">${p?"Guardar cambios":"Crear producto"}</button></div>
+    <div class="field full"><label class="lb" for="p-obs">Notas del producto</label><textarea id="p-obs" placeholder="${INVF?"Especificación, número de parte, de dónde viene…":"Marca, especificación, proveedor habitual…"}">${esc(p?p.obs:"")}</textarea></div>
+    <div class="form-actions">${p?`<button type="button" class="btn danger" id="p-del" style="margin-right:auto">Eliminar</button>`:""}<button type="button" class="btn" data-close>Cancelar</button><button type="submit" class="btn primary">${p?"Guardar cambios":INVF?"Agregar al inventario":"Crear producto"}</button></div>
   </form>`);
   const PE=presOf(p||{}).map(x=>({n:x.n,f:x.f}));
   const drawPE=()=>{$("#p-pres").innerHTML=PE.map((x,k)=>`<div class="pres-row"><input type="text" data-pe="n" data-k="${k}" value="${esc(x.n)}" placeholder="Nombre (ej.: Caja 20 kg)"><span class="meta">=</span><input type="number" step="any" min="0" data-pe="f" data-k="${k}" value="${x.f||""}" placeholder="Cant."><span class="unit pe-u">${esc($("#p-uni").value||"u")}</span><button type="button" class="btn ghost sm" data-pedel="${k}" aria-label="Quitar">✕</button></div>`).join("")};
@@ -1522,12 +1658,12 @@ function openProductForm(sku,pre){
   if(p){$("#p-del").addEventListener("click",()=>confirmDelete(p));
     $("#p-stk").addEventListener("input",()=>{const nv=parseNum($("#p-stk").value);$("#p-stk-aut-w").hidden=!(nv!=null&&Math.round((nv-stockOf(p.sku))*1000)/1000)})}
   $("#f-prod").addEventListener("submit",async e=>{
-    e.preventDefault();if(!guardWrite("admin"))return;
+    e.preventDefault();if(!guardWrite(INVF?"deposito":"admin"))return;
     const s=p?p.sku:$("#p-sku").value.trim(),nombre=$("#p-nom").value.trim();
     if(!SKU_RE.test(s)){toast("El SKU solo admite letras, números, guion, punto o guion bajo (sin espacios).");return}
     if(!p&&parseSku(s)){toast("Ya existe un producto con ese SKU.");return}
     if(!nombre){toast("Falta el nombre del elemento.");return}
-    if(!p&&pre.scope&&!SCOPES[pre.scope].test({sku:s,nombre,categoria:$("#p-cat").value})){toast(pre.scope==="metal"?`Para que aparezca en Insumos metalúrgicos, la categoría tiene que ser "${MET_CAT}" o el SKU empezar con ${pre.prefix}.`:`Para que aparezca en ${SCOPES[pre.scope].name}, el nombre tiene que incluir "${SCOPES[pre.scope].name}" o el SKU empezar con ${pre.prefix}.`);return}
+    if(!p&&pre.scope&&!INVF&&!SCOPES[pre.scope].test({sku:s,nombre,categoria:$("#p-cat").value})){toast(pre.scope==="metal"?`Para que aparezca en Insumos metalúrgicos, la categoría tiene que ser "${MET_CAT}" o el SKU empezar con ${pre.prefix}.`:`Para que aparezca en ${SCOPES[pre.scope].name}, el nombre tiene que incluir "${SCOPES[pre.scope].name}" o el SKU empezar con ${pre.prefix}.`);return}
     let stkMov=null;
     if(p){const nv=parseNum($("#p-stk").value);if(nv==null||nv<0){toast("La cantidad en depósito debe ser un número mayor o igual a cero.");$("#p-stk").focus();return}
       if(Math.round((nv-stockOf(p.sku))*1000)/1000){const au=$("#p-stk-aut").value.trim();if(!au){toast("Indicá quién autoriza el cambio de stock.");$("#p-stk-aut").focus();return}stkMov=stockMov(Object.assign({},p,{nombre}),nv,au,"Corrección desde la ficha del producto","")}}
@@ -1535,12 +1671,13 @@ function openProductForm(sku,pre){
     if(pres.some(x=>!x.n||!(x.f>0))){toast("Cada presentación necesita nombre y una cantidad mayor a cero.");return}
     const body={sku:s,nombre,categoria:$("#p-cat").value.trim(),unidad:$("#p-uni").value.trim()||"u",minimo:+$("#p-min").value||0,ubicacion:$("#p-ubi").value.trim(),obs:$("#p-obs").value.trim(),presentaciones:pres,soloPres:!!(pres.length&&$("#p-solo").checked),creado:p?p.creado:new Date().toISOString(),actualizado:new Date().toISOString()};
     if(p&&p.porCaja)body.porCaja=p.porCaja;
+    if(INVF){Object.assign(body,{inventario:true,categoria:body.categoria||INV_CAT,marca:$("#p-marca").value.trim(),equipo:normEq($("#p-equipo").value.trim()),estadoInv:$("#p-estinv").value,minimo:0,presentaciones:[],soloPres:false})}
     try{
       await db.doc("products/"+s).set(body);
       const ini=p?0:+$("#p-ini").value||0;
       if(stkMov)await db.collection("movimientos").add(stkMov);
       if(ini>0)await db.collection("movimientos").add({sku:s,nombre,tipo:"ingreso",cantidad:ini,origen:"Stock inicial",destino:"",autoriza:"Alta de producto",solicitante:"",remito:"",obs:"",fecha:new Date().toISOString(),by:myId||""});
-      toast(p?"Producto actualizado":"Producto "+s+" creado");closeModal();if(!p){if(!S.products.has(s))S.products.set(s,Object.assign({},body));openProduct(s)}
+      toast(INVF?(p?"Elemento actualizado":"Elemento "+s+" agregado al inventario general"):p?"Producto actualizado":"Producto "+s+" creado");closeModal();if(!p){if(!S.products.has(s))S.products.set(s,Object.assign({},body));openProduct(s)}
     }catch(err){writeError(err)}
   });
 }
@@ -1610,7 +1747,7 @@ function setTipo(t){
 }
 $("#m-tipo").addEventListener("click",e=>{const b=e.target.closest("button[data-t]");if(b)setTipo(b.dataset.t)});
 function nowLocal(){const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16)}
-function startMov(sku,tipo){tipo=tipo||"ingreso";const pp=S.products.get(sku);const sc=pp&&Object.keys(SCOPES).find(k=>SCOPES[k].test(pp));go(tipo==="ajuste"?"productos/ajuste":(sc||"productos")+"/"+(tipo==="ingreso"?"entrada":"salida"),{tipo});setTipo(tipo);const p=S.products.get(sku);if(p)$("#m-prod").value=p.sku+" · "+p.nombre;$("#m-fecha").value=nowLocal();updatePreview();setTimeout(()=>$("#m-cant").focus(),50)}
+function startMov(sku,tipo){tipo=tipo||"ingreso";const pp=S.products.get(sku);const sc=pp&&Object.keys(SCOPES).find(k=>SCOPES[k].test(pp));go(tipo==="ajuste"?"productos/ajuste":sc==="inv"?"productos/inv-"+(tipo==="ingreso"?"entrada":"salida"):(sc||"productos")+"/"+(tipo==="ingreso"?"entrada":"salida"),{tipo});setTipo(tipo);const p=S.products.get(sku);if(p)$("#m-prod").value=p.sku+" · "+p.nombre;$("#m-fecha").value=nowLocal();updatePreview();setTimeout(()=>$("#m-cant").focus(),50)}
 function updatePreview(){
   const sku=parseSku($("#m-prod").value),w=$("#m-preview-wrap");
   if(!sku){w.hidden=true;return}
@@ -1636,7 +1773,8 @@ $("#f-mov").addEventListener("submit",async e=>{
   if(movTipo==="egreso"&&p.soloPres&&presOf(p).length&&!pr){toast(`Elegí la presentación (${presOf(p).map(x=>x.n).join(", ")}).`);$("#m-un").focus();return}
   if(pr&&!(Number.isInteger(q)&&q>0)){toast(`Indicá cuántas unidades de "${pr.n}" (número entero).`);$("#m-cant").focus();return}
   if(pr&&q>0)q=Math.round(q*pr.f*1000)/1000;
-  if(MOV_SCOPE&&!SCOPES[MOV_SCOPE].test(p)){toast(`Ese elemento no es de ${SCOPES[MOV_SCOPE].name.toLowerCase()}. Registralo desde Movimientos de productos.`);return}
+  if(!MOV_SCOPE&&isInv(p)&&movTipo!=="ajuste"){toast("Ese elemento es del Inventario general: registralo desde Insumos Equipos › Inventario general.");return}
+  if(MOV_SCOPE&&!SCOPES[MOV_SCOPE].test(p)){toast(`Ese elemento no es de ${SCOPES[MOV_SCOPE].name.toLowerCase()}. Registralo desde Insumos Equipos.`);return}
   if(!MOV_TIPOS.includes(movTipo)){toast("Este tipo de movimiento no está disponible acá.");return}
   if(!q||(movTipo!=="ajuste"&&q<0)){toast(movTipo==="ajuste"?"Indicá la diferencia de recuento (distinta de cero).":"Indicá una cantidad mayor a cero.");$("#m-cant").focus();return}
   const origen=normEq($("#m-origen").value),destino=normEq($("#m-destino").value),aut=$("#m-aut").value.trim();
@@ -2025,7 +2163,7 @@ function bkCell(k,v){if(v==null)return"";if(typeof v==="number"||typeof v==="boo
 function bkSheet(rows,pref){const keys=pref.slice();rows.forEach(r=>Object.keys(r).forEach(k=>{if(!keys.includes(k))keys.push(k)}));const used=keys.filter(k=>rows.some(r=>r[k]!=null&&r[k]!==""));
   const aoa=[used].concat(rows.map(r=>used.map(k=>bkCell(k,r[k]))));const ws=XLSX.utils.aoa_to_sheet(aoa);ws["!cols"]=used.map(k=>({wch:k==="texto"||k==="obs"||k==="items"?60:k==="nombre"?36:14}));if(used.length)ws["!autofilter"]={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:Math.max(rows.length,1),c:used.length-1}})};return ws}
 function renderBackup(){if($("#v-backup").hidden)return;const d=bkDays(),u=S.config&&S.config.ultimoRespaldo;
-  $("#bk-last").innerHTML=u?`<div class="banner ${d>=7?"warn":"ok"}">Última copia: ${esc(fmtD(u.fecha))}<span id="bk-by"></span>${u.registros?" · "+u.registros+" registros":""}${d>=7?" — conviene hacer una nueva.":""}</div>`:'<div class="banner warn">Todavía no se descargó ninguna copia de seguridad.</div>';
+  $("#bk-last").innerHTML=u?`<div class="banner ${d>=7?"warn":"ok"}">Última copia: ${esc(fmtD(u.fecha))}${u.automatico?" (copia semanal automática en Drive)":""}<span id="bk-by"></span>${u.registros?" · "+u.registros+" registros":""}${d>=7?" — conviene hacer una nueva.":""}</div>`:'<div class="banner warn">Todavía no se descargó ninguna copia de seguridad.</div>';
   const nL=Array.from(S.recs.values()).reduce((a,r)=>a+(r.n||0),0);
   $("#t-bk tbody").innerHTML=BK_COLS.map(([c,n,f])=>`<tr><td>${esc(n)}</td><td class="r">${f().length}</td></tr>`).join("")+`<tr><td>Líneas de recuento</td><td class="r">≈ ${nL}</td></tr><tr><td>Ajustes generales</td><td class="r">1</td></tr>`;
   bkDrive();
@@ -2075,7 +2213,14 @@ $("#bk-zip").addEventListener("click",async()=>{if(!guardWrite("admin"))return;c
 /* ---------- Google Drive: carpeta Control y Backup ---------- */
 async function bkDrive(){if(!window.DEP)return;try{const j=await DEP.call("info");const a=$("#bk-drive-open");if(j.carpeta){a.href=j.carpeta;a.hidden=false}
   let u=null;try{u=j.ultimaExportacion&&JSON.parse(j.ultimaExportacion)}catch(e){}
-  if(u)$("#bk-drive-st").textContent=`Última actualización: ${fmtD(u.fecha)}${u.errores&&u.errores.length?" · con avisos: "+u.errores.join("; "):""} · Se actualiza sola todos los días a las 20 h.`}catch(e){}}
+  if(u)$("#bk-drive-st").textContent=`Última actualización: ${fmtD(u.fecha)}${u.errores&&u.errores.length?" · con avisos: "+u.errores.join("; "):""} · Se actualiza sola todos los días a las 20 h.`;
+  bkSemShow(j.semanal)}catch(e){}}
+function bkSemShow(w){if(!w)return;const o=$("#bk-sem-open");if(w.carpeta){o.href=w.carpeta;o.hidden=false}
+  $("#bk-sem-st").textContent=w.programado?`Programada: todos los ${w.dia} a las ${w.hora} h se guarda una copia completa (Excel) en Drive › Control y Backup › 11 Backup semanal. Se conservan las últimas ${w.conservar}.`:"La copia semanal todavía no está programada: la programa un Administrador al abrir esta pantalla.";
+  const u=w.ultima;$("#bk-sem-last").innerHTML=u&&u.archivo?`<div class="banner ok" style="margin:0">Última copia semanal: <b>${esc(fmtD(u.fecha))}</b> · ${esc(u.archivo)} · ${u.registros} registros${u.url?` · <a href="${esc(u.url)}" target="_blank" rel="noopener">abrir</a>`:""}</div>`:"";
+  if(u&&u.errorReciente)$("#bk-sem-last").innerHTML+=`<div class="banner warn" style="margin:6px 0 0">El intento del ${esc(fmtD(u.errorReciente.fecha))} falló: ${esc(u.errorReciente.error)}</div>`}
+$("#bk-sem-now").addEventListener("click",async()=>{if(!guardWrite("admin"))return;const b=$("#bk-sem-now");b.disabled=true;b.textContent="Generando la copia… (puede tardar 1 o 2 minutos)";
+  try{const j=await DEP.call("backupWeekly");bkSemShow(j.semanal);toast("Copia semanal guardada en Drive: "+j.backup.archivo)}catch(e){toast("No se pudo hacer la copia: "+(e.message||"error"))}finally{b.disabled=false;b.textContent="Hacer la copia semanal ahora"}});
 $("#bk-drive-now").addEventListener("click",async()=>{if(!guardWrite("admin"))return;const b=$("#bk-drive-now");b.disabled=true;b.textContent="Actualizando… (puede tardar 1 o 2 minutos)";
   try{await DEP.call("exportNow");toast("Carpeta de Drive actualizada.");bkDrive()}catch(e){toast("No se pudo actualizar Drive: "+(e.message||"error"))}finally{b.disabled=false;b.textContent="Actualizar Drive ahora"}});
 /* ---------- pasar datos de la planilla anterior ---------- */
@@ -2181,10 +2326,10 @@ async function save(filename,data,opt){
   try{await downloads.save({filename,data})}catch(e){if(e&&e.code==="declined")return;if(e&&e.code==="rate_limited"){toast("Ya hay una descarga pendiente de confirmar.");return}toast("No se pudo generar la descarga.")}
 }
 $("#btn-export-stock").addEventListener("click",()=>{
-  const rows=[["SKU","Elemento","Categoría","Unidad","Ubicación","Stock actual","Stock mínimo","Estado"]].concat(prodList().map(p=>[p.sku,p.nombre,p.categoria,p.unidad,p.ubicacion,fmtN(stockOf(p.sku)),p.minimo||"",estado(p)[1]]));
+  const rows=[["SKU","Elemento","Categoría","Unidad","Ubicación","Stock actual","Stock mínimo","Estado"]].concat(prodList().filter(scopeTest(STOCK_SCOPE)).map(p=>[p.sku,p.nombre,p.categoria,p.unidad,p.ubicacion,fmtN(stockOf(p.sku)),p.minimo||"",estado(p)[1]]));
   save("stock-"+localDay(new Date().toISOString())+".csv",toCsv(rows))});
 $("#btn-export-hist").addEventListener("click",()=>{
-  const rows=[["Fecha","Tipo","SKU","Elemento","Cantidad","Unidad","Origen","Destino","Solicitó","Autorizó","Remito/Pedido","Observaciones"]].concat(S.movs.map(m=>{const p=S.products.get(m.sku);return[fmtD(m.fecha),m.tipo,m.sku,m.nombre,String(m.tipo==="egreso"?-m.cantidad:m.cantidad).replace(".",","),(p&&p.unidad)||"",m.origen,m.destino,m.solicitante,m.autoriza,m.remito,m.obs]}));
+  const rows=[["Fecha","Tipo","SKU","Elemento","Cantidad","Unidad","Origen","Destino","Solicitó","Autorizó","Remito/Pedido","Observaciones"]].concat(S.movs.filter(m=>!movInv(m)).map(m=>{const p=S.products.get(m.sku);return[fmtD(m.fecha),m.tipo,m.sku,m.nombre,String(m.tipo==="egreso"?-m.cantidad:m.cantidad).replace(".",","),(p&&p.unidad)||"",m.origen,m.destino,m.solicitante,m.autoriza,m.remito,m.obs]}));
   save("movimientos-"+localDay(new Date().toISOString())+".csv",toCsv(rows))});
 
 /* ---------- carga / recuento de cantidades ---------- */
@@ -2199,7 +2344,7 @@ const CQ={vals:new Map(),only0:true};
 function openCarga(){
   if(!guardWrite("admin"))return;
   if(!prodList().length){toast("Primero cargá productos.");return}
-  CQ.vals=new Map();CQ.only0=prodList().some(p=>stockOf(p.sku)<=0);
+  CQ.vals=new Map();CQ.only0=prodList().some(p=>!isInv(p)&&stockOf(p.sku)<=0);
   modal(`<div class="modal-h"><div><h3>Cargar cantidades en stock</h3><div class="meta">Escribí la cantidad que hay hoy en el depósito. Solo se guardan las filas que cambies; cada cambio queda en el Historial como stock inicial o ajuste por recuento.</div></div><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
    <div style="padding:18px;display:grid;gap:12px">
      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
@@ -2224,7 +2369,7 @@ function openCarga(){
 }
 function renderCarga(){
   const q=$("#cq-q").value.trim().toLowerCase(),cat=$("#cq-cat").value;
-  const rows=prodList().filter(p=>(!CQ.only0||stockOf(p.sku)<=0||CQ.vals.has(p.sku))&&(!cat||p.categoria===cat)&&(!q||(p.sku+" "+p.nombre+" "+(p.ubicacion||"")).toLowerCase().includes(q)));
+  const rows=prodList().filter(p=>!isInv(p)&&(!CQ.only0||stockOf(p.sku)<=0||CQ.vals.has(p.sku))&&(!cat||p.categoria===cat)&&(!q||(p.sku+" "+p.nombre+" "+(p.ubicacion||"")).toLowerCase().includes(q)));
   $("#cq-t tbody").innerHTML=rows.length?rows.map(p=>{const v=CQ.vals.get(p.sku);return `<tr data-sku="${esc(p.sku)}">
     <td class="mono">${esc(p.sku)}</td><td class="wrap">${esc(p.nombre)}</td><td class="meta">${esc(p.ubicacion||"—")}</td>
     <td class="r num">${fmtN(stockOf(p.sku))} <span class="unit">${esc(p.unidad||"u")}</span></td>
@@ -3755,7 +3900,7 @@ function openMovEdit(id){
      <div class="field"${isIn&&!m.autoriza?" hidden":""}><label class="lb" for="me-a">Autoriza</label><input type="text" id="me-a" list="dl-personas" value="${esc(m.autoriza||"")}"></div>
      <div class="field"><label class="lb" for="me-r">Nº de registro (remito / factura)${opt}</label><input type="text" id="me-r" list="dl-docnum" autocomplete="off" value="${esc(m.remito||"")}"><span class="hint" id="me-r-h"></span></div>
      <div class="field full"><label class="lb" for="me-obs">Observaciones</label><textarea id="me-obs">${esc(m.obs||"")}</textarea></div>
-     ${(m.adjuntos||[]).length?`<div class="field full"><span class="lb">Imágenes cargadas en el movimiento (anteriores)</span><div class="att-grid" id="me-att"></div><span class="hint">Los documentos nuevos se cargan en Movimientos diarios › Carga de registros. Tocá ✕ para quitar una de estas.</span></div>`:'<div id="me-att" hidden></div>'}
+     ${(m.adjuntos||[]).length?`<div class="field full"><span class="lb">Imágenes cargadas en el movimiento (anteriores)</span><div class="att-grid" id="me-att"></div><span class="hint">Los documentos nuevos se cargan en Movimientos diarios › Cargar documentos. Tocá ✕ para quitar una de estas.</span></div>`:'<div id="me-att" hidden></div>'}
      <div class="field full" id="me-warn" hidden></div>
      <div class="form-actions"><button type="button" class="btn" data-close>Cancelar</button><button type="submit" class="btn primary" id="me-go">Guardar cambios</button></div>
    </form>`,"wide");
@@ -3872,7 +4017,7 @@ function renderDocDay(){const f=$("#dl-fecha").value||todayStr(),L=docList().fil
   $("#dl-day-h").textContent=`Registros cargados el ${f.split("-").reverse().join("/")} (${L.length})`;
   box.innerHTML=L.length?L.map(d=>{const n=docLinks(d).n;return `<div class="dc-row" data-docopen="${esc(d.id)}" role="button" tabindex="0" style="display:flex;gap:10px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line)"><span class="dc-mv-th">${docThumbs(d,2)}</span><span style="flex:1;min-width:0"><b class="mono">${esc(d.numero)}</b> <span class="meta">${esc(d.tipo||"")}${d.tercero?" · "+esc(d.tercero):""}</span></span><span class="pill" style="background:var(--surface)">${n} vínculo${n===1?"":"s"}</span></div>`}).join(""):'<div class="meta" style="padding:12px 14px">Todavía no hay registros cargados en esta fecha.</div>'}
 /* número de registro en el movimiento: muestra si ya está vinculado */
-function docHint(inp,out){const v=inp.value.trim(),d=v&&docByKey(v);out.innerHTML=!v?"":d?`<span style="color:var(--ok)">✓ Vinculado a <button type="button" class="lnk" data-docopen="${esc(d.id)}">${esc(docLabel(d))}</button> del ${esc((d.fecha||"").split("-").reverse().join("/"))}</span>`:'<span class="meta">Todavía no hay un registro cargado con ese número: se vincula solo cuando se cargue en <b>Carga de registros</b>.</span>'}
+function docHint(inp,out){const v=inp.value.trim(),d=v&&docByKey(v);out.innerHTML=!v?"":d?`<span style="color:var(--ok)">✓ Vinculado a <button type="button" class="lnk" data-docopen="${esc(d.id)}">${esc(docLabel(d))}</button> del ${esc((d.fecha||"").split("-").reverse().join("/"))}</span>`:'<span class="meta">Todavía no hay un registro cargado con ese número: se vincula solo cuando se cargue en <b>Cargar documentos</b>.</span>'}
 function docThumbs(d,max){const A=d.adjuntos||[];return A.slice(0,max||4).map((a,i)=>`<button type="button" class="mv-th" data-docimg="${esc(d.id)}" data-atti="${i}" aria-label="Ver ${esc(a.nombre||"imagen")}">${isPdf(a)?'<span>PDF</span>':`<img src="${esc(attUrl(a))}" alt="" loading="lazy">`}</button>`).join("")+(A.length>(max||4)?`<button type="button" class="mv-th more" data-docimg="${esc(d.id)}" data-atti="${max||4}">+${A.length-(max||4)}</button>`:"")}
 document.addEventListener("click",e=>{const b=e.target.closest("[data-docimg]");if(!b)return;e.preventDefault();e.stopPropagation();const d=S.docs.get(b.dataset.docimg);if(!d||!(d.adjuntos||[]).length)return;
   lbOpen(d.adjuntos.map(a=>({src:attUrl(a),nombre:a.nombre,tipo:a.tipo,ctx:`${docLabel(d)} · ${(d.fecha||"").split("-").reverse().join("/")}`})),+b.dataset.atti||0)},true);
@@ -3884,7 +4029,7 @@ function renderDocs(){
   const L=docList().filter(d=>(!ti||d.tipo===ti)&&(!de||d.fecha>=de)&&(!ha||d.fecha<=ha)&&(!q||norm([d.tipo,d.numero,d.tercero,d.obs].join(" ")).includes(q)||docKey(d.numero||"").includes(q.replace(/[^a-z0-9]/g,""))&&q.replace(/[^a-z0-9]/g,"")));
   $("#dc-sub").textContent=S.loadedDc?`${S.docs.size} registro${S.docs.size===1?"":"s"} · ${docList().reduce((a,d)=>a+(d.adjuntos||[]).length,0)} archivos${q||ti||de||ha?` · ${L.length} coinciden`:""}`:"Cargando…";
   if(!S.loadedDc){box.innerHTML='<div class="card empty">Cargando…</div>';return}
-  if(!L.length){box.innerHTML=`<div class="card empty">${S.docs.size?"Ningún registro coincide con la búsqueda.":"<b>Todavía no hay registros</b>Cargalos en <em>Carga de registros</em>."}</div>`;return}
+  if(!L.length){box.innerHTML=`<div class="card empty">${S.docs.size?"Ningún registro coincide con la búsqueda.":"<b>Todavía no hay registros</b>Cargalos en <em>Cargar documentos</em>."}</div>`;return}
   const days=new Map();L.forEach(d=>{const k=d.fecha||"";if(!days.has(k))days.set(k,[]);days.get(k).push(d)});
   box.innerHTML=Array.from(days.entries()).map(([k,ds])=>`<div class="card bit-day"><div class="bit-dh"><b>${k?esc(fmtDay(k)):"Sin fecha"}</b><span class="meta">${ds.length} registro${ds.length===1?"":"s"}</span></div>${ds.map(d=>{const n=docLinks(d).n;return `<div class="dc-row" data-docopen="${esc(d.id)}" role="button" tabindex="0"><div class="dc-main"><div><span class="pill" style="background:var(--surface-2)">${esc(d.tipo||"Documento")}</span> <b class="mono">${esc(d.numero||"s/n")}</b></div><div class="meta">${esc(d.tercero||"")}${d.obs?` · ${esc(d.obs)}`:""}</div><div class="meta">${n?`${n} movimiento${n===1?"":"s"} vinculado${n===1?"":"s"}`:"Sin movimientos vinculados"}</div></div><div class="mv-att">${docThumbs(d,4)}</div></div>`}).join("")}</div>`).join("");
 }
@@ -4199,26 +4344,27 @@ function shFiltered(){const t=$("#sh-tipo").value,q=$("#sh-q").value.trim().toLo
   return shRows(SH_SCOPE).filter(m=>(!t||m.tipo===t)&&(!pr||m.sku===pr)&&(!de||localDay(m.fecha)>=de)&&(!ha||localDay(m.fecha)<=ha)&&(!q||[m.origen,m.destino,m.obra,m.remito,m.obs,m.autoriza,m.solicitante,m.sku,m.nombre].join(" ").toLowerCase().includes(q)))}
 const SH_HEAD_STD='<tr><th>Fecha</th><th>Entrada/Salida</th><th>Origen</th><th>Destino</th><th>N° Obra</th><th>Remito</th><th class="r">Cantidad</th><th class="r">Stock</th><th>Observaciones</th></tr>';
 const SH_HEAD_MET='<tr><th>Fecha</th><th>Entrada/Salida</th><th>SKU · Producto</th><th>Proveedor / Retira</th><th>Remito / Factura</th><th class="r">Cantidad</th><th class="r">Stock del producto</th><th>Observaciones</th></tr>';
+const SH_HEAD_INV='<tr><th>Fecha</th><th>Entrada/Salida</th><th>Código · Elemento</th><th>Origen / Destino</th><th>Remito / Doc.</th><th class="r">Cantidad</th><th class="r">Existencia</th><th>Observaciones</th></tr>';
 const cajasTxt=m=>{const t=movPresTxt(m);return t?`<div class="meta">${esc(t)}</div>`:""};
 function renderSHist(){
   if($("#v-shist").hidden||!SH_SCOPE)return;
-  const name=SCOPES[SH_SCOPE].name,P=prodList().filter(scopeTest(SH_SCOPE)),MET=SH_SCOPE==="metal";
-  $("#sh-title").textContent="Historial de "+name.toLowerCase();
-  const th=$("#t-sh thead"),hd=MET?SH_HEAD_MET:SH_HEAD_STD;if(th.innerHTML!==hd)th.innerHTML=hd;
+  const name=SCOPES[SH_SCOPE].name,P=prodList().filter(scopeTest(SH_SCOPE)),INV=SH_SCOPE==="inv",MET=SH_SCOPE==="metal"||INV;
+  $("#sh-title").textContent=INV?"Historial del inventario general":"Historial de "+name.toLowerCase();
+  const th=$("#t-sh thead"),hd=INV?SH_HEAD_INV:MET?SH_HEAD_MET:SH_HEAD_STD;if(th.innerHTML!==hd)th.innerHTML=hd;
   $("#sh-imp").style.display=MET?"none":"";$("#sh-q").placeholder=MET?"Buscar SKU, producto, proveedor, quién retira, remito…":"Buscar origen, destino, N° de obra, remito…";
-  const ps=$("#sh-prod"),cur=ps.value;ps.innerHTML='<option value="">Todos los productos</option>'+P.map(p=>`<option value="${esc(p.sku)}"${p.sku===cur?" selected":""}>${MET?esc(p.sku)+" · ":""}${esc(p.nombre)}</option>`).join("");ps.style.maxWidth=MET?"260px":"";ps.hidden=P.length<2;
+  const ps=$("#sh-prod"),cur=ps.value;ps.innerHTML=`<option value="">${INV?"Todos los elementos":"Todos los productos"}</option>`+P.map(p=>`<option value="${esc(p.sku)}"${p.sku===cur?" selected":""}>${MET?esc(p.sku)+" · ":""}${esc(p.nombre)}</option>`).join("");ps.style.maxWidth=MET?"260px":"";ps.hidden=P.length<2;
   const all=shRows(SH_SCOPE),L=shFiltered(),tb=$("#t-sh tbody"),multi=P.length>1;
   const ent=L.filter(m=>m.tipo==="ingreso"&&!m.historico).reduce((a,m)=>a+m.q,0),sal=L.filter(m=>m.tipo==="egreso"&&!m.historico).reduce((a,m)=>a-m.q,0);
   const u=(P[0]||{}).unidad||"u";
   const pr=$("#sh-prod").value,one=pr?S.products.get(pr):null;
-  $("#sh-sum").innerHTML=`<div class="kpi"><small>Entradas</small><b class="qty ingreso">${fmtN(ent)}</b></div><div class="kpi"><small>Salidas</small><b class="qty egreso">${fmtN(sal)}</b></div>${MET&&!one?`<div class="kpi"><small>Productos sin stock</small><b>${P.filter(p=>stockOf(p.sku)<=0).length} de ${P.length}</b></div>`:`<div class="kpi"><small>Stock actual</small><b>${fmtN(one?stockOf(one.sku):P.reduce((a,p)=>a+stockOf(p.sku),0))}</b></div>`}<div class="kpi"><small>Movimientos</small><b>${L.length}</b></div>`;
-  $("#sh-sub").textContent=!P.length?`No hay productos de ${name.toLowerCase()} en el catálogo.`:MET?`${P.length} productos del taller metalúrgico (categoría "${MET_CAT}" o SKU T-MET-). Cantidades en la unidad de cada producto.`:`${P.map(p=>p.nombre).join(" · ")} · unidad: ${u}`;
+  $("#sh-sum").innerHTML=`<div class="kpi"><small>Entradas</small><b class="qty ingreso">${fmtN(ent)}</b></div><div class="kpi"><small>Salidas</small><b class="qty egreso">${fmtN(sal)}</b></div>${MET&&!one?`<div class="kpi"><small>${INV?"Elementos sin existencia":"Productos sin stock"}</small><b>${P.filter(p=>stockOf(p.sku)<=0).length} de ${P.length}</b></div>`:`<div class="kpi"><small>Stock actual</small><b>${fmtN(one?stockOf(one.sku):P.reduce((a,p)=>a+stockOf(p.sku),0))}</b></div>`}<div class="kpi"><small>Movimientos</small><b>${L.length}</b></div>`;
+  $("#sh-sub").textContent=!P.length?`No hay productos de ${name.toLowerCase()} en el catálogo.`:INV?`${P.length} elementos del inventario general. Cantidades en la unidad de cada elemento.`:MET?`${P.length} productos del taller metalúrgico (categoría "${MET_CAT}" o SKU T-MET-). Cantidades en la unidad de cada producto.`:`${P.map(p=>p.nombre).join(" · ")} · unidad: ${u}`;
   if(!S.loadedM){tb.innerHTML=`<tr><td colspan="${MET?8:9}" class="span"><div class="empty">Cargando…</div></td></tr>`;return}
-  if(!all.length){tb.innerHTML=`<tr><td colspan="${MET?8:9}" class="span"><div class="empty"><b>Sin movimientos de ${esc(name.toLowerCase())}</b>Registrá entradas y salidas${MET?" desde este nivel o desde Movimientos de productos":" o importá tu planilla con <em>Importar desde Excel</em>"}.</div></td></tr>`;$("#sh-more").hidden=true;return}
+  if(!all.length){tb.innerHTML=`<tr><td colspan="${MET?8:9}" class="span"><div class="empty"><b>Sin movimientos de ${esc(name.toLowerCase())}</b>Registrá entradas y salidas${MET?" desde este nivel":" o importá tu planilla con <em>Importar desde Excel</em>"}.</div></td></tr>`;$("#sh-more").hidden=true;return}
   if(!L.length){tb.innerHTML=`<tr><td colspan="${MET?8:9}" class="span"><div class="empty">Ningún movimiento coincide con el filtro.</div></td></tr>`;$("#sh-more").hidden=true;return}
   if(MET){tb.innerHTML=L.slice(0,SH_LIMIT).map(m=>`<tr${m.historico?' style="opacity:.6"':""}><td class="mono meta">${esc(fmtD(m.fecha).split(" ")[0])}</td>
     <td><span class="pill ${m.tipo==="ingreso"?"ok":m.tipo==="egreso"?"warn":""}">${m.tipo==="ingreso"?"Entrada":m.tipo==="egreso"?"Salida":"Ajuste"}</span>${m.historico?' <span class="pill" style="background:var(--surface-2)">No suma</span>':""}${m.stockNegativo?' <span class="pill bad" title="Registrado con stock negativo">Stock negativo</span>':""}${movAttHtml(m)}</td>
-    <td><div class="mono meta">${esc(m.sku)}</div>${esc(m.nombre||"")}</td><td>${m.tipo==="egreso"?(m.solicitante?`<span class="meta">Retira:</span> ${esc(m.solicitante)}`:"—"):esc(m.origen||"—")}</td><td class="meta">${esc(m.remito||"—")}</td>
+    <td><div class="mono meta">${esc(m.sku)}</div>${esc(m.nombre||"")}</td><td>${INV?(m.tipo==="egreso"?`<span class="meta">hacia</span> ${esc(m.destino||"—")}${m.solicitante?`<div class="meta">Solicitó: ${esc(m.solicitante)}</div>`:""}`:m.tipo==="ingreso"?`<span class="meta">desde</span> ${esc(m.origen||"—")}`:'<span class="meta">Recuento / ajuste</span>'):m.tipo==="egreso"?(m.solicitante?`<span class="meta">Retira:</span> ${esc(m.solicitante)}`:"—"):esc(m.origen||"—")}</td><td class="meta">${esc(m.remito||"—")}</td>
     <td class="r num"><b class="qty ${m.tipo}">${m.q>0?"+":"−"}${fmtN(Math.abs(m.q))}</b> <span class="meta">${esc(m.unidad)}</span>${cajasTxt(m)}</td><td class="r num"><b>${fmtN(m.saldo)}</b></td><td class="span meta">${esc(m.obs||"")}${m.ediciones&&m.ediciones.length?`<div class="meta">✎ editado</div>`:""}${movEditBtn(m)}</td></tr>`).join("");$("#sh-more").hidden=L.length<=SH_LIMIT;return}
   tb.innerHTML=L.slice(0,SH_LIMIT).map(m=>`<tr${m.historico?' style="opacity:.6"':""}><td class="mono meta">${esc(fmtD(m.fecha).split(" ")[0])}</td>
     <td><span class="pill ${m.tipo==="ingreso"?"ok":m.tipo==="egreso"?"warn":""}">${m.tipo==="ingreso"?"Entrada":m.tipo==="egreso"?"Salida":"Ajuste"}</span>${m.historico?' <span class="pill" style="background:var(--surface-2)">No suma</span>':""}${m.stockNegativo?' <span class="pill bad" title="Registrado con stock negativo">Stock negativo</span>':""}${movAttHtml(m)}${multi?`<div class="meta">${esc(m.nombre||"")}</div>`:""}</td>
@@ -4450,7 +4596,7 @@ function renderPed(){
   const tb=$("#t-ped tbody");if(!tb)return;
   const est=$("#pd-est").value,q=$("#pd-q").value.trim().toLowerCase();
   const all=pedList();
-  const low=prodList().filter(p=>estado(p)[0]!=="ok").length;
+  const low=prodList().filter(p=>!isInv(p)&&estado(p)[0]!=="ok").length;
   $("#ped-sub").textContent=`${low} elemento${low===1?"":"s"} bajo mínimo o sin stock · ${all.filter(p=>p.estado==="pendiente").length} notas pendientes de envío`;
   const rows=all.filter(p=>(!est||p.estado===est)&&(!q||[pedNum(p.numero),p.solicita,p.area,(p.items||[]).map(i=>i.sku+" "+i.nombre).join(" ")].join(" ").toLowerCase().includes(q)));
   if(!S.loadedPd){tb.innerHTML=`<tr><td colspan="6" class="span"><div class="empty">Cargando…</div></td></tr>`;return}
@@ -4514,6 +4660,7 @@ const SCAN_TARGETS={
   "rec-q":(t,sku)=>{const i=$("#rec-q");i.value=sku||t;recSearch(true)},
   "pf-q":(t,sku)=>{const i=$("#pf-q");i.value=sku||t;pfSearch();if(sku)pfPick(sku)},
   "m-prod":(t,sku)=>{if(!sku)return;const p=S.products.get(sku);$("#m-prod").value=p.sku+" · "+p.nombre;$("#m-prod").dispatchEvent(new Event("input"));$("#m-prod").dispatchEvent(new Event("change"));setTimeout(()=>$("#m-cant").focus(),50)},
+  "inv-q":(t,sku)=>{if(sku){$("#inv-q").value="";renderInv();openProduct(sku)}else{$("#inv-q").value=t;renderInv()}},
   "s-q":(t,sku)=>{if(sku){$("#s-q").value="";renderStock();openProduct(sku)}else{$("#s-q").value=t;renderStock()}}
 };
 /* lectores que "escriben" el código (lector USB/Bluetooth o teclado escáner del celular):
@@ -4663,7 +4810,7 @@ $("#ct-copy").addEventListener("click",async()=>{const e=CT.env||ctEnv(),r=CT.re
 let REC_CUR=null,REC_UNSUB=null,REC_PICK=null;
 const recList=()=>Array.from(S.recs.values()).sort((a,b)=>(b.fecha||"").localeCompare(a.fecha||"")||(b.seq||0)-(a.seq||0));
 /* alcance del recuento: stock de repuestos (incluye grava, bentonita y tripolifosfato) o insumos del taller metalúrgico. Los recuentos viejos (sin alcance) abarcan todo */
-const REC_ALC={repuestos:{name:"Stock repuestos",test:p=>!!p&&!SCOPES.metal.test(p)},metal:{name:"Insumos de taller metalúrgico",test:p=>!!p&&SCOPES.metal.test(p)}};
+const REC_ALC={repuestos:{name:"Stock repuestos",test:p=>!!p&&!isInv(p)&&!SCOPES.metal.test(p)},inv:{name:"Inventario general",test:isInv},metal:{name:"Insumos de taller metalúrgico",test:p=>!!p&&SCOPES.metal.test(p)}};
 const recAlcName=r=>r&&REC_ALC[r.alcance]?REC_ALC[r.alcance].name:"Todos los productos";
 const recInScope=(r,p)=>!r||!REC_ALC[r.alcance]?!!p:REC_ALC[r.alcance].test(p);
 const recCurInScope=p=>recInScope(S.recs.get(REC_CUR),p);
@@ -4960,12 +5107,12 @@ function pfStage1(){PF.cur=null;PF.editIx=-1;$("#np-s2").hidden=true;$("#np-s1")
 function pfSearch(){
   const words=norm($("#pf-q").value).split(/\s+/).filter(Boolean),box=$("#pf-res");
   let L,title="";
-  if(words.length){L=prodList().filter(p=>{const h=norm(p.sku+" "+p.nombre);return words.every(w=>h.includes(w))});
+  if(words.length){L=prodList().filter(p=>{const h=norm(p.sku+" "+p.nombre+(isInv(p)?" "+(p.marca||"")+" "+(p.equipo||""):""));return words.every(w=>h.includes(w))});
     L.sort((a,b)=>{const q=norm($("#pf-q").value),as=norm(a.sku)===q||norm(a.nombre)===q?0:norm(a.sku).startsWith(q)||norm(a.nombre).startsWith(q)?1:2,bs=norm(b.sku)===q||norm(b.nombre)===q?0:norm(b.sku).startsWith(q)||norm(b.nombre).startsWith(q)?1:2;return as-bs||a.nombre.localeCompare(b.nombre,"es")})}
   else{box.innerHTML="";return}
   const inList=new Set(PF.list.map(i=>i.sku)),N=40;
   box.innerHTML=words.length&&!L.length?`<div class="empty" style="padding:14px">Ningún elemento coincide con "${esc($("#pf-q").value.trim())}".</div>`:
-    title+L.slice(0,N).map(p=>{const [c,t]=estado(p);return `<button type="button" class="np-it" data-pick="${esc(p.sku)}"><span class="mono meta">${esc(p.sku)}</span><span class="nm">${esc(p.nombre)}${inList.has(p.sku)?' <span class="pill" style="background:var(--surface-2)">ya en el listado</span>':""}</span><span class="st">${fmtN(stockOf(p.sku))} ${esc(p.unidad||"u")}${c!=="ok"?` <span class="pill ${c}">${t}</span>`:""}</span></button>`}).join("")+(L.length>N?`<div class="meta" style="padding:6px 2px">${L.length-N} resultados más: escribí más letras para acotar.</div>`:"");
+    title+L.slice(0,N).map(p=>{const [c,t]=estado(p);return `<button type="button" class="np-it" data-pick="${esc(p.sku)}"><span class="mono meta">${esc(p.sku)}</span><span class="nm">${esc(p.nombre)}${isInv(p)?` <span class="pill" style="background:var(--accent-soft);color:var(--accent)">Inventario general</span>${p.marca?` <span class="meta">${esc(p.marca)}</span>`:""}`:""}${inList.has(p.sku)?' <span class="pill" style="background:var(--surface-2)">ya en el listado</span>':""}</span><span class="st">${fmtN(stockOf(p.sku))} ${esc(p.unidad||"u")}${c!=="ok"?` <span class="pill ${c}">${t}</span>`:""}</span></button>`}).join("")+(L.length>N?`<div class="meta" style="padding:6px 2px">${L.length-N} resultados más: escribí más letras para acotar.</div>`:"");
 }
 function pfPick(sku,ix){
   const p=S.products.get(sku);if(!p)return;
