@@ -581,6 +581,11 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
         <label class="lb" for="m-aut">Autoriza el pedido <em>*</em></label>
         <input type="text" id="m-aut" list="dl-personas" placeholder="Nombre y apellido">
       </div>
+      <div class="field" id="m-np-wrap" hidden>
+        <label class="lb" for="m-np">Nota de pedido <span class="meta" style="font-weight:400;text-transform:none;letter-spacing:0">(para el seguimiento)</span></label>
+        <select id="m-np"></select>
+        <span class="hint" id="m-np-h"></span>
+      </div>
       <div class="field" id="m-doc-wrap">
         <label class="lb" for="m-doc" id="m-doc-lb">Nº de remito / pedido / OC</label>
         <input type="text" id="m-doc" list="dl-docnum" placeholder="Opcional" autocomplete="off">
@@ -816,6 +821,22 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
     </div>
     <div class="card"><div class="table-wrap"><table class="cards" id="t-ped">
       <thead><tr><th>Número</th><th>Fecha</th><th>Elementos</th><th>Solicita</th><th>Estado</th><th>Enviada</th></tr></thead>
+      <tbody></tbody>
+    </table></div></div>
+  </section>
+
+  <section id="v-npseg" data-view="npseg" hidden>
+    <div class="section-head">
+      <div><h2>Seguimiento NP</h2><p class="sub" id="nps-sub"></p></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="nps-xls"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Exportar como…</button><button class="btn primary need-dep" data-goto="compras/pedido">Notas de pedido</button></div>
+    </div>
+    <div class="card" id="nps-auto" style="padding:10px 14px;margin-bottom:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--surface-2)"></div>
+    <div class="toolbar">
+      <input class="grow" type="search" id="nps-q" placeholder="Buscar por NP, Nº de Compras, detalle o elemento">
+      <select id="nps-est" style="width:auto"><option value="">Todos los estados</option><option value="enviada">Enviada</option><option value="procesada">Procesada</option><option value="parcial">Entrega parcial</option><option value="recibido">Recibido</option></select>
+    </div>
+    <div class="card"><div class="table-wrap"><table class="cards" id="t-nps">
+      <thead><tr><th>NP</th><th>Nº Compras</th><th>Detalle</th><th>Estado</th></tr></thead>
       <tbody></tbody>
     </table></div></div>
   </section>
@@ -1098,6 +1119,7 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
 <datalist id="dl-origen"></datalist>
 <datalist id="dl-docnum"></datalist>
 <datalist id="dl-invmarca"></datalist>
+<datalist id="dl-npdet"></datalist>
 <datalist id="dl-destino"></datalist>
 <datalist id="dl-personas"></datalist>
 <datalist id="dl-cat"></datalist>
@@ -1192,7 +1214,7 @@ const MENU=[
     {id:"salida",name:"Salida",view:"mov",need:"deposito",tipos:["egreso"],title:"Salida de insumos metalúrgicos",sub:"Retiro de insumos del taller metalúrgico, en unidades o en cajas."},
     {id:"stock",name:"Stock",view:"stock",title:"Stock de insumos metalúrgicos"},
     {id:"historial",name:"Historial",view:"shist"}]},
-  {id:"compras",name:"Compras",ic:"compras",items:[{id:"pedido",name:"Nota de pedido",view:"ped"}]},
+  {id:"compras",name:"Compras",ic:"compras",items:[{id:"pedido",name:"Nota de pedido",view:"ped"},{id:"seguimiento",name:"Seguimiento NP",view:"npseg"}]},
   {id:"trepanos",name:"Trépanos",ic:"trepanos",items:[
     {id:"stock",name:"Listado de stock",view:"tr-stock"},
     {id:"entrada",name:"Entrada",view:"tr-in",need:"deposito"},
@@ -1294,6 +1316,7 @@ function enterView(view,r,opt){
   if(view==="prod"){$("#pr-title").textContent=it.title||"Productos";$("#pr-sub").textContent=it.sub||"";renderProd()}
   if(view==="hist")renderHist();
   if(view==="inv")renderInv();
+  if(view==="npseg"){refreshNpDl();renderNpSeg();npMailInfo()}
   if(view==="conf")fillConfForm();
   if(view==="map")renderMap();
   if(view==="users")renderUsers();
@@ -1430,6 +1453,87 @@ $("#inv-file").addEventListener("change",async e=>{const f=e.target.files[0];e.t
     catch(err){writeError(err);toast(`Se importaron ${n} de ${ok.length}. Volvé a importar el archivo: los ya cargados se reconocen por código o por nombre y marca, y no se duplican.`);b.disabled=false;b.textContent="Reintentar"}};
 });
 
+/* ---------- seguimiento de notas de pedido (Compras › Seguimiento NP) ----------
+   Enviada → Procesada (Compras asigna su número; en la app de Google se lee solo de la respuesta por correo)
+   → Entrega parcial / Recibido (según las entradas vinculadas a la NP: cada ítem con su cantidad) */
+const NP_DET=["Insumos taller","Repuestos equipos","Repuestos motor","Librería","Limpieza"];
+const NPS_EST={enviada:["","Enviada"],procesada:["info","Procesada"],parcial:["warn","Entrega parcial"],recibido:["ok","Recibido"]};
+const npsPill=k=>{const [c,t]=NPS_EST[k]||["",k];return `<span class="pill ${c}"${c==="info"?' style="background:var(--accent-soft);color:var(--accent)"':c?"":' style="background:var(--surface-2)"'}>${t}</span>`};
+/* número de Compras: NP-AAAA-NNNN (np 2026 1 → NP-2026-0001); otros formatos se guardan tal cual */
+const npComprasNorm=v=>{v=String(v||"").trim();const m=/^NP[\s\-–_.]*((?:19|20)\d{2})[\s\-–_.\/]+(\d{1,6})$/i.exec(v);return m?`NP-${m[1]}-${String(+m[2]).padStart(4,"0")}`:v};
+const npDetList=()=>uniq(NP_DET.concat(pedList().map(p=>p.detalle||"")).map(x=>String(x).trim()).filter(Boolean));
+function refreshNpDl(){trDl("dl-npdet",npDetList().map(x=>`<option value="${esc(x)}"></option>`).join(""))}
+/* cantidades pedidas y recibidas por producto */
+function npSeg(p){
+  const req=new Map(),rec=new Map(),movs=S.movs.filter(m=>m.npId===p.id&&m.tipo==="ingreso"&&!m.historico);
+  (p.items||[]).forEach(i=>req.set(i.sku,Math.round(((req.get(i.sku)||0)+(+i.cantidad||0))*1000)/1000));
+  movs.forEach(m=>rec.set(m.sku,Math.round(((rec.get(m.sku)||0)+(+m.cantidad||0))*1000)/1000));
+  const skus=Array.from(req.keys()),full=skus.filter(k=>(rec.get(k)||0)>=req.get(k)-1e-9).length,any=skus.filter(k=>(rec.get(k)||0)>0).length;
+  const k=skus.length&&full===skus.length?"recibido":any||movs.length?"parcial":p.nroCompras?"procesada":"enviada";
+  return {k,req,rec,movs,n:skus.length,full,any,manual:k!=="recibido"&&p.estado==="recibido"}}
+const npTracked=()=>pedList().filter(p=>(p.enviado||p.estado==="enviado"||p.estado==="recibido")&&p.estado!=="anulado");
+/* notas con ese producto pendiente de recibir (para vincular una entrada) */
+function npOpenFor(sku){return npTracked().filter(p=>(p.items||[]).some(i=>i.sku===sku)).map(p=>{const g=npSeg(p);return {p,req:g.req.get(sku)||0,rec:g.rec.get(sku)||0}}).filter(x=>x.rec<x.req-1e-9)}
+/* selector de NP en el formulario de movimientos (solo entradas) */
+function npSelRefresh(){const w=$("#m-np-wrap");if(!w)return;const sku=parseSku($("#m-prod").value),sel=$("#m-np");
+  if(!sku||movTipo!=="ingreso"){w.hidden=true;sel.innerHTML="";sel.dataset.sku="";return}
+  if(sel.dataset.sku===sku&&sel.options.length)return;
+  const L=npOpenFor(sku),u=(S.products.get(sku)||{}).unidad||"u";sel.dataset.sku=sku;
+  w.hidden=!L.length;
+  sel.innerHTML='<option value="">— Sin nota de pedido —</option>'+L.map(x=>`<option value="${esc(x.p.id)}">${pedNum(x.p.numero)}${x.p.nroCompras?" · Compras "+esc(x.p.nroCompras):""}${x.p.detalle?" · "+esc(x.p.detalle):""} · pedido ${fmtN(x.req)} ${esc(u)}${x.rec?", recibido "+fmtN(x.rec):""}</option>`).join("");
+  if(L.length===1)sel.value=L[0].p.id;
+  $("#m-np-h").textContent=L.length?(L.length===1?"Este elemento está pedido en esa nota: la entrada se vincula para el seguimiento. Elegí «Sin nota de pedido» si no corresponde.":"Este elemento está pedido en varias notas: elegí a cuál corresponde la entrada."):""}
+/* listado */
+function renderNpSeg(){
+  if($("#v-npseg").hidden)return;
+  const q=norm($("#nps-q").value),fe=$("#nps-est").value,all=npTracked();
+  const rows=all.map(p=>({p,g:npSeg(p)})).filter(x=>(!fe||x.g.k===fe)&&(!q||norm([pedNum(x.p.numero),x.p.nroCompras,x.p.detalle,x.p.solicita,x.p.area,(x.p.items||[]).map(i=>i.sku+" "+i.nombre).join(" ")].join(" ")).includes(q)));
+  const cnt=k=>all.filter(p=>npSeg(p).k===k).length;
+  $("#nps-sub").textContent=S.loadedPd===false?"Cargando…":`${all.length} nota${all.length===1?"":"s"} enviada${all.length===1?"":"s"} · ${cnt("enviada")} enviadas · ${cnt("procesada")} procesadas · ${cnt("parcial")} con entrega parcial · ${cnt("recibido")} recibidas`;
+  const tb=$("#t-nps tbody");
+  if(!all.length){tb.innerHTML='<tr><td colspan="4" class="span"><div class="empty"><b>Todavía no hay notas de pedido enviadas</b>Cuando envíes una nota de pedido a Compras aparece acá con estado Enviada.</div></td></tr>';return}
+  if(!rows.length){tb.innerHTML='<tr><td colspan="4" class="span"><div class="empty">Ninguna nota coincide con el filtro.</div></td></tr>';return}
+  tb.innerHTML=rows.map(({p,g})=>{const rv=p.respuestaCompras&&p.respuestaCompras.revisar&&!p.nroCompras;return `<tr class="click" data-nps="${esc(p.id)}">
+    <td><b class="mono">${pedNum(p.numero)}</b><div class="meta">Enviada ${esc(fmtD(p.enviado||p.fecha).split(" ")[0])}</div></td>
+    <td class="mono">${p.nroCompras?`<b>${esc(p.nroCompras)}</b>`:rv?'<span class="pill warn">Respuesta para revisar</span>':'<span class="meta">—</span>'}</td>
+    <td class="span">${p.detalle?esc(p.detalle):'<span class="meta">Sin detalle</span>'}</td>
+    <td>${npsPill(g.k)}${g.k==="parcial"?`<div class="meta">${g.full} de ${g.n} ítem${g.n===1?"":"s"} completo${g.full===1?"":"s"}</div>`:""}${g.manual?'<div class="meta">marcada recibida a mano</div>':""}</td></tr>`}).join("");
+}
+["#nps-q","#nps-est"].forEach(x=>$(x).addEventListener("input",renderNpSeg));
+$("#t-nps").addEventListener("click",e=>{const r=e.target.closest("[data-nps]");if(r)openNpSeg(r.dataset.nps)});
+$("#nps-xls").addEventListener("click",async()=>{const L=npTracked();if(!L.length){toast("No hay notas para exportar.");return}
+  try{await loadXlsx()}catch(e){toast("No se pudo cargar el generador de Excel.");return}
+  const a=[["NP","Nº Compras","Detalle","Estado","Fecha de envío","Ítems recibidos completos","Ítems pedidos"]].concat(L.map(p=>{const g=npSeg(p);return [pedNum(p.numero),p.nroCompras||"",p.detalle||"",NPS_EST[g.k][1],fmtD(p.enviado||p.fecha).split(" ")[0],g.full,g.n]}));
+  const ws=XLSX.utils.aoa_to_sheet(a);ws["!cols"]=[{wch:10},{wch:14},{wch:24},{wch:16},{wch:13},{wch:12},{wch:10}];const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Seguimiento NP");
+  save(`seguimiento-np-${todayStr()}.xlsx`,new Blob([XLSX.write(wb,{bookType:"xlsx",type:"array"})]),{title:"Seguimiento de notas de pedido al "+todayStr().split("-").reverse().join("/")})});
+/* detalle de una nota */
+function openNpSeg(id){const p=S.peds.get(id);if(!p)return;const g=npSeg(p),R=p.respuestaCompras;
+  const items=Array.from(g.req.entries()).map(([sku,req])=>{const it=(p.items||[]).find(i=>i.sku===sku)||{},rec=g.rec.get(sku)||0;return {sku,nombre:it.nombre||sku,unidad:it.unidad||"u",req,rec}});
+  modal(`<div class="modal-h"><div><div class="meta">Seguimiento · enviada ${esc(fmtD(p.enviado||p.fecha))}${p.enviadoA?" a "+esc(p.enviadoA):""}</div><h3>${pedNum(p.numero)}${p.detalle?" · "+esc(p.detalle):""}</h3><div style="margin-top:4px">${npsPill(g.k)}</div></div><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
+   <form class="form" id="f-nps" autocomplete="off" style="padding:18px">
+     <div class="field"><label class="lb" for="nps-nro">Nº de NP de Compras</label><input type="text" id="nps-nro" value="${esc(p.nroCompras||"")}" placeholder="${window.DEP?"Se completa solo con la respuesta de Compras (ej.: NP-2026-0001)":"Número asignado por Compras (ej.: NP-2026-0001)"}"><span class="hint">${p.nroCompras?`Cargado ${p.procesadoVia==="correo"?"automáticamente desde el correo de Compras":"a mano"}${p.procesado?" el "+esc(fmtD(p.procesado)):""}`:window.DEP?"Se completa solo cuando llega la respuesta de Compras a la casilla de la app. También lo podés cargar a mano.":"Cargalo cuando Compras responda el correo."}</span></div>
+     <div class="field"><label class="lb" for="nps-det">Detalle del pedido</label><input type="text" id="nps-det" list="dl-npdet" value="${esc(p.detalle||"")}" placeholder="Insumos taller, Repuestos equipos, Librería…"></div>
+     ${R?`<div class="field full"><div class="banner ${R.revisar&&!p.nroCompras?"warn":"ok"}" style="margin:0;display:grid;gap:4px"><b>Respuesta de Compras · ${esc(fmtD(R.fecha))}${R.de?" · "+esc(R.de):""}</b>${R.revisar&&!p.nroCompras?"<span>No encontré el número con seguridad. Revisá el texto y cargalo arriba.</span>":""}<span class="meta" style="white-space:pre-wrap">${esc((R.extracto||"").slice(0,600))}</span>${(R.candidatos||[]).length&&!p.nroCompras?`<span>Posibles números: ${R.candidatos.map(c=>`<button type="button" class="btn sm" data-npscand="${esc(c)}">${esc(c)}</button>`).join(" ")}</span>`:""}</div></div>`:""}
+     <div class="field full"><div class="lb" style="margin-bottom:6px">Ítems de la nota (${g.full} de ${g.n} recibidos completos)</div>
+       <div class="card table-wrap"><table class="prev"><thead><tr><th>Elemento</th><th class="r">Pedido</th><th class="r">Recibido</th><th class="r">Pendiente</th></tr></thead><tbody>${items.map(i=>`<tr><td class="wrap"><div class="mono meta">${esc(i.sku)}</div>${esc(i.nombre)}</td><td class="r num">${fmtN(i.req)} <span class="unit">${esc(i.unidad)}</span></td><td class="r num"><b${i.rec>=i.req-1e-9?' style="color:var(--ok)"':""}>${fmtN(i.rec)}</b></td><td class="r num">${i.rec>=i.req-1e-9?'<span class="pill ok">Completo</span>':fmtN(Math.round((i.req-i.rec)*1000)/1000)}</td></tr>`).join("")}</tbody></table></div></div>
+     <div class="field full"><div class="lb" style="margin-bottom:6px">Entradas vinculadas (${g.movs.length})</div>${g.movs.length?`<div class="card table-wrap"><table class="prev"><tbody>${g.movs.map(m=>`<tr><td class="meta mono">${esc(fmtD(m.fecha))}</td><td><span class="mono meta">${esc(m.sku)}</span> ${esc(m.nombre||"")}</td><td class="r num">+${fmtN(m.cantidad)}</td><td class="meta">${esc(m.origen||"")}${m.remito?" · "+esc(m.remito):""}</td></tr>`).join("")}</tbody></table></div>`:'<div class="meta">Todavía no hay entradas vinculadas. Al registrar la Entrada de un elemento pedido, elegí esta nota en el campo «Nota de pedido».</div>'}</div>
+     <div class="form-actions" style="display:flex;flex-wrap:wrap"><button type="button" class="btn" id="nps-np" style="margin-right:auto">Ver la nota de pedido</button><button type="button" class="btn" data-close>Cerrar</button><button type="submit" class="btn primary need-dep">Guardar</button></div>
+   </form>`,"wide");
+  $$("[data-npscand]").forEach(b=>b.onclick=()=>{$("#nps-nro").value=b.dataset.npscand;$("#nps-nro").focus()});
+  $("#nps-np").onclick=()=>openPed(id);
+  $("#f-nps").addEventListener("submit",async e=>{e.preventDefault();if(!guardWrite("deposito"))return;
+    const nro=npComprasNorm($("#nps-nro").value),det=$("#nps-det").value.trim(),up={detalle:det,actualizado:new Date().toISOString()};
+    if(nro!==(p.nroCompras||"")){up.nroCompras=nro;up.procesado=nro?new Date().toISOString():"";up.procesadoVia=nro?"manual":"";up.procesadoPor=myId||""}
+    try{await db.doc("pedidos/"+id).update(up);S.peds.set(id,Object.assign({},S.peds.get(id)||p,up));toast(pedNum(p.numero)+" actualizada");closeModal();refreshNpDl();renderNpSeg()}catch(err){writeError(err)}});
+}
+/* app de Google: lectura automática de las respuestas de Compras */
+async function npMailInfo(){const box=$("#nps-auto");if(!box)return;
+  if(!window.DEP){box.innerHTML='<span class="meta">En esta versión el Nº de Compras se carga a mano desde cada nota. La lectura automática del correo de Compras funciona en la aplicación de Google.</span>';return}
+  try{const j=await DEP.call("npMailInfo");const u=j.ultima;
+    box.innerHTML=`<span class="meta">${j.programado?`Lectura automática de las respuestas de Compras en ${esc(j.casilla||"la casilla de la app")}: cada ${j.minutos} minutos.`:"La lectura automática todavía no está activada: falta ejecutar instalarLecturaCompras() en Apps Script (ver instrucciones)."}${u?` Última revisión: ${esc(fmtD(u.fecha))}${u.procesadas?` · ${u.procesadas} respuesta${u.procesadas===1?"":"s"} nueva${u.procesadas===1?"":"s"}`:""}${u.error?" · error: "+esc(u.error):""}`:""}</span> <button class="btn sm need-dep" id="nps-now">Revisar el correo ahora</button>`;
+    const b=$("#nps-now");if(b)b.onclick=async()=>{b.disabled=true;b.textContent="Revisando…";try{const r=await DEP.call("npMailNow");toast(r.procesadas?`${r.procesadas} respuesta${r.procesadas===1?"":"s"} de Compras procesada${r.procesadas===1?"":"s"}`:"No hay respuestas nuevas de Compras");npMailInfo()}catch(e){toast("No se pudo revisar el correo: "+(e.message||"error"));b.disabled=false;b.textContent="Revisar el correo ahora"}}}
+  catch(e){box.innerHTML='<span class="meta">No se pudo consultar la lectura automática del correo.</span>'}}
+
 /* ---------- QR ---------- */
 function qrText(sku){const b=(S.config.baseUrl||"").trim();return b?b.split("#")[0]+"#"+sku:sku}
 function qrDataUrl(text,size){
@@ -1547,7 +1651,7 @@ async function renderHist(){
       <td class="span"><span class="mono meta">${esc(m.sku)}</span> <span class="name">${esc(m.nombre||(p&&p.nombre)||"")}</span></td>
       <td class="r"><span class="qty ${m.tipo} num" style="font-weight:600">${sign}${fmtN(Math.abs(m.cantidad))}</span><span class="unit">${esc((p&&p.unidad)||"u")}</span></td>
       <td class="span">${od}</td>
-      <td class="span"><span class="meta">Autorizó:</span> ${esc(m.autoriza||"—")}${m.obra?`<div class="meta">Obra: ${esc(m.obra)}</div>`:""}${m.remito?`<div class="meta">Doc: ${esc(m.remito)}</div>`:""}${carga}</td>
+      <td class="span"><span class="meta">Autorizó:</span> ${esc(m.autoriza||"—")}${m.obra?`<div class="meta">Obra: ${esc(m.obra)}</div>`:""}${m.remito?`<div class="meta">Doc: ${esc(m.remito)}</div>`:""}${m.np?`<div class="meta">Nota de pedido: ${esc(m.np)}</div>`:""}${carga}</td>
       <td class="span meta">${esc(m.obs||"")}${m.ediciones&&m.ediciones.length?`<div class="meta">✎ editado</div>`:""}${movEditBtn(m)}</td></tr>`}).join("");
   $("#h-more").hidden=rows.length<=histLimit;
 }
@@ -1575,7 +1679,7 @@ $("#p-q").addEventListener("input",renderProd);
 $("#t-prod").addEventListener("click",e=>{const ed=e.target.closest("[data-edit]");if(ed){e.stopPropagation();openProductForm(ed.dataset.edit);return}const r=e.target.closest("tr[data-sku]");if(r)openProduct(r.dataset.sku)});
 $("#btn-new-prod").addEventListener("click",()=>openProductForm(null));
 
-function renderAll(){if(ROUTE.it&&ROUTE.it.view==="shist")setTimeout(renderSHist,0);if(ROUTE.it&&ROUTE.it.view==="lbl"&&!$("#l-rows"))openLabels([],$("#lbl-host"));recompute();renderLists();renderStock();renderInv();renderProd();renderProv();renderPed();renderHome();origenHint();if(!$("#v-hist").hidden)renderHist();updatePreview();if(currentModalSku&&S.products.has(currentModalSku))openProduct(currentModalSku,true)}
+function renderAll(){if(ROUTE.it&&ROUTE.it.view==="shist")setTimeout(renderSHist,0);if(ROUTE.it&&ROUTE.it.view==="lbl"&&!$("#l-rows"))openLabels([],$("#lbl-host"));recompute();renderLists();renderStock();renderInv();renderNpSeg();renderProd();renderProv();renderPed();renderHome();origenHint();if(!$("#v-hist").hidden)renderHist();updatePreview();if(currentModalSku&&S.products.has(currentModalSku))openProduct(currentModalSku,true)}
 
 /* ---------- modal ---------- */
 let currentModalSku=null;
@@ -1749,6 +1853,7 @@ $("#m-tipo").addEventListener("click",e=>{const b=e.target.closest("button[data-
 function nowLocal(){const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16)}
 function startMov(sku,tipo){tipo=tipo||"ingreso";const pp=S.products.get(sku);const sc=pp&&Object.keys(SCOPES).find(k=>SCOPES[k].test(pp));go(tipo==="ajuste"?"productos/ajuste":sc==="inv"?"productos/inv-"+(tipo==="ingreso"?"entrada":"salida"):(sc||"productos")+"/"+(tipo==="ingreso"?"entrada":"salida"),{tipo});setTipo(tipo);const p=S.products.get(sku);if(p)$("#m-prod").value=p.sku+" · "+p.nombre;$("#m-fecha").value=nowLocal();updatePreview();setTimeout(()=>$("#m-cant").focus(),50)}
 function updatePreview(){
+  try{npSelRefresh()}catch(e){}
   const sku=parseSku($("#m-prod").value),w=$("#m-preview-wrap");
   if(!sku){w.hidden=true;return}
   const p=S.products.get(sku),cur=stockOf(sku),q=movQty();
@@ -1764,7 +1869,7 @@ $("#m-cant").addEventListener("input",()=>{unHint();updatePreview()});
 $("#m-un").addEventListener("change",()=>{unHint();updatePreview()});
 $("#m-prod").addEventListener("input",unRefresh);
 $("#m-doc").addEventListener("input",()=>docHint($("#m-doc"),$("#m-doc-h")));
-$("#f-mov").addEventListener("reset",()=>setTimeout(()=>{$("#m-doc-h").innerHTML="";$("#m-fecha").value=nowLocal();UN_SKU=null;unRefresh();mAttClear();if(MDP)MDP.clear();updatePreview();origenHint()},0));
+$("#f-mov").addEventListener("reset",()=>setTimeout(()=>{$("#m-np").dataset.sku="";$("#m-doc-h").innerHTML="";$("#m-fecha").value=nowLocal();UN_SKU=null;unRefresh();mAttClear();if(MDP)MDP.clear();updatePreview();origenHint()},0));
 $("#f-mov").addEventListener("submit",async e=>{
   e.preventDefault();if(!guardWrite(movTipo==="ajuste"?"admin":"deposito"))return;
   const sku=parseSku($("#m-prod").value);
@@ -1792,6 +1897,7 @@ $("#f-mov").addEventListener("submit",async e=>{
   const body={obra:MOV_SCOPE&&!met?$("#m-obra").value.trim():"",sku,nombre:p.nombre,tipo:movTipo,cantidad:q,origen:movTipo==="ingreso"?(prov?prov.razonSocial:origen):"",proveedorId:prov?prov.id:"",destino:movTipo==="egreso"?(met?MET_CAT:destino):"",solicitante:movTipo==="egreso"?retira:"",autoriza:met||movTipo==="ingreso"?"":aut,remito:met&&movTipo==="egreso"?"":docN,obs:$("#m-obs").value.trim(),fecha,by:myId||""};
   if(met)body.nivel="metal";if(pr){body.presN=pr.n;body.presCant=cnt;body.presF=+pr.f}
   if(despues<0&&movTipo!=="ingreso")body.stockNegativo={antes,despues};
+  if(movTipo==="ingreso"&&$("#m-np").value&&!$("#m-np-wrap").hidden){const np=S.peds.get($("#m-np").value);if(np){body.npId=np.id;body.np=pedNum(np.numero)}}
   const dId=(MDP&&movTipo!=="ajuste"?MDP.get():null)||((docByKey(body.remito)||{}).id)||null;if(dId){body.docId=dId;if(!body.remito){const dd=S.docs.get(dId);if(dd)body.remito=dd.numero}}
   const btn=$("#m-submit");btn.disabled=true;
   const useAtt=movTipo!=="ajuste"&&M_ATT.length;
@@ -3899,6 +4005,7 @@ function openMovEdit(id){
      <div class="field"><label class="lb" for="me-ob">N° de obra${opt}</label><input type="text" id="me-ob" value="${esc(m.obra||"")}"></div>`:""}
      <div class="field"${isIn&&!m.autoriza?" hidden":""}><label class="lb" for="me-a">Autoriza</label><input type="text" id="me-a" list="dl-personas" value="${esc(m.autoriza||"")}"></div>
      <div class="field"><label class="lb" for="me-r">Nº de registro (remito / factura)${opt}</label><input type="text" id="me-r" list="dl-docnum" autocomplete="off" value="${esc(m.remito||"")}"><span class="hint" id="me-r-h"></span></div>
+     ${isIn?(()=>{const L=npTracked().filter(np=>(np.items||[]).some(i=>i.sku===m.sku)||np.id===m.npId);return L.length?`<div class="field"><label class="lb" for="me-np">Nota de pedido</label><select id="me-np"><option value="">— Sin nota de pedido —</option>${L.map(np=>`<option value="${esc(np.id)}"${np.id===m.npId?" selected":""}>${pedNum(np.numero)}${np.nroCompras?" · Compras "+esc(np.nroCompras):""}${np.detalle?" · "+esc(np.detalle):""}</option>`).join("")}</select></div>`:""})():""}
      <div class="field full"><label class="lb" for="me-obs">Observaciones</label><textarea id="me-obs">${esc(m.obs||"")}</textarea></div>
      ${(m.adjuntos||[]).length?`<div class="field full"><span class="lb">Imágenes cargadas en el movimiento (anteriores)</span><div class="att-grid" id="me-att"></div><span class="hint">Los documentos nuevos se cargan en Movimientos diarios › Cargar documentos. Tocá ✕ para quitar una de estas.</span></div>`:'<div id="me-att" hidden></div>'}
      <div class="field full" id="me-warn" hidden></div>
@@ -3923,6 +4030,7 @@ function openMovEdit(id){
     if(pr&&!Number.isInteger(parseNum($("#me-cant").value))){toast(`Indicá cuántas unidades de "${pr.n}" (número entero).`);return}
     const fv=$("#me-f").value,fecha=fv?new Date(fv).toISOString():m.fecha;
     const patch={cantidad:q,fecha,autoriza:$("#me-a").value.trim(),remito:$("#me-r").value.trim(),obs:$("#me-obs").value.trim()};
+    if($("#me-np")){const np=S.peds.get($("#me-np").value);patch.npId=np?np.id:"";patch.np=np?pedNum(np.numero):""}
     if(isIn)patch.origen=normEq($("#me-o").value);
     if(isOut){patch.destino=normEq($("#me-d").value);patch.solicitante=$("#me-s").value.trim();patch.obra=$("#me-ob").value.trim()}
     if(!lockQty&&!isAdj){if(pr){patch.presN=pr.n;patch.presCant=parseNum($("#me-cant").value);patch.presF=+pr.f}else{patch.presN=null;patch.presCant=null;patch.presF=null}}
@@ -5050,7 +5158,7 @@ function lsGetJ(k){try{return JSON.parse(localStorage.getItem(k)||"null")}catch(
 function openPedForm(id){
   const ex=id?S.peds.get(id):null;
   if(!prodList().length){toast("Primero cargá productos.");return}
-  PF.editing=ex;PF.cur=null;PF.editIx=-1;
+  PF.editing=ex;PF.cur=null;PF.editIx=-1;refreshNpDl();
   PF.list=ex?(ex.items||[]).map(i=>({sku:i.sku,cantidad:i.cantidad,solicitante:i.solicitante||ex.solicita||"",area:i.area||ex.area||"",imputacion:i.imputacion||ex.imputacion||"",prioridad:i.prioridad||ex.prioridad||"normal",plazo:i.plazo!=null?i.plazo:"",obs:i.obs||"",codProv:i.codProv||""})):pfLoadDraft();
   modal(`<div class="modal-h"><div><h3>${ex?"Editar "+pedNum(ex.numero):"Nueva nota de pedido"}</h3><div class="meta">1 · Buscá el elemento &nbsp;›&nbsp; 2 · Completá su línea &nbsp;›&nbsp; 3 · Cargalo al listado o generá la NP</div></div><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
    <div class="np-body">
@@ -5075,6 +5183,7 @@ function openPedForm(id){
      </section>
      <section class="np-step np-act">
        <div class="np-h"><span class="np-n">3</span><b>Cargar o generar</b><span class="meta" id="pf-hint" style="margin-left:6px"></span></div>
+       <div class="field" style="max-width:420px"><label class="lb" for="pf-det">Detalle del pedido <span class="meta" style="font-weight:400;text-transform:none;letter-spacing:0">(para el seguimiento)</span></label><input type="text" id="pf-det" list="dl-npdet" value="${esc(ex&&ex.detalle||"")}" placeholder="Insumos taller, Repuestos equipos, Repuestos motor, Librería, Limpieza…"></div>
        <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
          <button type="button" class="btn" data-close style="margin-right:auto">${ex?"Cancelar":"Cerrar"}</button>
          <button type="button" class="btn" id="pf-add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg><span>Cargar al listado</span></button>
@@ -5174,8 +5283,9 @@ async function pfGenerate(){
   const lims=items.map(i=>i.limite).filter(Boolean).sort();
   const body={numero:ex?ex.numero:(pedList().reduce((m,p)=>Math.max(m,p.numero||0),0)+1),fecha:emi,estado:ex?ex.estado:"pendiente",
     solicita:uniq(items.map(i=>i.solicitante)).join(", "),area:uniq(items.map(i=>i.area)).join(", "),imputacion:uniq(items.map(i=>i.imputacion).filter(Boolean)).join(", "),
-    prioridad:items.some(i=>i.prioridad==="urgente")?"urgente":"normal",necesario:lims[0]||"",obs:ex?ex.obs||"":"",items,
+    prioridad:items.some(i=>i.prioridad==="urgente")?"urgente":"normal",necesario:lims[0]||"",obs:ex?ex.obs||"":"",items,detalle:($("#pf-det")?$("#pf-det").value.trim():"")||(ex&&ex.detalle)||"",
     enviado:ex?ex.enviado||"":"",enviadoA:ex?ex.enviadoA||"":"",recibido:ex?ex.recibido||"":"",by:ex?ex.by:(myId||""),actualizado:now,pdfs:ex?((S.peds.get(ex.id)||ex).pdfs||[]):[]};
+  if(ex){const cur=S.peds.get(ex.id)||ex;["nroCompras","procesado","procesadoVia","procesadoPor","respuestaCompras","enviadoPor"].forEach(k=>{if(cur[k]!=null&&cur[k]!=="")body[k]=cur[k]})}
   const b=$("#pf-go");b.disabled=true;
   try{let id=ex?ex.id:null;if(ex)await db.doc("pedidos/"+ex.id).set(body);else{const r=await db.collection("pedidos").add(body);id=r.id}
     const full=Object.assign({id},body);S.peds.set(id,full);if(!ex){PF.list=[];try{localStorage.removeItem(pfDraftKey)}catch(e){}}
@@ -5224,6 +5334,7 @@ function openPed(id){
        <span class="hint">${mailer?"Elegís los destinatarios en la agenda (o cargás uno nuevo) y el correo sale desde la cuenta de la empresa con el PDF adjunto. Al enviarla, la nota queda en estado Enviado.":"Elegís los destinatarios en la agenda (o cargás uno nuevo) y se abre tu programa de correo con el asunto y el texto: adjuntá el PDF descargado y marcá la nota como enviado."}</span>
      </div>`}
      ${p.enviado?`<div class="meta">Enviada el ${esc(fmtD(p.enviado))}${p.enviadoA?" a "+esc(p.enviadoA):""}.${p.recibido?" Recibida el "+esc(fmtD(p.recibido))+".":""}</div>`:""}
+     ${p.enviado&&p.estado!=="anulado"?`<div class="meta">Seguimiento: <b>${NPS_EST[npSeg(p).k][1]}</b>${p.nroCompras?" · Nº de Compras "+esc(p.nroCompras):""}${p.detalle?" · "+esc(p.detalle):""} · <a href="#" data-goto="compras/seguimiento">ver Seguimiento NP</a></div>`:""}
      <div id="pd-pdfs">${(p.pdfs||[]).length?`<div class="lb" style="margin-bottom:6px">PDF guardados en la base</div><div class="card table-wrap"><table class="prev"><tbody>${(p.pdfs||[]).slice().reverse().map((v,i)=>`<tr><td><a href="${esc("/_blob/"+v.id)}" target="_blank" rel="noopener" class="btn sm${i===0?" primary":""}">${i===0?"Ver PDF guardado":"Ver versión anterior"}</a></td><td class="wrap"><b>${esc(v.nombre)}</b><div class="meta">Guardado el ${esc(fmtD(v.fecha))}${i===0&&(p.pdfs||[]).length>1?" · versión actual":""}</div>${(v.envios||[]).map(e=>`<div class="meta">✉ Enviado el ${esc(fmtD(e.fecha))} a ${esc(e.para)}</div>`).join("")}</td></tr>`).join("")}</tbody></table></div>`:`<div class="meta">El PDF se guarda en la base al generarlo o descargarlo${mailer?" y al enviarlo":""}.</div>`}</div>
      <div class="form-actions" style="display:flex">
        ${p.estado==="pendiente"?`<button class="btn danger" id="pd-anul" style="margin-right:auto">Anular</button><button class="btn" id="pd-edit">Editar</button><button class="btn in" id="pd-sent">Marcar como enviado</button>`:""}
