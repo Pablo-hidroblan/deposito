@@ -1628,12 +1628,14 @@ function npRecambioWa(p,L,onDone){
   const sh=$("#rwa-share");if(sh)sh.onclick=async()=>{try{await navigator.share({text:t()})}catch(e){if(e&&e.name==="AbortError")return;$("#rwa-go").click()}};
   $("#rwa-ok").onclick=()=>{closeModal();if(onDone)onDone()};
 }
+/* app de Google: llamadas al servidor solo cuando ya hay sesión (si la app abre directo en una de estas pantallas) */
+function depCall(a,b){return new Promise((res,rej)=>{const t=()=>{if(window.DEP&&DEP.user&&DEP.user())DEP.call(a,b).then(res,rej);else setTimeout(t,400)};t()})}
 /* app de Google: lectura automática de las respuestas de Compras */
 async function npMailInfo(){const box=$("#nps-auto");if(!box)return;
   if(!window.DEP){box.innerHTML='<span class="meta">En esta versión el Nº de Compras se carga a mano desde cada nota. La lectura automática del correo de Compras funciona en la aplicación de Google.</span>';return}
-  try{const j=await DEP.call("npMailInfo");const u=j.ultima;
+  try{const j=await depCall("npMailInfo");const u=j.ultima;
     box.innerHTML=`<span class="meta">${j.programado?`Lectura automática de las respuestas de Compras en ${esc(j.casilla||"la casilla de la app")}: cada ${j.minutos} minutos.`:"La lectura automática todavía no está activada: falta ejecutar instalarLecturaCompras() en Apps Script (ver instrucciones)."}${u?` Última revisión: ${esc(fmtD(u.fecha))}${u.procesadas?` · ${u.procesadas} respuesta${u.procesadas===1?"":"s"} nueva${u.procesadas===1?"":"s"}`:""}${u.error?" · error: "+esc(u.error):""}`:""}</span> <button class="btn sm need-dep" id="nps-now">Revisar el correo ahora</button>`;
-    const b=$("#nps-now");if(b)b.onclick=async()=>{b.disabled=true;b.textContent="Revisando…";try{const r=await DEP.call("npMailNow");toast(r.procesadas?`${r.procesadas} respuesta${r.procesadas===1?"":"s"} de Compras procesada${r.procesadas===1?"":"s"}`:"No hay respuestas nuevas de Compras");npMailInfo()}catch(e){toast("No se pudo revisar el correo: "+(e.message||"error"));b.disabled=false;b.textContent="Revisar el correo ahora"}}}
+    const b=$("#nps-now");if(b)b.onclick=async()=>{b.disabled=true;b.textContent="Revisando…";try{const r=await depCall("npMailNow");toast(r.procesadas?`${r.procesadas} respuesta${r.procesadas===1?"":"s"} de Compras procesada${r.procesadas===1?"":"s"}`:"No hay respuestas nuevas de Compras");npMailInfo()}catch(e){toast("No se pudo revisar el correo: "+(e.message||"error"));b.disabled=false;b.textContent="Revisar el correo ahora"}}}
   catch(e){box.innerHTML='<span class="meta">No se pudo consultar la lectura automática del correo.</span>'}}
 
 /* ---------- QR ---------- */
@@ -2422,7 +2424,7 @@ $("#bk-zip").addEventListener("click",async()=>{if(!guardWrite("admin"))return;c
   catch(e){console.error(e);toast("No se pudo armar el ZIP. Revisá la conexión e intentá de nuevo.")}finally{btn.disabled=false;st.textContent=""}});
 
 /* ---------- Google Drive: carpeta Control y Backup ---------- */
-async function bkDrive(){if(!window.DEP)return;try{const j=await DEP.call("info");const a=$("#bk-drive-open");if(j.carpeta){a.href=j.carpeta;a.hidden=false}
+async function bkDrive(){if(!window.DEP)return;try{const j=await depCall("info");const a=$("#bk-drive-open");if(j.carpeta){a.href=j.carpeta;a.hidden=false}
   let u=null;try{u=j.ultimaExportacion&&JSON.parse(j.ultimaExportacion)}catch(e){}
   if(u)$("#bk-drive-st").textContent=`Última actualización: ${fmtD(u.fecha)}${u.errores&&u.errores.length?" · con avisos: "+u.errores.join("; "):""} · Se actualiza sola todos los días a las 20 h.`;
   bkSemShow(j.semanal)}catch(e){}}

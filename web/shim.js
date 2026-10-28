@@ -24,7 +24,10 @@
 
   /* ---------------- llamadas a la API ---------------- */
   function err(code, msg) { var e = new Error(msg || code); e.code = code; return e; }
+  /* las llamadas que necesitan sesión esperan a que haya una (al abrir la app en una pantalla que consulta al servidor) */
+  var sessOk, SESS_READY = new Promise(function (r) { sessOk = r; });
   async function call(a, body, opts) {
+    if (!SESSION && a !== 'login' && a !== 'ping') await SESS_READY;
     var payload = Object.assign({ a: a, s: SESSION }, body || {});
     var res;
     try { res = await fetch(API, { method: 'POST', body: JSON.stringify(payload), redirect: 'follow' }); }
@@ -97,7 +100,7 @@
     showGate('Verificando la cuenta…');
     try {
       var j = await call('login', { idToken: idToken }, { quiet: true });
-      SESSION = j.session; USER = j.user;
+      SESSION = j.session; USER = j.user; sessOk();
       ls.set(LS_S, JSON.stringify({ s: SESSION, u: USER }));
       tellSW();
       if (authLost) { location.reload(); return; }   // se volvió a ingresar después de vencer la sesión
@@ -125,7 +128,7 @@
   async function ensureLogin() {
     var saved = null; try { saved = JSON.parse(ls.get(LS_S) || 'null'); } catch (e) { }
     if (saved && saved.s) {
-      SESSION = saved.s; USER = saved.u;
+      SESSION = saved.s; USER = saved.u; sessOk();
       tellSW();
       // validar en segundo plano; si venció, aparece la pantalla de ingreso
       call('me').then(function (j) { USER = j.user; ls.set(LS_S, JSON.stringify({ s: SESSION, u: USER })); refreshUserUi(); }, function () { });
