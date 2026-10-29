@@ -775,6 +775,7 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
         <button class="btn" id="inv-xls"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Exportar como…</button>
         <button class="btn in need-dep" data-goto="productos/inv-entrada" id="inv-in"></button>
         <button class="btn out need-dep" data-goto="productos/inv-salida" id="inv-out"></button>
+        <button class="btn need-adm" id="inv-move">Pasar elementos al inventario</button>
         <button class="btn primary need-dep" id="inv-new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Nuevo elemento</button>
       </div>
     </div>
@@ -1403,6 +1404,29 @@ function renderInv(){
 ["#inv-q","#inv-est","#inv-eq","#inv-ub"].forEach(x=>$(x).addEventListener("input",renderInv));
 $("#inv-q").addEventListener("keydown",e=>{if(e.key!=="Enter")return;const sku=parseSku(e.target.value);if(sku&&isInv(S.products.get(sku))){e.target.value="";renderInv();openProduct(sku)}});
 $("#t-inv").addEventListener("click",e=>{const r=e.target.closest("tr[data-sku]");if(r)openProduct(r.dataset.sku)});
+/* pasar productos existentes (Insumos Equipos o Metalúrgicos) al inventario general, con su stock e historial */
+$("#inv-move").addEventListener("click",()=>{if(!guardWrite("admin"))return;const SEL=new Set();
+  const cands=()=>prodList().filter(p=>!isInv(p)&&!/^T-MET-/i.test(p.sku)&&!["grava","bentonita","tripolifosfato"].some(k=>SCOPES[k].test(p)));
+  modal(`<div class="modal-h"><div><h3>Pasar elementos al inventario general</h3><div class="meta">Elegí productos del catálogo: pasan al inventario general con su stock y su historial, y dejan de figurar en Insumos Equipos.</div></div><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
+   <div class="form" style="padding:18px">
+     <div class="field full"><input type="search" id="im-q" placeholder="Buscar por SKU o nombre (ej.: kit filtros)" autocomplete="off"></div>
+     <div class="field full"><div class="card" id="im-list" style="max-height:340px;overflow:auto"></div></div>
+     <div class="form-actions" style="display:flex;flex-wrap:wrap"><span class="meta" id="im-n" style="margin-right:auto;align-self:center"></span><button type="button" class="btn" data-close>Cancelar</button><button type="button" class="btn primary" id="im-go" disabled>Pasar al inventario</button></div>
+   </div>`,"wide");
+  const draw=()=>{const q=norm($("#im-q").value),L=cands().filter(p=>!q||norm(p.sku+" "+p.nombre+" "+(p.categoria||"")).includes(q)).slice(0,300);
+    $("#im-list").innerHTML=L.length?(q?`<label class="chk" style="display:flex;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line)"><input type="checkbox" id="im-all"${L.every(p=>SEL.has(p.sku))?" checked":""}> <b>Seleccionar los ${L.length} que coinciden</b></label>`:"")+L.map(p=>`<label class="chk" style="display:flex;gap:8px;align-items:center;padding:7px 12px;border-bottom:1px solid var(--line)"><input type="checkbox" data-imk="${esc(p.sku)}"${SEL.has(p.sku)?" checked":""}><span class="mono meta">${esc(p.sku)}</span><span style="flex:1">${esc(p.nombre)}${SCOPES.metal.test(p)?' <span class="meta">· Insumos Metalúrgicos</span>':""}</span><span class="meta num">${fmtN(stockOf(p.sku))} ${esc(p.unidad||"u")}</span></label>`).join(""):'<div class="meta" style="padding:12px">Ningún producto coincide.</div>';
+    $("#im-n").textContent=SEL.size?`${SEL.size} seleccionado${SEL.size===1?"":"s"}`:"";$("#im-go").disabled=!SEL.size};
+  $("#im-q").addEventListener("input",draw);
+  $("#im-list").addEventListener("change",e=>{if(e.target.id==="im-all"){const q=norm($("#im-q").value);cands().filter(p=>!q||norm(p.sku+" "+p.nombre+" "+(p.categoria||"")).includes(q)).slice(0,300).forEach(p=>e.target.checked?SEL.add(p.sku):SEL.delete(p.sku));draw();return}
+    const k=e.target.dataset.imk;if(!k)return;e.target.checked?SEL.add(k):SEL.delete(k);draw()});
+  $("#im-go").onclick=async()=>{if(!guardWrite("admin"))return;const b=$("#im-go");b.disabled=true;let n=0;const now=new Date().toISOString();
+    try{for(const sku of SEL){const p=S.products.get(sku);if(!p)continue;b.textContent=`Pasando ${n+1} de ${SEL.size}…`;
+        const eq=(/\bT(?:EC)?\s*-?\s*(\d{1,3})\b/i.exec(p.nombre||"")||[])[1];
+        const up={inventario:true,categoria:/metal[uú]rg/i.test(p.categoria||"")||!p.categoria?INV_CAT:p.categoria,estadoInv:p.estadoInv||"nuevo",equipo:p.equipo||(eq?"TEC"+eq:""),marca:p.marca||"",minimo:0,actualizado:now};
+        await withRetry(()=>db.doc("products/"+sku).update(up));S.products.set(sku,Object.assign({},p,up));n++}
+      closeModal();toast(`${n} elemento${n===1?"":"s"} pasado${n===1?"":"s"} al inventario general`);renderAll()}
+    catch(err){writeError(err);toast(`Se pasaron ${n} de ${SEL.size}.`);b.disabled=false;b.textContent="Pasar al inventario"}};
+  draw();setTimeout(()=>$("#im-q").focus(),30)});
 $("#inv-new").addEventListener("click",()=>{if(!guardWrite("deposito"))return;newScopedProduct("inv")});
 /* plantilla y exportación */
 const INV_COLS=["Código","Elemento","Marca / modelo","Equipo","Estado","Ubicación","Cantidad","Unidad","Observaciones"];
@@ -1836,21 +1860,24 @@ function openProduct(sku,refresh){
 function nextSku(){let max=0;for(const k of S.products.keys()){const m=/^HB-(\d+)$/i.exec(k);if(m)max=Math.max(max,+m[1])}return "HB-"+String(max+1).padStart(4,"0")}
 function openProductForm(sku,pre){
   const p=sku?S.products.get(sku):null;pre=p?{}:(pre||{});const INVF=p?isInv(p):pre.scope==="inv";
+  /* nivel del producto (solo Administrador): Insumos Equipos, Insumos Metalúrgicos o Inventario general */
+  const NIV0=INVF?"inv":(p?SCOPES.metal.test(p):pre.scope==="metal")?"metal":"equipos",SOLO=p?["grava","bentonita","tripolifosfato"].some(k=>SCOPES[k].test(p)):["grava","bentonita","tripolifosfato"].includes(pre.scope),NIVSEL=roleOk("admin")&&!SOLO;
   modal(`<div class="modal-h"><h3>${INVF?(p?"Editar elemento del inventario general":"Nuevo elemento del inventario general"):p?"Editar producto":"Nuevo producto"+(pre.scope?" de "+esc(SCOPES[pre.scope].name.toLowerCase()):"")}</h3><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
   <form class="form" id="f-prod" autocomplete="off">
     <div class="field"><label class="lb" for="p-sku">SKU interno <em>*</em></label><input type="text" id="p-sku" class="mono" value="${esc(p?p.sku:(pre.sku||nextSku()))}" ${p?"disabled":""}><span class="hint">${p?"El SKU no se cambia porque identifica al QR y al historial.":INVF?"Se sugiere el siguiente INV-. Podés usar el código que ya tenga el repuesto.":"Letras, números, guion o punto. Se sugiere el siguiente HB-."}</span></div>
     <div class="field"><label class="lb" for="p-cat">Categoría</label><input type="text" id="p-cat" list="dl-cat" value="${esc(p?p.categoria:(pre.categoria||""))}" placeholder="EPP, Lubricantes, Ferretería…"></div>
     <div class="field full"><label class="lb" for="p-nom">Nombre detallado del elemento <em>*</em></label><input type="text" id="p-nom" value="${esc(p?p.nombre:(pre.nombre||""))}" placeholder="Ej.: Guante de vaqueta reforzado talle 9"></div>
     <div class="field"><label class="lb" for="p-uni">Unidad de medida</label><input type="text" id="p-uni" list="dl-uni" value="${esc(p?p.unidad:(pre.unidad||"u"))}"><datalist id="dl-uni"><option value="u"><option value="par"><option value="m"><option value="kg"><option value="l"><option value="caja"><option value="rollo"><option value="bolsa"><option value="BigBag"><option value="tambor"></datalist></div>
-    ${INVF?`<div class="field"><label class="lb" for="p-marca">Marca / modelo</label><input type="text" id="p-marca" list="dl-invmarca" value="${esc(p?p.marca||"":"")}" placeholder="Ej.: Caterpillar 3306"></div>
-    <div class="field"><label class="lb" for="p-equipo">Equipo al que pertenece</label><input type="text" id="p-equipo" list="dl-equipos" value="${esc(p?p.equipo||"":"")}" placeholder="Ej.: TEC48, compresor, grupo electrógeno"></div>
-    <div class="field"><label class="lb" for="p-estinv">Estado</label><select id="p-estinv">${Object.entries(INV_EST).map(([k,v])=>`<option value="${k}"${(p?p.estadoInv||"nuevo":"nuevo")===k?" selected":""}>${v[1]}</option>`).join("")}</select></div>`:""}
-    <div class="field"${INVF?" hidden":""}><label class="lb" for="p-min">Stock mínimo</label><input type="number" id="p-min" step="any" min="0" inputmode="decimal" value="${p&&p.minimo?p.minimo:""}" placeholder="Aviso de reposición"></div>
+    ${NIVSEL?`<div class="field"><label class="lb" for="p-nivel">Nivel</label><select id="p-nivel"><option value="equipos"${NIV0==="equipos"?" selected":""}>Insumos Equipos</option><option value="metal"${NIV0==="metal"?" selected":""}>Insumos Metalúrgicos</option><option value="inv"${NIV0==="inv"?" selected":""}>Inventario general</option></select><span class="hint">Cambiá el nivel para pasar el elemento (con su stock e historial) a otro listado.</span></div>`:""}
+    ${INVF||NIVSEL?`<div class="field p-invf"${INVF?"":" hidden"}><label class="lb" for="p-marca">Marca / modelo</label><input type="text" id="p-marca" list="dl-invmarca" value="${esc(p?p.marca||"":"")}" placeholder="Ej.: Caterpillar 3306"></div>
+    <div class="field p-invf"${INVF?"":" hidden"}><label class="lb" for="p-equipo">Equipo al que pertenece</label><input type="text" id="p-equipo" list="dl-equipos" value="${esc(p?p.equipo||"":"")}" placeholder="Ej.: TEC48, compresor, grupo electrógeno"></div>
+    <div class="field p-invf"${INVF?"":" hidden"}><label class="lb" for="p-estinv">Estado</label><select id="p-estinv">${Object.entries(INV_EST).map(([k,v])=>`<option value="${k}"${(p?p.estadoInv||"nuevo":"nuevo")===k?" selected":""}>${v[1]}</option>`).join("")}</select></div>`:""}
+    <div class="field p-noinv"${INVF?" hidden":""}><label class="lb" for="p-min">Stock mínimo</label><input type="number" id="p-min" step="any" min="0" inputmode="decimal" value="${p&&p.minimo?p.minimo:""}" placeholder="Aviso de reposición"></div>
     <div class="field"><label class="lb" for="p-ubi">Ubicación en depósito</label><input type="text" id="p-ubi" value="${esc(p?p.ubicacion:(pre.ubicacion||""))}" placeholder="Estantería A · Nivel 2"></div>
     ${p?`<div class="field"><label class="lb" for="p-stk">Cantidad en depósito</label><input type="text" id="p-stk" inputmode="decimal" value="${String(stockOf(p.sku)).replace(".",",")}"><span class="hint">Stock actual: ${fmtN(stockOf(p.sku))} ${esc(p.unidad||"u")}. Si lo cambiás, queda registrado como ajuste.</span></div>
     <div class="field" id="p-stk-aut-w" hidden><label class="lb" for="p-stk-aut">Autoriza el cambio de stock <em>*</em></label><input type="text" id="p-stk-aut" list="dl-personas" placeholder="Nombre y apellido"></div>`:""}
     ${p?"":`<div class="field"><label class="lb" for="p-ini">Stock inicial</label><input type="number" id="p-ini" step="any" min="0" inputmode="decimal" placeholder="0"><span class="hint">Se registra como ingreso con origen "Stock inicial".</span></div>`}
-    <div class="field full"${INVF?" hidden":""}><span class="lb">Presentaciones <span class="meta" style="font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></span>
+    <div class="field full p-noinv"${INVF?" hidden":""}><span class="lb">Presentaciones <span class="meta" style="font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></span>
       <div id="p-pres" class="pres-ed"></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button type="button" class="btn sm" id="p-pres-add">+ Agregar presentación</button>
       <label class="chk"><input type="checkbox" id="p-solo"${p&&p.soloPres?" checked":""}> En las salidas, entregar solo en estas presentaciones</label></div>
@@ -1858,6 +1885,10 @@ function openProductForm(sku,pre){
     <div class="field full"><label class="lb" for="p-obs">Notas del producto</label><textarea id="p-obs" placeholder="${INVF?"Especificación, número de parte, de dónde viene…":"Marca, especificación, proveedor habitual…"}">${esc(p?p.obs:"")}</textarea></div>
     <div class="form-actions">${p?`<button type="button" class="btn danger" id="p-del" style="margin-right:auto">Eliminar</button>`:""}<button type="button" class="btn" data-close>Cancelar</button><button type="submit" class="btn primary">${p?"Guardar cambios":INVF?"Agregar al inventario":"Crear producto"}</button></div>
   </form>`);
+  const nvs=$("#p-nivel");if(nvs)nvs.addEventListener("change",()=>{const inv=nvs.value==="inv";$$("#f-prod .p-invf").forEach(x=>x.hidden=!inv);$$("#f-prod .p-noinv").forEach(x=>x.hidden=inv);
+    if(nvs.value==="metal"&&!/metal[uú]rg/i.test($("#p-cat").value))$("#p-cat").value=MET_CAT;
+    if(nvs.value!=="metal"&&/metal[uú]rg/i.test($("#p-cat").value))$("#p-cat").value="";
+    if(inv&&!$("#p-cat").value.trim())$("#p-cat").value=INV_CAT;if(!inv&&$("#p-cat").value===INV_CAT)$("#p-cat").value=""});
   const PE=presOf(p||{}).map(x=>({n:x.n,f:x.f}));
   const drawPE=()=>{$("#p-pres").innerHTML=PE.map((x,k)=>`<div class="pres-row"><input type="text" data-pe="n" data-k="${k}" value="${esc(x.n)}" placeholder="Nombre (ej.: Caja 20 kg)"><span class="meta">=</span><input type="number" step="any" min="0" data-pe="f" data-k="${k}" value="${x.f||""}" placeholder="Cant."><span class="unit pe-u">${esc($("#p-uni").value||"u")}</span><button type="button" class="btn ghost sm" data-pedel="${k}" aria-label="Quitar">✕</button></div>`).join("")};
   drawPE();
@@ -1873,7 +1904,7 @@ function openProductForm(sku,pre){
     if(!SKU_RE.test(s)){toast("El SKU solo admite letras, números, guion, punto o guion bajo (sin espacios).");return}
     if(!p&&parseSku(s)){toast("Ya existe un producto con ese SKU.");return}
     if(!nombre){toast("Falta el nombre del elemento.");return}
-    if(!p&&pre.scope&&!INVF&&!SCOPES[pre.scope].test({sku:s,nombre,categoria:$("#p-cat").value})){toast(pre.scope==="metal"?`Para que aparezca en Insumos metalúrgicos, la categoría tiene que ser "${MET_CAT}" o el SKU empezar con ${pre.prefix}.`:`Para que aparezca en ${SCOPES[pre.scope].name}, el nombre tiene que incluir "${SCOPES[pre.scope].name}" o el SKU empezar con ${pre.prefix}.`);return}
+    if(!p&&pre.scope&&!INVF&&(!nvs||nvs.value===NIV0)&&!SCOPES[pre.scope].test({sku:s,nombre,categoria:$("#p-cat").value})){toast(pre.scope==="metal"?`Para que aparezca en Insumos metalúrgicos, la categoría tiene que ser "${MET_CAT}" o el SKU empezar con ${pre.prefix}.`:`Para que aparezca en ${SCOPES[pre.scope].name}, el nombre tiene que incluir "${SCOPES[pre.scope].name}" o el SKU empezar con ${pre.prefix}.`);return}
     let stkMov=null;
     if(p){const nv=parseNum($("#p-stk").value);if(nv==null||nv<0){toast("La cantidad en depósito debe ser un número mayor o igual a cero.");$("#p-stk").focus();return}
       if(Math.round((nv-stockOf(p.sku))*1000)/1000){const au=$("#p-stk-aut").value.trim();if(!au){toast("Indicá quién autoriza el cambio de stock.");$("#p-stk-aut").focus();return}stkMov=stockMov(Object.assign({},p,{nombre}),nv,au,"Corrección desde la ficha del producto","")}}
@@ -1881,7 +1912,13 @@ function openProductForm(sku,pre){
     if(pres.some(x=>!x.n||!(x.f>0))){toast("Cada presentación necesita nombre y una cantidad mayor a cero.");return}
     const body={sku:s,nombre,categoria:$("#p-cat").value.trim(),unidad:$("#p-uni").value.trim()||"u",minimo:+$("#p-min").value||0,ubicacion:$("#p-ubi").value.trim(),obs:$("#p-obs").value.trim(),presentaciones:pres,soloPres:!!(pres.length&&$("#p-solo").checked),creado:p?p.creado:new Date().toISOString(),actualizado:new Date().toISOString()};
     if(p&&p.porCaja)body.porCaja=p.porCaja;
-    if(INVF){Object.assign(body,{inventario:true,categoria:body.categoria||INV_CAT,marca:$("#p-marca").value.trim(),equipo:normEq($("#p-equipo").value.trim()),estadoInv:$("#p-estinv").value,minimo:0,presentaciones:[],soloPres:false})}
+    const NIV=nvs?nvs.value:NIV0;
+    if(NIV!=="inv"&&/^INV-/i.test(s)){toast("Los códigos INV- son siempre del Inventario general.");return}
+    if(NIV!=="metal"&&/^T-MET-/i.test(s)){toast("Los códigos T-MET- son siempre de Insumos Metalúrgicos.");return}
+    if(NIV==="metal"&&!/metal[uú]rg/i.test(body.categoria)&&!/^T-MET-/i.test(s))body.categoria=MET_CAT;
+    if(NIV!=="metal"&&/metal[uú]rg/i.test(body.categoria))body.categoria="";
+    if(NIV!=="inv"&&body.categoria===INV_CAT)body.categoria="";
+    if(NIV==="inv"){Object.assign(body,{inventario:true,categoria:body.categoria||INV_CAT,marca:$("#p-marca").value.trim(),equipo:normEq($("#p-equipo").value.trim()),estadoInv:$("#p-estinv").value,minimo:0,presentaciones:[],soloPres:false})}
     try{
       await db.doc("products/"+s).set(body);
       const ini=p?0:+$("#p-ini").value||0;
@@ -5079,7 +5116,7 @@ function renderRecDet(fromSnap){
     const oc=L.some(l=>l.obs);
     $("#rec-kpi").innerHTML=`<div class="kpi"><small>Productos contados</small><b>${L.length}</b><span class="meta">${esc(recAlcName(r))}</span></div>`;
     th.innerHTML=`<tr><th>Producto</th><th class="r">Cantidad contada</th>${oc?"<th>Observación</th>":""}</tr>`;
-    const V=L.slice().sort((a,b)=>String(a.nombre||"").localeCompare(String(b.nombre||""),"es")).filter(l=>!q||norm(l.sku+" "+l.nombre+" "+(l.obs||"")).includes(q));
+    const V=recSortLines(L).filter(l=>!q||norm(l.sku+" "+l.nombre+" "+(l.obs||"")).includes(q));
     tb.innerHTML=!S.loadedRL?`<tr><td colspan="3" class="span"><div class="empty">Cargando…</div></td></tr>`:V.length?V.map(l=>`<tr><td><div class="mono meta">${esc(l.sku)}</div>${esc(l.nombre)}</td><td class="r num"><b>${fmtN(l.contado)}</b> <span class="unit">${esc(l.unidad||"u")}</span></td>${oc?`<td>${esc(l.obs||"")}</td>`:""}</tr>`).join(""):`<tr><td colspan="3" class="span"><div class="empty">${L.length?"Ningún producto coincide con el filtro.":"El recuento no tiene productos contados."}</div></td></tr>`}
   else{
   $("#rec-kpi").innerHTML=`<div class="kpi"><small>Productos contados</small><b>${L.length}</b><span class="meta">${L.length-dif.length} coinciden</span></div><div class="kpi"><small>Pendientes de contar</small><b>${NC.length}</b><span class="meta">de ${esc(recAlcName(r).toLowerCase())}</span></div><div class="kpi"><small>Con diferencia</small><b${dif.length?' style="color:var(--bad)"':""}>${dif.length}</b></div><div class="kpi"><small>Faltantes / sobrantes</small><b>${dif.filter(l=>l.dif<0).length} / ${dif.filter(l=>l.dif>0).length}</b></div>`;
@@ -5211,14 +5248,17 @@ $("#rec-xls").addEventListener("click",async()=>{const r=S.recs.get(REC_CUR);if(
   try{await loadXlsx()}catch(e){toast("No se pudo cargar el generador de Excel.");return}
   const open=r.estado==="abierto",wb=XLSX.utils.book_new();
   const head=[[r.nombre],[`${recAlcName(r)} · Realizó: ${r.responsable||""}`],[`Estado: ${(REC_EST[r.estado]||["",r.estado])[1]}${r.cerrado?" · cerrado el "+fmtD(r.cerrado)+(r.cerradoPor?" por "+r.cerradoPor:""):""}`],[]];
-  if(!open){const oc=L.some(l=>l.obs),V=L.slice().sort((a,b)=>String(a.nombre||"").localeCompare(String(b.nombre||""),"es"));
-    const a=head.concat([oc?["Producto","Cantidad contada","Unidad","Observación"]:["Producto","Cantidad contada","Unidad"]]).concat(V.map(l=>oc?[l.nombre,l.contado,l.unidad||"u",l.obs||""]:[l.nombre,l.contado,l.unidad||"u"]));
-    const ws=XLSX.utils.aoa_to_sheet(a);ws["!cols"]=[{wch:48},{wch:16},{wch:8},{wch:40}];XLSX.utils.book_append_sheet(wb,ws,"Recuento")}
-  else{const a=head.concat([["SKU","Producto","Unidad","Stock en sistema","Cantidad contada","Diferencia","Observación","Hora del conteo"]]).concat(L.map(l=>[l.sku,l.nombre,l.unidad||"u",l.sistema,l.contado,l.dif,l.obs||"",fmtD(l.ts)]));
+  if(!open){const oc=L.some(l=>l.obs),V=recSortLines(L);
+    const a=head.concat([oc?["SKU","Producto","Cantidad contada","Unidad","Observación"]:["SKU","Producto","Cantidad contada","Unidad"]]).concat(V.map(l=>oc?[l.sku,l.nombre,l.contado,l.unidad||"u",l.obs||""]:[l.sku,l.nombre,l.contado,l.unidad||"u"]));
+    const ws=XLSX.utils.aoa_to_sheet(a);ws["!cols"]=[{wch:12},{wch:48},{wch:16},{wch:8},{wch:40}];XLSX.utils.book_append_sheet(wb,ws,"Recuento")}
+  else{const a=head.concat([["SKU","Producto","Unidad","Stock en sistema","Cantidad contada","Diferencia","Observación","Hora del conteo"]]).concat(recSortLines(L).map(l=>[l.sku,l.nombre,l.unidad||"u",l.sistema,l.contado,l.dif,l.obs||"",fmtD(l.ts)]));
     const ws=XLSX.utils.aoa_to_sheet(a);ws["!cols"]=[{wch:12},{wch:44},{wch:7},{wch:15},{wch:15},{wch:11},{wch:30},{wch:16}];ws["!autofilter"]={ref:`A5:H${a.length}`};XLSX.utils.book_append_sheet(wb,ws,"Recuento");
     const NC=recNoCtrl(r);if(NC.length){const b2=[[r.nombre+" · pendientes de contar"],["Stock actual en sistema"],[],["SKU","Producto","Unidad","Stock"]].concat(NC.map(x=>[x.sku,x.nombre,x.unidad,x.stock]));
       const w2=XLSX.utils.aoa_to_sheet(b2);w2["!cols"]=[{wch:12},{wch:44},{wch:7},{wch:10}];XLSX.utils.book_append_sheet(wb,w2,"Pendientes")}}
   await save(`${r.nombre.replace(/\//g,"-")}.xlsx`,new Blob([XLSX.write(wb,{bookType:"xlsx",type:"array"})]),{title:r.nombre})});
+/* líneas en el orden del recorrido (lista definida + orden del sistema); las que ya no están en el recorrido van al final por SKU */
+function recSortLines(L){const O=recOrder(),ix=new Map(O.map((k,i)=>[k,i]));
+  return L.slice().sort((a,b)=>{const ia=ix.has(a.sku)?ix.get(a.sku):1e9,ib=ix.has(b.sku)?ix.get(b.sku):1e9;return ia-ib||String(a.sku).localeCompare(String(b.sku),"es",{numeric:true})})}
 /* ---------- orden del recuento (lista definida por Admin) ---------- */
 function recOrdMatch(lines){const out=[],miss=[],seen=new Set();const P=prodList();
   lines.forEach(raw=>{const t=String(raw||"").trim();if(!t)return;let sku=parseSku(t)||parseSku(t.replace(/[\/\s]/g,""));
