@@ -851,7 +851,7 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
     <div class="card" id="nps-auto" style="padding:10px 14px;margin-bottom:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--surface-2)"></div>
     <div class="toolbar">
       <input class="grow" type="search" id="nps-q" placeholder="Buscar por NP, Nº de Compras, detalle o elemento">
-      <select id="nps-est" style="width:auto"><option value="">Todos los estados</option><option value="enviada">Enviada</option><option value="procesada">Procesada</option><option value="parcial">Entrega parcial</option><option value="recibido">Recibido</option></select>
+      <select id="nps-est" style="width:auto"><option value="">Todos los estados</option><option value="enviada">Enviada</option><option value="procesada">Procesada</option><option value="parcial">Entrega parcial</option><option value="recibido">Recibido</option><option value="anulada">Dada de baja</option></select>
     </div>
     <div class="card"><div class="table-wrap"><table class="cards" id="t-nps">
       <thead><tr><th>NP</th><th>Nº Compras</th><th>Detalle</th><th>Estado</th></tr></thead>
@@ -1506,7 +1506,7 @@ $("#inv-file").addEventListener("change",async e=>{const f=e.target.files[0];e.t
    Enviada → Procesada (Compras asigna su número; en la app de Google se lee solo de la respuesta por correo)
    → Entrega parcial / Recibido (según las entradas vinculadas a la NP: cada ítem con su cantidad) */
 const NP_DET=["Insumos taller","Repuestos equipos","Repuestos motor","Librería","Limpieza"];
-const NPS_EST={enviada:["","Enviada"],procesada:["info","Procesada"],parcial:["warn","Entrega parcial"],recibido:["ok","Recibido"]};
+const NPS_EST={enviada:["","Enviada"],procesada:["info","Procesada"],parcial:["warn","Entrega parcial"],recibido:["ok","Recibido"],anulada:["bad","Dada de baja"]};
 const npsPill=k=>{const [c,t]=NPS_EST[k]||["",k];return `<span class="pill ${c}"${c==="info"?' style="background:var(--accent-soft);color:var(--accent)"':c?"":' style="background:var(--surface-2)"'}>${t}</span>`};
 /* número de Compras: NP-AAAA-NNNN (np 2026 1 → NP-2026-0001); otros formatos se guardan tal cual */
 const npComprasNorm=v=>{v=String(v||"").trim();const m=/^NP[\s\-–_.]*((?:19|20)\d{2})[\s\-–_.\/]+(\d{1,6})$/i.exec(v);return m?`NP-${m[1]}-${String(+m[2]).padStart(4,"0")}`:v};
@@ -1522,6 +1522,24 @@ function npSeg(p){
   const k=skus.length&&full===skus.length?"recibido":any||movs.length||recPend.length?"parcial":p.nroCompras?"procesada":"enviada";
   return {k,req,rec,movs,n:skus.length,full,any,recPend,manual:k!=="recibido"&&p.estado==="recibido"}}
 const npTracked=()=>pedList().filter(p=>(p.enviado||p.estado==="enviado"||p.estado==="recibido")&&p.estado!=="anulado");
+/* para el listado del seguimiento: también las enviadas que se dieron de baja */
+const npSegShown=()=>pedList().filter(p=>p.enviado||p.estado==="enviado"||p.estado==="recibido");
+const npK=p=>p.estado==="anulado"?"anulada":npSeg(p).k;
+/* dar de baja una nota (enviada o no) con motivo; los elementos dejan de figurar como pendientes */
+function npAnular(p,onDone){if(!guardWrite("deposito"))return;
+  modal(`<div class="modal-h"><div><div class="meta">${pedNum(p.numero)}${p.nroCompras?" · Compras "+esc(p.nroCompras):""}</div><h3>Dar de baja la nota de pedido</h3></div><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
+   <form class="form" id="f-npb" autocomplete="off" style="padding:18px">
+     <div class="field full"><div class="banner warn" style="margin:0">La nota queda <b>dada de baja</b>: sus elementos dejan de figurar como «ya pedidos» y no se pueden vincular entradas a esta nota. Lo que ya se recibió queda en el stock y en el historial.</div></div>
+     <div class="field full"><label class="lb" for="npb-m">Motivo <em>*</em></label><textarea id="npb-m" rows="3" placeholder="Ej.: el correo nunca llegó a Compras; se reemplaza por la NP-0008"></textarea></div>
+     <div class="form-actions"><button type="button" class="btn" data-close>Cancelar</button><button type="submit" class="btn danger" style="border-color:var(--bad)">Dar de baja</button></div>
+   </form>`);
+  setTimeout(()=>$("#npb-m").focus(),40);
+  $("#f-npb").addEventListener("submit",async e=>{e.preventDefault();if(!guardWrite("deposito"))return;const m=$("#npb-m").value.trim();if(!m){toast("Escribí el motivo de la baja.");$("#npb-m").focus();return}
+    const now=new Date().toISOString(),up={estado:"anulado",estadoAntes:p.estado,anulado:now,anuladoMotivo:m,anuladoPor:myId||"",actualizado:now};
+    try{await db.doc("pedidos/"+p.id).update(up);S.peds.set(p.id,Object.assign({},S.peds.get(p.id)||p,up));toast(pedNum(p.numero)+" dada de baja");closeModal();try{renderAll()}catch(x){}if(onDone)onDone()}catch(err){writeError(err)}})}
+async function npReactivar(p,onDone){if(!guardWrite("deposito"))return;const now=new Date().toISOString(),est=p.estadoAntes&&p.estadoAntes!=="anulado"?p.estadoAntes:(p.enviado?"enviado":"pendiente");
+  const up={estado:est,reactivado:now,reactivadoPor:myId||"",actualizado:now};
+  try{await db.doc("pedidos/"+p.id).update(up);S.peds.set(p.id,Object.assign({},S.peds.get(p.id)||p,up));toast(pedNum(p.numero)+" reactivada");try{renderAll()}catch(x){}if(onDone)onDone()}catch(err){writeError(err)}}
 /* notas con ese producto pendiente de recibir (para vincular una entrada) */
 function npOpenFor(sku){return npTracked().filter(p=>(p.items||[]).some(i=>i.sku===sku)).map(p=>{const g=npSeg(p);return {p,req:g.req.get(sku)||0,rec:g.rec.get(sku)||0}}).filter(x=>x.rec<x.req-1e-9)}
 /* selector de NP en el formulario de movimientos (solo entradas) */
@@ -1536,10 +1554,10 @@ function npSelRefresh(){const w=$("#m-np-wrap");if(!w)return;const sku=parseSku(
 /* listado */
 function renderNpSeg(){
   if($("#v-npseg").hidden)return;
-  const q=norm($("#nps-q").value),fe=$("#nps-est").value,all=npTracked();
-  const rows=all.map(p=>({p,g:npSeg(p)})).filter(x=>(!fe||x.g.k===fe)&&(!q||norm([pedNum(x.p.numero),x.p.nroCompras,x.p.detalle,x.p.solicita,x.p.area,(x.p.items||[]).map(i=>i.sku+" "+i.nombre).join(" ")].join(" ")).includes(q)));
-  const cnt=k=>all.filter(p=>npSeg(p).k===k).length;
-  $("#nps-sub").textContent=S.loadedPd===false?"Cargando…":`${all.length} nota${all.length===1?"":"s"} enviada${all.length===1?"":"s"} · ${cnt("enviada")} enviadas · ${cnt("procesada")} procesadas · ${cnt("parcial")} con entrega parcial · ${cnt("recibido")} recibidas`;
+  const q=norm($("#nps-q").value),fe=$("#nps-est").value,all=npSegShown();
+  const rows=all.map(p=>({p,g:Object.assign({},npSeg(p),{k:npK(p)})})).filter(x=>(!fe||x.g.k===fe)&&(!q||norm([pedNum(x.p.numero),x.p.nroCompras,x.p.detalle,x.p.solicita,x.p.area,(x.p.items||[]).map(i=>i.sku+" "+i.nombre).join(" ")].join(" ")).includes(q)));
+  const cnt=k=>all.filter(p=>npK(p)===k).length;
+  $("#nps-sub").textContent=S.loadedPd===false?"Cargando…":`${all.length} nota${all.length===1?"":"s"} enviada${all.length===1?"":"s"} · ${cnt("enviada")} enviadas · ${cnt("procesada")} procesadas · ${cnt("parcial")} con entrega parcial · ${cnt("recibido")} recibidas${cnt("anulada")?` · ${cnt("anulada")} dada${cnt("anulada")===1?"":"s"} de baja`:""}`;
   const tb=$("#t-nps tbody");
   if(!all.length){tb.innerHTML='<tr><td colspan="4" class="span"><div class="empty"><b>Todavía no hay notas de pedido enviadas</b>Cuando envíes una nota de pedido a Compras aparece acá con estado Enviada.</div></td></tr>';return}
   if(!rows.length){tb.innerHTML='<tr><td colspan="4" class="span"><div class="empty">Ninguna nota coincide con el filtro.</div></td></tr>';return}
@@ -1547,7 +1565,7 @@ function renderNpSeg(){
     <td><b class="mono">${pedNum(p.numero)}</b><div class="meta">Enviada ${esc(fmtD(p.enviado||p.fecha).split(" ")[0])}</div></td>
     <td class="mono">${p.nroCompras?`<b>${esc(p.nroCompras)}</b>`:rv?'<span class="pill warn">Respuesta para revisar</span>':'<span class="meta">—</span>'}</td>
     <td class="span">${p.detalle?esc(p.detalle):'<span class="meta">Sin detalle</span>'}</td>
-    <td>${npsPill(g.k)}${g.k==="parcial"?`<div class="meta">${g.full} de ${g.n} ítem${g.n===1?"":"s"} completo${g.full===1?"":"s"}</div>`:""}${g.recPend.length?`<div><span class="pill bad">Recambio pedido (${g.recPend.length})</span></div>`:""}${g.manual?'<div class="meta">marcada recibida a mano</div>':""}</td></tr>`}).join("");
+    <td>${npsPill(g.k)}${g.k==="anulada"?`<div class="meta" style="max-width:260px">${esc(p.anuladoMotivo||"")}</div>`:""}${g.k==="parcial"?`<div class="meta">${g.full} de ${g.n} ítem${g.n===1?"":"s"} completo${g.full===1?"":"s"}</div>`:""}${g.recPend.length&&g.k!=="anulada"?`<div><span class="pill bad">Recambio pedido (${g.recPend.length})</span></div>`:""}${g.manual?'<div class="meta">marcada recibida a mano</div>':""}</td></tr>`}).join("");
 }
 ["#nps-q","#nps-est"].forEach(x=>$(x).addEventListener("input",renderNpSeg));
 $("#t-nps").addEventListener("click",e=>{const r=e.target.closest("[data-nps]");if(r)openNpSeg(r.dataset.nps)});
@@ -1559,11 +1577,12 @@ $("#nps-xls").addEventListener("click",async()=>{const L=npTracked();if(!L.lengt
 /* detalle de una nota */
 function openNpSeg(id){const p=S.peds.get(id);if(!p)return;const g=npSeg(p),R=p.respuestaCompras;
   const items=Array.from(g.req.entries()).map(([sku,req])=>{const it=(p.items||[]).find(i=>i.sku===sku)||{},rec=g.rec.get(sku)||0,pr=S.products.get(sku);return {sku,nombre:(pr&&pr.nombre)||it.nombre||sku,unidad:(pr&&pr.unidad)||it.unidad||"u",req,rec,pend:Math.max(0,Math.round((req-rec)*1000)/1000),ok:!!pr}});
-  const pendientes=items.filter(i=>i.pend>1e-9&&i.ok);
+  const BAJA=p.estado==="anulado",pendientes=BAJA?[]:items.filter(i=>i.pend>1e-9&&i.ok);
   /* ingreso manual: ING.sel = Map sku → cantidad */
   const ING={on:false,sel:new Map()};
-  modal(`<div class="modal-h"><div><div class="meta">Seguimiento · enviada ${esc(fmtD(p.enviado||p.fecha))}${p.enviadoA?" a "+esc(p.enviadoA):""}</div><h3>${pedNum(p.numero)}${p.detalle?" · "+esc(p.detalle):""}</h3><div style="margin-top:4px">${npsPill(g.k)}</div></div><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
+  modal(`<div class="modal-h"><div><div class="meta">Seguimiento · enviada ${esc(fmtD(p.enviado||p.fecha))}${p.enviadoA?" a "+esc(p.enviadoA):""}</div><h3>${pedNum(p.numero)}${p.detalle?" · "+esc(p.detalle):""}</h3><div style="margin-top:4px">${npsPill(BAJA?"anulada":g.k)}</div></div><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
    <form class="form" id="f-nps" autocomplete="off" style="padding:18px">
+     ${BAJA?`<div class="field full nps-dat"><div class="banner bad" style="margin:0"><b>Dada de baja</b>${p.anulado?" el "+esc(fmtD(p.anulado).split(" ")[0]):""} · Motivo: ${esc(p.anuladoMotivo||"—")}. Sus elementos no figuran como pendientes.</div></div>`:""}
      <div class="field nps-dat"><label class="lb" for="nps-nro">Nº de NP de Compras</label><input type="text" id="nps-nro" value="${esc(p.nroCompras||"")}" placeholder="${window.DEP?"Se completa solo con la respuesta de Compras (ej.: NP-2026-0001)":"Número asignado por Compras (ej.: NP-2026-0001)"}"><span class="hint">${p.nroCompras?`Cargado ${p.procesadoVia==="correo"?"automáticamente desde el correo de Compras":"a mano"}${p.procesado?" el "+esc(fmtD(p.procesado)):""}`:window.DEP?"Se completa solo cuando llega la respuesta de Compras a la casilla de la app. También lo podés cargar a mano.":"Cargalo cuando Compras responda el correo."}</span></div>
      <div class="field nps-dat"><label class="lb" for="nps-det">Detalle del pedido</label><input type="text" id="nps-det" list="dl-npdet" value="${esc(p.detalle||"")}" placeholder="Insumos taller, Repuestos equipos, Librería…"></div>
      ${R?`<div class="field full nps-dat"><div class="banner ${R.revisar&&!p.nroCompras?"warn":"ok"}" style="margin:0;display:grid;gap:4px"><b>Respuesta de Compras · ${esc(fmtD(R.fecha))}${R.de?" · "+esc(R.de):""}</b>${R.revisar&&!p.nroCompras?"<span>No encontré el número con seguridad. Revisá el texto y cargalo arriba.</span>":""}<span class="meta" style="white-space:pre-wrap">${esc((R.extracto||"").slice(0,600))}</span>${(R.candidatos||[]).length&&!p.nroCompras?`<span>Posibles números: ${R.candidatos.map(c=>`<button type="button" class="btn sm" data-npscand="${esc(c)}">${esc(c)}</button>`).join(" ")}</span>`:""}</div></div>`:""}
@@ -1584,8 +1603,9 @@ function openNpSeg(id){const p=S.peds.get(id);if(!p)return;const g=npSeg(p),R=p.
         <td class="r num">${done?'<span class="pill ok">Completo</span>':ING.on?(chk?`<div style="display:flex;gap:6px;justify-content:flex-end;align-items:center;flex-wrap:wrap"><select data-npsa="${esc(i.sku)}" style="width:auto"><option value="ing"${sel.get(i.sku).acc==="ing"?" selected":""}>Ingresar</option><option value="rec"${sel.get(i.sku).acc==="rec"?" selected":""}>Pedir recambio / devolución</option></select><input type="text" inputmode="decimal" data-npsq="${esc(i.sku)}" value="${String(sel.get(i.sku).q).replace(".",",")}" style="width:80px;text-align:right" aria-label="Cantidad"> <span class="unit">${esc(i.unidad)}</span></div>`:`<span class="meta">pend. ${fmtN(i.pend)}</span>`):fmtN(i.pend)}</td></tr>${ING.on&&chk&&sel.get(i.sku).acc==="rec"?`<tr><td></td><td colspan="4"><input type="text" data-npsm="${esc(i.sku)}" value="${esc(sel.get(i.sku).mot)}" placeholder="Motivo del recambio o devolución * (ej.: se pidieron puntas de 1.2 mm y llegaron de 1.0 mm)" style="width:100%"></td></tr>`:""}`}).join("")}</tbody>`;
     foot()};
   const foot=()=>{const f=$("#nps-foot");
-    if(!ING.on){f.innerHTML=`<button type="button" class="btn" id="nps-np" style="margin-right:auto">Ver la nota de pedido</button><button type="button" class="btn" data-close>Cerrar</button>${pendientes.length?`<button type="button" class="btn in need-dep" id="nps-ing-b">${ICON_IN}Dar ingreso</button>`:""}<button type="submit" class="btn primary need-dep">Guardar</button>`;
-      $("#nps-np").onclick=()=>openPed(id);const b=$("#nps-ing-b");if(b)b.onclick=()=>{if(!guardWrite("deposito"))return;ING.on=true;$$(".nps-dat").forEach(x=>x.hidden=true);draw()};return}
+    if(!ING.on){f.innerHTML=`<button type="button" class="btn" id="nps-np" style="margin-right:auto">Ver la nota de pedido</button>${BAJA?'<button type="button" class="btn need-dep" id="nps-react">Reactivar</button>':g.k!=="recibido"?'<button type="button" class="btn danger need-dep" id="nps-baja">Dar de baja</button>':""}<button type="button" class="btn" data-close>Cerrar</button>${pendientes.length?`<button type="button" class="btn in need-dep" id="nps-ing-b">${ICON_IN}Dar ingreso</button>`:""}<button type="submit" class="btn primary need-dep">Guardar</button>`;
+      $("#nps-np").onclick=()=>openPed(id);
+      {const bb=$("#nps-baja");if(bb)bb.onclick=()=>npAnular(S.peds.get(id)||p,()=>openNpSeg(id));const br=$("#nps-react");if(br)br.onclick=()=>npReactivar(S.peds.get(id)||p,()=>openNpSeg(id))}const b=$("#nps-ing-b");if(b)b.onclick=()=>{if(!guardWrite("deposito"))return;ING.on=true;$$(".nps-dat").forEach(x=>x.hidden=true);draw()};return}
     if($("#nps-ing").hidden){f.innerHTML=`<button type="button" class="btn" id="nps-x" style="margin-right:auto">Cancelar ingreso</button><button type="button" class="btn primary" id="nps-cont"${ING.sel.size?"":" disabled"}>Continuar</button>`;
       $("#nps-x").onclick=()=>{ING.on=false;ING.sel.clear();$$(".nps-dat").forEach(x=>x.hidden=false);draw()};$("#nps-cont").onclick=step3;return}
     f.innerHTML=`<button type="button" class="btn" id="nps-back" style="margin-right:auto">‹ Volver a los ítems</button><button type="button" class="btn in" id="nps-go">${ICON_IN}Ingresar</button>`;
@@ -4947,7 +4967,7 @@ $("#usr-hits").addEventListener("click",async e=>{const b=e.target.closest("[dat
 
 let ROLE_READY=false;
 /* ---------- notas de pedido ---------- */
-const PED_EST={pendiente:["warn","Pendiente de envío"],enviado:["ok","Enviado"],recibido:["","Recibida"],anulado:["bad","Anulada"]};
+const PED_EST={pendiente:["warn","Pendiente de envío"],enviado:["ok","Enviado"],recibido:["","Recibida"],anulado:["bad","Dada de baja"]};
 function pedList(){return Array.from(S.peds.values()).sort((a,b)=>(b.numero||0)-(a.numero||0))}
 const pedNum=n=>"NP-"+String(n||0).padStart(4,"0");
 function sugQty(p){const st=stockOf(p.sku),min=+p.minimo||0;if(!min)return st<=0?1:0;return Math.max(1,Math.ceil(min*2-st))}
@@ -5603,9 +5623,10 @@ function openPed(id){
      ${p.enviado&&p.estado!=="anulado"?`<div class="meta">Seguimiento: <b>${NPS_EST[npSeg(p).k][1]}</b>${p.nroCompras?" · Nº de Compras "+esc(p.nroCompras):""}${p.detalle?" · "+esc(p.detalle):""} · <a href="#" data-goto="compras/seguimiento">ver Seguimiento NP</a></div>`:""}
      <div id="pd-pdfs">${(p.pdfs||[]).length?`<div class="lb" style="margin-bottom:6px">PDF guardados en la base</div><div class="card table-wrap"><table class="prev"><tbody>${(p.pdfs||[]).slice().reverse().map((v,i)=>`<tr><td><a href="${esc("/_blob/"+v.id)}" target="_blank" rel="noopener" class="btn sm${i===0?" primary":""}">${i===0?"Ver PDF guardado":"Ver versión anterior"}</a></td><td class="wrap"><b>${esc(v.nombre)}</b><div class="meta">Guardado el ${esc(fmtD(v.fecha))}${i===0&&(p.pdfs||[]).length>1?" · versión actual":""}</div>${(v.envios||[]).map(e=>`<div class="meta">✉ Enviado el ${esc(fmtD(e.fecha))} a ${esc(e.para)}</div>`).join("")}</td></tr>`).join("")}</tbody></table></div>`:`<div class="meta">El PDF se guarda en la base al generarlo o descargarlo${mailer?" y al enviarlo":""}.</div>`}</div>
      <div class="form-actions" style="display:flex">
-       ${p.estado==="pendiente"?`<button class="btn danger" id="pd-anul" style="margin-right:auto">Anular</button><button class="btn" id="pd-edit">Editar</button><button class="btn in" id="pd-sent">Marcar como enviado</button>`:""}
-       ${p.estado==="enviado"?`<button class="btn" id="pd-back" style="margin-right:auto">Volver a pendiente</button><button class="btn" data-goto="compras/seguimiento">Ver en Seguimiento NP</button>`:""}
-       ${p.estado==="recibido"||p.estado==="anulado"?`<button class="btn" id="pd-back" style="margin-right:auto">Volver a pendiente</button>`:""}
+       ${p.estado==="pendiente"?`<button class="btn danger" id="pd-anul" style="margin-right:auto">Dar de baja</button><button class="btn" id="pd-edit">Editar</button><button class="btn in" id="pd-sent">Marcar como enviado</button>`:""}
+       ${p.estado==="enviado"?`<button class="btn danger" id="pd-anul" style="margin-right:auto">Dar de baja</button><button class="btn" id="pd-back">Volver a pendiente</button><button class="btn" data-goto="compras/seguimiento">Ver en Seguimiento NP</button>`:""}
+       ${p.estado==="recibido"?`<button class="btn" id="pd-back" style="margin-right:auto">Volver a pendiente</button>`:""}
+       ${p.estado==="anulado"?`<span class="meta" style="margin-right:auto;align-self:center">Dada de baja${p.anulado?" el "+esc(fmtD(p.anulado).split(" ")[0]):""}${p.anuladoMotivo?": "+esc(p.anuladoMotivo):""}</span><button class="btn" id="pd-react">Reactivar</button>`:""}
        <button class="btn" data-close>Cerrar</button>
      </div>
    </div>`,"wide");
@@ -5627,7 +5648,8 @@ function openPed(id){
   b("#pd-sent",()=>setEst("enviado",{enviado:new Date().toISOString(),enviadoA:to}));
   b("#pd-recv",()=>setEst("recibido",{recibido:new Date().toISOString()}));
   b("#pd-back",()=>setEst("pendiente",{}));
-  b("#pd-anul",()=>setEst("anulado",{}));
+  b("#pd-anul",()=>npAnular(p,()=>openPed(p.id)));
+  b("#pd-react",()=>npReactivar(p,()=>openPed(p.id)));
   b("#pd-edit",()=>openPedForm(p.id));
 }
 /* PDF con el formato R-COM-01 del Sistema de Gestión Integrado (planilla "Nota Pedido base.xlsx") */
