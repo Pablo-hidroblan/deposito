@@ -833,17 +833,14 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
   <!-- PEDIDOS -->
   <section id="v-ped" data-view="ped" hidden>
     <div class="section-head">
-      <div><h2>Notas de pedido</h2><p class="sub" id="ped-sub"></p></div>
-      <button class="btn primary need-dep" id="btn-new-ped"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Nueva nota de pedido</button>
+      <div><h2>Nueva NP</h2><p class="sub" id="ped-sub">Armá una nota de pedido nueva para Compras. El estado de las notas enviadas se sigue en Seguimiento NP.</p></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-goto="compras/seguimiento">Seguimiento NP</button><button class="btn primary need-dep" id="btn-new-ped"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Nueva nota de pedido</button></div>
     </div>
-    <div class="toolbar">
-      <input class="grow" type="search" id="pd-q" placeholder="Buscar por número, elemento o solicitante">
-      <select id="pd-est" style="width:auto"><option value="">Todos los estados</option><option value="pendiente">Pendientes de envío</option><option value="enviado">Enviados</option><option value="recibido">Recibidas</option><option value="anulado">Anuladas</option></select>
-    </div>
+    <div id="ped-pend-w" hidden><h3 class="rec-h3" style="margin-top:4px">Notas generadas sin enviar</h3><p class="sub" style="margin:-4px 0 10px">Todavía no se mandaron a Compras: abrilas para enviarlas por correo, editarlas o anularlas.</p>
     <div class="card"><div class="table-wrap"><table class="cards" id="t-ped">
-      <thead><tr><th>Número</th><th>Fecha</th><th>Elementos</th><th>Solicita</th><th>Estado</th><th>Enviada</th></tr></thead>
+      <thead><tr><th>Número</th><th>Fecha</th><th>Elementos</th><th>Solicita</th><th></th></tr></thead>
       <tbody></tbody>
-    </table></div></div>
+    </table></div></div></div>
   </section>
 
   <section id="v-npseg" data-view="npseg" hidden>
@@ -1242,7 +1239,7 @@ const MENU=[
     {id:"salida",name:"Salida",view:"mov",need:"deposito",tipos:["egreso"],title:"Salida de insumos metalúrgicos",sub:"Retiro de insumos del taller metalúrgico, en unidades o en cajas."},
     {id:"stock",name:"Stock",view:"stock",title:"Stock de insumos metalúrgicos"},
     {id:"historial",name:"Historial",view:"shist"}]},
-  {id:"compras",name:"Compras",ic:"compras",items:[{id:"pedido",name:"Nota de pedido",view:"ped"},{id:"seguimiento",name:"Seguimiento NP",view:"npseg"}]},
+  {id:"compras",name:"Compras",ic:"compras",items:[{id:"pedido",name:"Nueva NP",view:"ped"},{id:"seguimiento",name:"Seguimiento NP",view:"npseg"}]},
   {id:"trepanos",name:"Trépanos",ic:"trepanos",items:[
     {id:"stock",name:"Listado de stock",view:"tr-stock"},
     {id:"entrada",name:"Entrada",view:"tr-in",need:"deposito"},
@@ -1344,6 +1341,7 @@ function enterView(view,r,opt){
   if(view==="prod"){$("#pr-title").textContent=it.title||"Productos";$("#pr-sub").textContent=it.sub||"";renderProd()}
   if(view==="hist")renderHist();
   if(view==="inv")renderInv();
+  if(view==="ped"){renderPed();if(!opt.noNew&&!opt.pop&&roleOk("deposito")&&canWrite)setTimeout(()=>{if(!$("#scrim")&&!$("#v-ped").hidden)openPedForm(null)},0)}
   if(view==="npseg"){refreshNpDl();renderNpSeg();npMailInfo()}
   if(view==="conf")fillConfForm();
   if(view==="map")renderMap();
@@ -1708,8 +1706,8 @@ const AYUDA=[
  {id:"inventario",c:"Inventario general",t:"Cargar un elemento al inventario general",k:"inventario general repuesto poco uso kit filtros equipo marca modelo",v:["inv"],r:"productos/inventario",p:"deposito",s:[
   "Andá a <b>Insumos Equipos › Inventario general › Listado</b>.","Tocá <b>Nuevo elemento</b>.","Completá nombre, <b>Marca / modelo</b>, <b>Equipo al que pertenece</b>, <b>Estado</b>, ubicación y la cantidad inicial.","Tocá <b>Agregar al inventario</b>.","Para moverlo usá <b>Entrada</b> o <b>Salida</b> dentro de Inventario general."],
   n:"Para cargar muchos de una vez: <b>Plantilla Excel</b> → completala → <b>Importar Excel</b>."},
- {id:"np",c:"Compras",t:"Hacer una nota de pedido",k:"nota de pedido np pedir comprar solicitar compras falta reponer",v:["ped","stock"],r:"compras/pedido",p:"deposito",s:[
-  "Andá a <b>Compras › Nota de pedido</b> y tocá <b>Nueva nota de pedido</b>.","<b>Paso 1:</b> buscá el elemento y tocalo. Si dice «Ya pedido», revisá antes de pedirlo de nuevo.","<b>Paso 2:</b> completá Cantidad, Solicitante y Área (y si querés imputación, prioridad, plazo y observaciones).","Tocá <b>Cargar al listado</b> y repetí con los demás elementos.","Completá el <b>Detalle del pedido</b> (por ejemplo, Repuestos equipos) y tocá <b>Generar NP</b>.","En la nota tocá <b>Enviar por correo</b>, elegí a Compras y enviá. Queda en estado Enviado."]},
+ {id:"np",c:"Compras",t:"Hacer una nota de pedido",k:"nota de pedido np pedir comprar solicitar compras falta reponer",v:["ped","stock","npseg"],r:"compras/pedido",p:"deposito",s:[
+  "Andá a <b>Compras › Nueva NP</b>: se abre la nota nueva.","<b>Paso 1:</b> buscá el elemento y tocalo. Si dice «Ya pedido», revisá antes de pedirlo de nuevo.","<b>Paso 2:</b> completá Cantidad, Solicitante y Área (y si querés imputación, prioridad, plazo y observaciones).","Tocá <b>Cargar al listado</b> y repetí con los demás elementos.","Completá el <b>Detalle del pedido</b> (por ejemplo, Repuestos equipos) y tocá <b>Generar NP</b>.","En la nota tocá <b>Enviar por correo</b>, elegí a Compras y enviá. Queda en estado Enviado."]},
  {id:"seguimiento",c:"Compras",t:"Seguir una nota de pedido y dar ingreso",k:"seguimiento np estado procesada parcial recibido dar ingreso recambio devolucion compras numero",v:["npseg","ped"],r:"compras/seguimiento",p:"deposito",s:[
   "Andá a <b>Compras › Seguimiento NP</b>: cada nota muestra su estado (Enviada, Procesada, Entrega parcial o Recibido).","Tocá la nota para ver qué se pidió, qué llegó y qué falta.","Cuando llega material, tocá <b>Dar ingreso</b>, marcá los ítems que llegaron y ajustá la cantidad.","Si algo llegó mal, en ese ítem elegí <b>Pedir recambio / devolución</b> y escribí el motivo.","Tocá <b>Continuar</b>, elegí el proveedor y el remito si los tenés, y tocá <b>Ingresar</b>.","Si pediste un recambio, se abre el mensaje de WhatsApp para avisarle a Compras."]},
  {id:"diario",c:"Movimientos diarios",t:"Registrar una novedad del día",k:"bitacora novedad diario registrar movimiento del dia whatsapp compartir",v:["bit-reg","bit-hist"],r:"diario/registrar",p:"deposito",s:[
@@ -4956,22 +4954,15 @@ function sugQty(p){const st=stockOf(p.sku),min=+p.minimo||0;if(!min)return st<=0
 function lastProv(sku){const m=S.movs.find(x=>x.sku===sku&&x.tipo==="ingreso"&&x.origen&&x.origen!=="Stock inicial");return m?m.origen:""}
 function renderPed(){
   const tb=$("#t-ped tbody");if(!tb)return;
-  const est=$("#pd-est").value,q=$("#pd-q").value.trim().toLowerCase();
-  const all=pedList();
-  const low=prodList().filter(p=>!isInv(p)&&estado(p)[0]!=="ok").length;
-  $("#ped-sub").textContent=`${low} elemento${low===1?"":"s"} bajo mínimo o sin stock · ${all.filter(p=>p.estado==="pendiente").length} notas pendientes de envío`;
-  const rows=all.filter(p=>(!est||p.estado===est)&&(!q||[pedNum(p.numero),p.solicita,p.area,(p.items||[]).map(i=>i.sku+" "+i.nombre).join(" ")].join(" ").toLowerCase().includes(q)));
-  if(!S.loadedPd){tb.innerHTML=`<tr><td colspan="6" class="span"><div class="empty">Cargando…</div></td></tr>`;return}
-  if(!all.length){tb.innerHTML=`<tr><td colspan="6" class="span"><div class="empty"><b>Todavía no hay notas de pedido</b>Tocá <em>Nueva nota de pedido</em>: buscás cada elemento, completás su línea (solicitante, área, prioridad, plazo), lo cargás al listado y al final generás la NP en PDF para Compras.</div></td></tr>`;return}
-  if(!rows.length){tb.innerHTML=`<tr><td colspan="6" class="span"><div class="empty">Ninguna nota coincide con el filtro.</div></td></tr>`;return}
-  tb.innerHTML=rows.map(p=>{const [c,t]=PED_EST[p.estado]||["",p.estado];return `<tr class="click" data-ped="${esc(p.id)}">
+  const L=pedList().filter(p=>p.estado==="pendiente");
+  $("#ped-pend-w").hidden=!L.length;
+  tb.innerHTML=L.map(p=>`<tr class="click" data-ped="${esc(p.id)}">
     <td class="mono name">${pedNum(p.numero)}</td><td class="meta mono">${esc(fmtD(p.fecha))}</td>
     <td class="span">${(p.items||[]).length} ítem${(p.items||[]).length===1?"":"s"} <span class="meta">· ${esc((p.items||[]).slice(0,3).map(i=>i.nombre).join(", "))}${(p.items||[]).length>3?"…":""}</span></td>
     <td class="meta hide-m">${esc(p.solicita||"")}${p.prioridad==="urgente"?' <span class="pill bad">Urgente</span>':""}</td>
-    <td class="r"><span class="pill ${c}" ${c?"":'style="background:var(--surface-2)"'}>${t}</span></td>
-    <td class="meta hide-m">${p.enviado?esc(fmtD(p.enviado).split(" ")[0]):"—"}</td></tr>`}).join("");
+    <td class="r"><span class="pill warn">Sin enviar</span></td></tr>`).join("");
 }
-$("#pd-est").addEventListener("change",renderPed);$("#pd-q").addEventListener("input",renderPed);
+
 $("#t-ped").addEventListener("click",e=>{const r=e.target.closest("tr[data-ped]");if(r)openPed(r.dataset.ped)});
 $("#btn-new-ped").addEventListener("click",()=>openPedForm(null));
 $("#btn-ped-s").addEventListener("click",()=>openPedForm(null));
@@ -5563,7 +5554,7 @@ async function pfGenerate(){
   const b=$("#pf-go");b.disabled=true;
   try{let id=ex?ex.id:null;if(ex)await db.doc("pedidos/"+ex.id).set(body);else{const r=await db.collection("pedidos").add(body);id=r.id}
     const full=Object.assign({id},body);S.peds.set(id,full);if(!ex){PF.list=[];try{localStorage.removeItem(pfDraftKey)}catch(e){}}
-    toast(ex?"Nota actualizada":pedNum(body.numero)+" generada");closeModal();showTab("ped");openPed(id);pedPdf(full,{store:true})}
+    toast(ex?"Nota actualizada":pedNum(body.numero)+" generada");closeModal();go("compras/pedido",{noNew:true});openPed(id);pedPdf(full,{store:true})}
   catch(e){writeError(e);b.disabled=false}
 }
 function pedSubject(p){const d=new Date(p.fecha||p.creado||Date.now());return `Nota de pedido ${pedNum(p.numero)} – ${isNaN(d)?"":String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0")+"/"+d.getFullYear()}${p.prioridad==="urgente"?" · URGENTE":""}`}
@@ -5593,7 +5584,8 @@ function pedText(p){
 }
 function openPed(id){
   const p=S.peds.get(id);if(!p)return;
-  const [c,t]=PED_EST[p.estado]||["",p.estado];
+  const segK=p.estado!=="anulado"&&p.estado!=="pendiente"&&(p.enviado||p.estado==="enviado"||p.estado==="recibido")?npSeg(p).k:null;
+  const [c,t]=segK?(NPS_EST[segK]||["",segK]):(PED_EST[p.estado]||["",p.estado]);
   const to=(S.config.comprasEmail||"").trim();
   modal(`<div class="modal-h"><div><div class="meta">${esc(fmtD(p.fecha))} · Solicita ${esc(p.solicita||"")}${p.area?" · "+esc(p.area):""}${p.imputacion?" · Imputación "+esc(p.imputacion):""}</div><h3>Nota de pedido ${pedNum(p.numero)}</h3>
      <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap"><span class="pill ${c}" ${c?"":'style="background:var(--surface-2)"'}>${t}</span>${p.prioridad==="urgente"?'<span class="pill bad">Urgente</span>':""}${p.necesario?`<span class="pill" style="background:var(--surface-2)">Para el ${esc(p.necesario.split("-").reverse().join("/"))}</span>`:""}</div></div><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
@@ -5612,7 +5604,7 @@ function openPed(id){
      <div id="pd-pdfs">${(p.pdfs||[]).length?`<div class="lb" style="margin-bottom:6px">PDF guardados en la base</div><div class="card table-wrap"><table class="prev"><tbody>${(p.pdfs||[]).slice().reverse().map((v,i)=>`<tr><td><a href="${esc("/_blob/"+v.id)}" target="_blank" rel="noopener" class="btn sm${i===0?" primary":""}">${i===0?"Ver PDF guardado":"Ver versión anterior"}</a></td><td class="wrap"><b>${esc(v.nombre)}</b><div class="meta">Guardado el ${esc(fmtD(v.fecha))}${i===0&&(p.pdfs||[]).length>1?" · versión actual":""}</div>${(v.envios||[]).map(e=>`<div class="meta">✉ Enviado el ${esc(fmtD(e.fecha))} a ${esc(e.para)}</div>`).join("")}</td></tr>`).join("")}</tbody></table></div>`:`<div class="meta">El PDF se guarda en la base al generarlo o descargarlo${mailer?" y al enviarlo":""}.</div>`}</div>
      <div class="form-actions" style="display:flex">
        ${p.estado==="pendiente"?`<button class="btn danger" id="pd-anul" style="margin-right:auto">Anular</button><button class="btn" id="pd-edit">Editar</button><button class="btn in" id="pd-sent">Marcar como enviado</button>`:""}
-       ${p.estado==="enviado"?`<button class="btn" id="pd-back" style="margin-right:auto">Volver a pendiente</button><button class="btn in" id="pd-recv">Marcar como recibida</button>`:""}
+       ${p.estado==="enviado"?`<button class="btn" id="pd-back" style="margin-right:auto">Volver a pendiente</button><button class="btn" data-goto="compras/seguimiento">Ver en Seguimiento NP</button>`:""}
        ${p.estado==="recibido"||p.estado==="anulado"?`<button class="btn" id="pd-back" style="margin-right:auto">Volver a pendiente</button>`:""}
        <button class="btn" data-close>Cerrar</button>
      </div>
