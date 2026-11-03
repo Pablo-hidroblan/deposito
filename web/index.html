@@ -220,6 +220,25 @@ main{padding-inline:20px;padding-block:20px 60px;min-width:0;max-width:1220px;wi
 .rec-close:empty{display:none}
 .dif-pos{color:var(--ok,#1a7f37);font-weight:700}
 .dif-neg{color:var(--bad,#b3261e);font-weight:700}
+.btn.help-btn{padding:3px 12px 3px 5px;gap:4px;font-weight:600;color:#7a5230;border-color:#f3dfb8;background:#fdf3df}
+.btn.help-btn:hover{border-color:#c8945a}
+.btn.help-btn .depo{width:30px;height:30px}
+@media (max-width:480px){.btn.help-btn span{display:none}.btn.help-btn{padding:3px 6px}}
+.ay-modal{max-width:640px}
+.ay-h{align-items:center}
+.ay-h .depo{width:64px;height:64px;flex:none;animation:depo-hop .6s ease-out}
+@keyframes depo-hop{0%{transform:translateY(8px) scale(.9)}60%{transform:translateY(-4px)}100%{transform:none}}
+@media (prefers-reduced-motion:reduce){.ay-h .depo{animation:none}}
+.ay-bub{position:relative;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:8px 12px;display:grid;gap:2px;font-size:14px;min-width:0}
+.ay-bub::before{content:"";position:absolute;left:-7px;top:50%;width:12px;height:12px;background:var(--surface-2);border-left:1px solid var(--line);border-bottom:1px solid var(--line);transform:translateY(-50%) rotate(45deg)}
+.ay-grp{display:grid;gap:4px}
+.ay-grp .lb{margin:4px 0 2px}
+.ay-it{display:flex;justify-content:space-between;gap:10px;align-items:baseline;text-align:left;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font:inherit;color:inherit;cursor:pointer;flex-wrap:wrap}
+.ay-it:hover,.ay-it:focus-visible{border-color:var(--accent);background:var(--accent-soft)}
+.ay-steps{margin:0;padding-left:22px;display:grid;gap:8px;font-size:15px}
+.ay-steps li::marker{font-weight:700;color:var(--accent)}
+.ay-tip{position:fixed;top:calc(64px + env(safe-area-inset-top,0px));right:14px;z-index:45;max-width:280px;background:#fdf3df;color:#5a3c1e;border:1px solid #e3c590;border-radius:12px;padding:10px 34px 10px 12px;font-size:14px;box-shadow:0 8px 22px rgba(0,0,0,.15)}
+.ay-tip button{position:absolute;top:6px;right:6px;border:0;background:none;cursor:pointer;color:inherit;font-size:13px}
 .btn.rec-btn{padding:7px 12px;gap:6px;font-weight:600;color:var(--accent);border-color:var(--accent-soft);background:var(--accent-soft)}
 .btn.rec-btn:hover{border-color:var(--accent)}
 .btn.rec-btn svg{width:18px;height:18px}
@@ -481,6 +500,7 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
     <a class="brand" href="#" data-goto="inicio" title="Ir al inicio"><h1>Depósito</h1><span>Hidroblan · Control de stock</span></a>
     <button class="btn home-btn" id="home-btn" data-goto="inicio" title="Ir al inicio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z"/></svg><span>Inicio</span></button>
     <button class="btn rec-btn need-dep" id="rec-btn" data-goto="productos/recuento" title="Recuento de stock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6v3H9z"/><path d="M8 5H5v16h14V5h-3"/><path d="M8 12l2.5 2.5L16 9"/></svg><span>Recuento</span></button>
+    <button class="btn help-btn" id="help-btn" title="Ayuda: preguntale a Depo" aria-label="Ayuda"><svg class="depo" viewBox="0 0 64 64" aria-hidden="true"><path d="M14 30h36v24a3 3 0 0 1-3 3H17a3 3 0 0 1-3-3z" fill="#c8945a" stroke="#7a5230" stroke-width="2"/><path d="M14 30l6-7h24l6 7" fill="#dcae74" stroke="#7a5230" stroke-width="2" stroke-linejoin="round"/><path d="M30 30v8h4v-8" fill="#e9cfa0"/><ellipse cx="25" cy="42" rx="3" ry="3.6" fill="#1d2a33"/><ellipse cx="39" cy="42" rx="3" ry="3.6" fill="#1d2a33"/><circle cx="26" cy="40.8" r="1" fill="#fff"/><circle cx="40" cy="40.8" r="1" fill="#fff"/><path d="M26 48q6 5 12 0" fill="none" stroke="#1d2a33" stroke-width="2.4" stroke-linecap="round"/><circle cx="21" cy="47" r="2.2" fill="#e8806b" opacity=".55"/><circle cx="43" cy="47" r="2.2" fill="#e8806b" opacity=".55"/><path d="M15 20a17 13 0 0 1 34 0z" fill="#f2b705" stroke="#9a6d00" stroke-width="2"/><rect x="11" y="19" width="42" height="5" rx="2.5" fill="#f2b705" stroke="#9a6d00" stroke-width="2"/><path d="M32 7v12" stroke="#9a6d00" stroke-width="2"/></svg><span>Ayuda</span></button>
     <nav class="crumb" id="crumb" aria-label="Ubicación"></nav>
   </div>
 </header>
@@ -1661,6 +1681,96 @@ async function npMailInfo(){const box=$("#nps-auto");if(!box)return;
     box.innerHTML=`<span class="meta">${j.programado?`Lectura automática de las respuestas de Compras en ${esc(j.casilla||"la casilla de la app")}: cada ${j.minutos} minutos.`:"La lectura automática todavía no está activada: falta ejecutar instalarLecturaCompras() en Apps Script (ver instrucciones)."}${u?` Última revisión: ${esc(fmtD(u.fecha))}${u.procesadas?` · ${u.procesadas} respuesta${u.procesadas===1?"":"s"} nueva${u.procesadas===1?"":"s"}`:""}${u.error?" · error: "+esc(u.error):""}`:""}</span> <button class="btn sm need-dep" id="nps-now">Revisar el correo ahora</button>`;
     const b=$("#nps-now");if(b)b.onclick=async()=>{b.disabled=true;b.textContent="Revisando…";try{const r=await depCall("npMailNow");toast(r.procesadas?`${r.procesadas} respuesta${r.procesadas===1?"":"s"} de Compras procesada${r.procesadas===1?"":"s"}`:"No hay respuestas nuevas de Compras");npMailInfo()}catch(e){toast("No se pudo revisar el correo: "+(e.message||"error"));b.disabled=false;b.textContent="Revisar el correo ahora"}}}
   catch(e){box.innerHTML='<span class="meta">No se pudo consultar la lectura automática del correo.</span>'}}
+
+/* ---------- Ayuda: "Depo", guía incorporada paso a paso ---------- */
+const DEPO_SVG=`<svg class="depo" viewBox="0 0 64 64" aria-hidden="true"><path d="M14 30h36v24a3 3 0 0 1-3 3H17a3 3 0 0 1-3-3z" fill="#c8945a" stroke="#7a5230" stroke-width="2"/><path d="M14 30l6-7h24l6 7" fill="#dcae74" stroke="#7a5230" stroke-width="2" stroke-linejoin="round"/><path d="M30 30v8h4v-8" fill="#e9cfa0"/><ellipse cx="25" cy="42" rx="3" ry="3.6" fill="#1d2a33"/><ellipse cx="39" cy="42" rx="3" ry="3.6" fill="#1d2a33"/><circle cx="26" cy="40.8" r="1" fill="#fff"/><circle cx="40" cy="40.8" r="1" fill="#fff"/><path d="M26 48q6 5 12 0" fill="none" stroke="#1d2a33" stroke-width="2.4" stroke-linecap="round"/><circle cx="21" cy="47" r="2.2" fill="#e8806b" opacity=".55"/><circle cx="43" cy="47" r="2.2" fill="#e8806b" opacity=".55"/><path d="M15 20a17 13 0 0 1 34 0z" fill="#f2b705" stroke="#9a6d00" stroke-width="2"/><rect x="11" y="19" width="42" height="5" rx="2.5" fill="#f2b705" stroke="#9a6d00" stroke-width="2"/><path d="M32 7v12" stroke="#9a6d00" stroke-width="2"/></svg>`;
+/* temas: t título · k palabras para buscar · v vistas donde se sugiere · r ruta de "Llevame ahí" · p perfil necesario · s pasos · n notas */
+const AYUDA=[
+ {id:"entrada",c:"Insumos Equipos",t:"Registrar una entrada (llegó material)",k:"ingreso cargar stock sumar recibir llego compra remito proveedor",v:["mov","stock"],r:"productos/entrada",p:"deposito",s:[
+  "Andá a <b>Insumos Equipos › Entrada</b>.","En <b>Elemento</b> escribí parte del nombre o el SKU (o tocá <b>Cámara</b> para leer el QR) y elegí el elemento de la lista.","Escribí la <b>Cantidad</b> y, si hace falta, elegí la <b>Unidad</b> (por ejemplo, caja).","En <b>Origen de la entrada</b> elegí el proveedor (o devolución de obra).","Si el elemento estaba pedido, aparece <b>Nota de pedido</b>: dejá elegida la nota que corresponde.","Opcional: <b>Nº de registro</b> (remito o factura) y <b>Observaciones</b>.","Tocá <b>Registrar entrada</b>. El stock se actualiza al momento."],
+  n:"Si el elemento no aparece en la lista, primero hay que darlo de alta (ver «Dar de alta un producto nuevo»)."},
+ {id:"salida",c:"Insumos Equipos",t:"Registrar una salida (se entrega material)",k:"egreso retiro entregar sacar descontar equipo destino",v:["mov","stock"],r:"productos/salida",p:"deposito",s:[
+  "Andá a <b>Insumos Equipos › Salida</b>.","Elegí el <b>Elemento</b> (nombre, SKU o QR con <b>Cámara</b>).","Escribí la <b>Cantidad</b> y la <b>Unidad</b>.","En <b>Destino de la salida</b> poné el equipo, área u obra (los equipos se escriben TEC + número, por ejemplo TEC48).","Completá <b>Solicitado por</b> y <b>Autoriza el pedido</b>.","Tocá <b>Registrar salida</b>."],
+  n:"Si la salida deja el stock en negativo, la app avisa y te deja confirmar o revisar."},
+ {id:"alta",c:"Insumos Equipos",t:"Dar de alta un producto nuevo",k:"cargar nuevo elemento crear producto agregar catalogo sku alta",v:["prod","stock"],r:"productos/altabaja",p:"admin",s:[
+  "Andá a <b>Insumos Equipos › Alta / Baja de producto</b> y tocá <b>Nuevo producto</b>.","Revisá el <b>SKU</b> que propone la app (podés cambiarlo).","Escribí el <b>Nombre detallado</b>, la <b>Unidad de medida</b>, la <b>Ubicación</b> y, si querés aviso de reposición, el <b>Stock mínimo</b>.","En <b>Nivel</b> elegí dónde va: Insumos Equipos, Insumos Metalúrgicos o Inventario general.","Si ya hay unidades en el depósito, poné el <b>Stock inicial</b>.","Tocá <b>Crear producto</b>. Después podés imprimir su etiqueta QR."],
+  n:"Solo un Administrador puede crear productos. Si sos de Depósito, pedíselo a un Administrador."},
+ {id:"stock",c:"Insumos Equipos",t:"Consultar el stock o buscar un elemento",k:"buscar consultar cuanto hay stock existencia ubicacion donde esta qr ficha",v:["stock","home"],r:"productos/stock",s:[
+  "Andá a <b>Insumos Equipos › Stock</b>.","Escribí en el buscador parte del nombre, el SKU o la ubicación, o tocá <b>Cámara</b> y leé el QR de la etiqueta.","Los recuadros de arriba filtran: <b>Bajo mínimo</b>, <b>Sin stock</b> o <b>Movimientos hoy</b>.","Tocá una fila para abrir la <b>ficha</b>: stock, ubicación, últimos movimientos y botones de Ingreso / Egreso."],
+  n:"La etiqueta violeta «Ya pedido» indica que el elemento ya está en una nota de pedido pendiente."},
+ {id:"historial",c:"Insumos Equipos",t:"Ver el historial de un elemento",k:"historial movimientos anteriores quien saco cuando fecha",v:["hist","stock"],r:"productos/historial",s:[
+  "Andá a <b>Insumos Equipos › Historial</b>.","Buscá por SKU, nombre, destino, remito, etc. y usá las fechas para acotar.","Para un solo elemento también podés abrir su ficha desde <b>Stock</b> y mirar «Últimos movimientos» o tocar <b>Historial › Exportar como…</b>."]},
+ {id:"editar",c:"Insumos Equipos",t:"Corregir un movimiento mal cargado",k:"corregir editar error equivocado equivoque mal cargado modificar cantidad fecha borrar entrada salida movimiento",v:["hist","shist","stock"],r:"productos/historial",p:"deposito",s:[
+  "Buscá el movimiento en el <b>Historial</b> (o en la ficha del elemento, «Últimos movimientos»).","Tocá <b>✎ Editar</b> en ese movimiento.","Cambiá lo que haga falta (cantidad, fecha, origen o destino, remito, observaciones).","Tocá <b>Guardar cambios</b>. Queda registrado que fue editado."]},
+ {id:"metal",c:"Insumos Metalúrgicos",t:"Entradas y salidas del taller metalúrgico",k:"metalurgico taller electrodo disco soldadura caja kg retira",v:["mov","stock","shist"],r:"metal/salida",p:"deposito",s:[
+  "Andá a <b>Insumos Metalúrgicos</b> y elegí <b>Entrada</b> o <b>Salida</b>.","Elegí el elemento y escribí la cantidad.","Los electrodos se entregan por presentación: elegí en <b>Unidad</b> Caja 20 kg, Caja 30 kg o Bolsa 5 kg.","En la salida completá <b>Persona que retira</b>.","Tocá <b>Registrar</b>."],
+  n:"Los insumos metalúrgicos no se cargan desde Insumos Equipos: la app avisa si lo intentás."},
+ {id:"inventario",c:"Inventario general",t:"Cargar un elemento al inventario general",k:"inventario general repuesto poco uso kit filtros equipo marca modelo",v:["inv"],r:"productos/inventario",p:"deposito",s:[
+  "Andá a <b>Insumos Equipos › Inventario general › Listado</b>.","Tocá <b>Nuevo elemento</b>.","Completá nombre, <b>Marca / modelo</b>, <b>Equipo al que pertenece</b>, <b>Estado</b>, ubicación y la cantidad inicial.","Tocá <b>Agregar al inventario</b>.","Para moverlo usá <b>Entrada</b> o <b>Salida</b> dentro de Inventario general."],
+  n:"Para cargar muchos de una vez: <b>Plantilla Excel</b> → completala → <b>Importar Excel</b>."},
+ {id:"np",c:"Compras",t:"Hacer una nota de pedido",k:"nota de pedido np pedir comprar solicitar compras falta reponer",v:["ped","stock"],r:"compras/pedido",p:"deposito",s:[
+  "Andá a <b>Compras › Nota de pedido</b> y tocá <b>Nueva nota de pedido</b>.","<b>Paso 1:</b> buscá el elemento y tocalo. Si dice «Ya pedido», revisá antes de pedirlo de nuevo.","<b>Paso 2:</b> completá Cantidad, Solicitante y Área (y si querés imputación, prioridad, plazo y observaciones).","Tocá <b>Cargar al listado</b> y repetí con los demás elementos.","Completá el <b>Detalle del pedido</b> (por ejemplo, Repuestos equipos) y tocá <b>Generar NP</b>.","En la nota tocá <b>Enviar por correo</b>, elegí a Compras y enviá. Queda en estado Enviado."]},
+ {id:"seguimiento",c:"Compras",t:"Seguir una nota de pedido y dar ingreso",k:"seguimiento np estado procesada parcial recibido dar ingreso recambio devolucion compras numero",v:["npseg","ped"],r:"compras/seguimiento",p:"deposito",s:[
+  "Andá a <b>Compras › Seguimiento NP</b>: cada nota muestra su estado (Enviada, Procesada, Entrega parcial o Recibido).","Tocá la nota para ver qué se pidió, qué llegó y qué falta.","Cuando llega material, tocá <b>Dar ingreso</b>, marcá los ítems que llegaron y ajustá la cantidad.","Si algo llegó mal, en ese ítem elegí <b>Pedir recambio / devolución</b> y escribí el motivo.","Tocá <b>Continuar</b>, elegí el proveedor y el remito si los tenés, y tocá <b>Ingresar</b>.","Si pediste un recambio, se abre el mensaje de WhatsApp para avisarle a Compras."]},
+ {id:"diario",c:"Movimientos diarios",t:"Registrar una novedad del día",k:"bitacora novedad diario registrar movimiento del dia whatsapp compartir",v:["bit-reg","bit-hist"],r:"diario/registrar",p:"deposito",s:[
+  "Andá a <b>Movimientos diarios › Registrar movimiento</b>.","Revisá la <b>Fecha</b> y quién <b>Registra</b>.","Escribí la <b>Novedad</b> (por ejemplo: «Se entregan 2 gomas a TEC25»). Podés sumar fotos.","Tocá <b>Cargar novedad</b>.","Para mandarlo al grupo: <b>Compartir por WhatsApp</b>, elegí el período y compartí."]},
+ {id:"docs",c:"Movimientos diarios",t:"Cargar remitos y facturas",k:"remito factura documento foto cargar documentos respaldo registro numero",v:["docload","docs"],r:"diario/cargaregistros",p:"deposito",s:[
+  "Andá a <b>Movimientos diarios › Cargar documentos</b>.","Escribí el <b>Nº de referencia</b> (por ejemplo R-04-0567), el tipo y el proveedor o destino.","Tocá <b>Adjuntar archivos</b> o <b>Cámara</b> para sumar la foto o el PDF.","Si hay más documentos, tocá <b>Agregar otro registro</b>.","Tocá <b>Guardar registro</b>.","En las entradas y salidas escribí ese mismo número en <b>Nº de registro</b> y quedan vinculados."]},
+ {id:"recuento",c:"Recuento",t:"Hacer un recuento de stock",k:"recuento contar control inventario fisico conteo recorrido",v:["rec"],r:"productos/recuento",p:"deposito",s:[
+  "Tocá <b>Recuento</b> en la barra de arriba y después <b>Nuevo recuento</b>.","Completá la fecha, quién cuenta y qué se cuenta (Stock repuestos, Insumos de taller metalúrgico o Inventario general). Tocá <b>Iniciar recuento</b>.","Tocá <b>Comenzar recorrido</b>: la app te muestra un elemento por vez en el orden del depósito.","Escribí la cantidad que ves y apretá <b>Enter</b> para pasar al siguiente (o <b>Saltar</b>).","Al terminar, un Administrador toca <b>Finalizar recuento</b> y el stock se ajusta a lo contado."]},
+ {id:"trepanos",c:"Trépanos",t:"Mover un trépano (entrada, salida o cambio de estado)",k:"trepano trepanos codigo equipo salida entrada estado arana descarte reparacion",v:["tr-stock","tr-in","tr-out"],r:"trepanos/stock",p:"deposito",s:[
+  "Andá a <b>Trépanos</b>.","Para mandarlo a un equipo: <b>Salida / traspaso</b>, escribí el código y el equipo.","Cuando vuelve a la base: <b>Entrada</b>, elegí el estado (Operativo, Araña, Descarte…) y la ubicación.","Para cambiar solo el estado o la ubicación: en <b>Listado de stock</b> tocá <b>✎ Estado / ubicación</b> y escribí el motivo."]},
+ {id:"grava",c:"Grava, bentonita y tripolifosfato",t:"Entradas y salidas de grava, bentonita o tripolifosfato",k:"grava bentonita tripolifosfato bigbag pallet bolsa obra",v:["mov","stock","shist"],r:"grava/salida",p:"deposito",s:[
+  "Elegí el nivel (<b>Grava</b>, <b>Bentonita</b> o <b>Tripolifosfato</b>) y después <b>Entrada</b> o <b>Salida</b>.","Elegí el producto y la cantidad (BigBag, pallets o bolsas).","En la salida poné el equipo de destino y el <b>N° de obra</b>.","Tocá <b>Registrar</b>. El historial de cada nivel se puede exportar o compartir por correo."]},
+ {id:"exportar",c:"General",t:"Descargar un listado en Excel o PDF",k:"exportar descargar excel pdf planilla listado enviar correo",v:["stock","hist","shist","inv","npseg","rec"],s:[
+  "Abrí el listado o historial que necesites.","Tocá <b>Exportar como…</b>.","Elegí <b>Planilla de Excel</b> o <b>Documento PDF</b>.","Tocá <b>Descargar</b> (en la app de Google también podés <b>Enviar por correo</b>)."]},
+ {id:"etiquetas",c:"General",t:"Imprimir etiquetas con QR",k:"etiqueta qr imprimir codigo pegar",v:["lbl","stock"],r:"admin/etiquetas",s:[
+  "Andá a <b>Administración › Catálogo › Etiquetas / QR</b> (o desde Stock › <b>Imprimir etiquetas</b>).","Marcá los elementos y la cantidad de etiquetas de cada uno.","Generá el PDF e imprimilo. Al leer el QR con la cámara se abre la ficha del elemento."]},
+ {id:"navegar",c:"General",t:"Moverse por la app",k:"menu volver atras inicio perdido niveles navegar",v:["home"],r:"inicio",s:[
+  "<b>Inicio</b> (arriba) muestra todos los niveles con sus tareas.","En la computadora el menú está a la izquierda; en el celular, tocá las tres rayitas ☰ arriba a la izquierda.","El botón <b>‹ Volver</b> (abajo a la izquierda) vuelve a la pantalla anterior.","Si una opción no aparece, puede ser que tu perfil no la tenga habilitada."]},
+ {id:"perfiles",c:"Administración",t:"Dar acceso a una persona nueva",k:"usuario perfil permiso acceso persona nueva habilitar administrador deposito consulta",v:["users"],r:"admin/usuarios",p:"admin",s:[
+  "Andá a <b>Administración › Usuarios y permisos</b>.","Buscá a la persona (o agregá su correo de Google).","Elegí el perfil: <b>Consulta</b> (solo mira), <b>Depósito</b> (carga movimientos) o <b>Administrador</b> (todo).","Listo: la próxima vez que entre ya tiene ese acceso."]}
+];
+const AY_PERF={deposito:"Depósito",admin:"Administrador"};
+const AY_STOP=new Set("el la lo le un al de en me mi se si ya yo es y o a como que hago hace hacer para una uno unos unas los las del con por cual donde cuando quiero necesito puedo tengo esta este esto ese esa algo cosa".split(" "));
+let AY_CUR=null;
+function ayudaOpen(id){
+  const view=(ROUTE.it?ROUTE.it.view:ROUTE.grp.view)||"home";AY_CUR=id||null;
+  const sug=AYUDA.filter(a=>(a.v||[]).includes(view)).slice(0,4);
+  modal(`<div class="modal-h ay-h">${DEPO_SVG}<div class="ay-bub"><b>¡Hola! Soy Depo.</b><span id="ay-say">¿En qué te ayudo? Escribí tu duda o elegí un tema.</span></div><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
+   <div style="padding:16px 18px;display:grid;gap:14px" id="ay-body">
+     <input type="search" id="ay-q" placeholder="Por ejemplo: cómo cargo una entrada, cómo hago una nota de pedido…" autocomplete="off">
+     <div id="ay-res"></div>
+   </div>`,"ay-modal");
+  const list=()=>{const raw=norm($("#ay-q").value).split(/[^a-z0-9ñ]+/).filter(Boolean),q=raw.filter(w=>w.length>=2&&!AY_STOP.has(w)).map(w=>w.length>5?w.slice(0,w.length-2):w.slice(0,4));
+    const sc=a=>{const t=norm(a.t+" "+a.k),h=norm(a.c+" "+a.s.join(" ").replace(/<[^>]+>/g,""));return q.reduce((s,w)=>s+(t.includes(w)?3:h.includes(w)?1:0),0)};
+    let html="";
+    if(raw.length){const L=AYUDA.map(a=>[a,sc(a)]).filter(x=>x[1]>0).sort((x,y)=>y[1]-x[1]).map(x=>x[0]);
+      html=L.length?`<div class="ay-grp"><div class="lb">Resultados</div>${L.map(ayItem).join("")}</div>`:`<div class="banner" style="margin:0">No encontré nada con esas palabras. Probá con otras (por ejemplo «entrada», «pedido», «recuento») o mirá los temas de abajo.</div>`+ayCats()}
+    else html=(sug.length?`<div class="ay-grp"><div class="lb">Para esta pantalla</div>${sug.map(ayItem).join("")}</div>`:"")+ayCats();
+    $("#ay-res").innerHTML=html};
+  const show=a=>{AY_CUR=a.id;const ok=!a.p||roleOk(a.p);
+    $("#ay-say").innerHTML=`Te explico: <b>${esc(a.t.toLowerCase())}</b>.`;
+    $("#ay-body").innerHTML=`<button type="button" class="btn ghost sm" id="ay-back" style="justify-self:start">‹ Todos los temas</button>
+      <div><div class="meta">${esc(a.c)}</div><h3 style="margin:2px 0 0;font-family:var(--f-display);font-size:22px">${esc(a.t)}</h3></div>
+      ${a.p?`<div class="banner ${ok?"":"warn"}" style="margin:0">${ok?`Necesita perfil ${AY_PERF[a.p]} o superior: vos lo tenés.`:`Esto lo hace un usuario con perfil <b>${AY_PERF[a.p]}</b>. Tu perfil no lo tiene: pedíselo a un Administrador.`}</div>`:""}
+      <ol class="ay-steps">${a.s.map(x=>`<li>${x}</li>`).join("")}</ol>
+      ${a.n?`<div class="banner" style="margin:0">💡 ${a.n}</div>`:""}
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">${a.r&&ok?`<button type="button" class="btn primary" data-goto="${esc(a.r)}">Llevame ahí ›</button>`:""}</div>`;
+    $("#ay-back").onclick=()=>ayudaOpen()};
+  $("#ay-q").addEventListener("input",list);
+  $("#ay-q").addEventListener("keydown",e=>{if(e.key==="Enter"){const b=$("#ay-res [data-ay]");if(b){e.preventDefault();b.click()}}});
+  $("#ay-res").addEventListener("click",e=>{const b=e.target.closest("[data-ay]");if(b){const a=AYUDA.find(x=>x.id===b.dataset.ay);if(a)show(a)}});
+  if(id){const a=AYUDA.find(x=>x.id===id);if(a){show(a);return}}
+  list();setTimeout(()=>{const i=$("#ay-q");if(i&&matchMedia("(min-width:700px)").matches)i.focus()},40);
+}
+function ayItem(a){return `<button type="button" class="ay-it" data-ay="${a.id}"><span>${esc(a.t)}</span><span class="meta">${esc(a.c)}${a.p&&!roleOk(a.p)?" · perfil "+AY_PERF[a.p]:""}</span></button>`}
+function ayCats(){const cs=uniq(AYUDA.map(a=>a.c));return cs.map(c=>`<div class="ay-grp"><div class="lb">${esc(c)}</div>${AYUDA.filter(a=>a.c===c).map(ayItem).join("")}</div>`).join("")}
+$("#help-btn").addEventListener("click",()=>ayudaOpen());
+/* la primera vez que alguien entra, Depo se presenta */
+(()=>{let visto=false;try{visto=!!localStorage.getItem("dep-depo-hola")}catch(e){}if(visto)return;
+  setTimeout(()=>{if($("#scrim")||$("#dep-gate")&&!$("#dep-gate").hidden)return;const t=document.createElement("div");t.className="ay-tip";t.innerHTML=`<b>¡Hola! Soy Depo.</b> Si tenés dudas con algún paso, tocame y te explico.<button type="button" aria-label="Cerrar">✕</button>`;
+    document.body.appendChild(t);const off=()=>{t.remove();try{localStorage.setItem("dep-depo-hola","1")}catch(e){}};t.querySelector("button").onclick=off;$("#help-btn").addEventListener("click",off,{once:true});setTimeout(off,12000)},2500)})();
 
 /* ---------- QR ---------- */
 function qrText(sku){const b=(S.config.baseUrl||"").trim();return b?b.split("#")[0]+"#"+sku:sku}
