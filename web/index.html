@@ -1729,7 +1729,7 @@ function renderStock(){
     <td class="hide-m meta">${esc(p.categoria||"—")}</td>
     <td class="meta">${esc(p.ubicacion||"—")}</td>
     <td class="r"><span class="stockv">${fmtN(stockOf(p.sku))}</span><span class="unit">${esc(p.unidad||"u")}</span></td>
-    <td class="r-m"><span class="pill ${c}">${t}</span></td></tr>`}).join("");
+    <td class="r-m"><span class="pill ${c}">${t}</span>${yaPedidoPill(p.sku,p.unidad||"u")}</td></tr>`}).join("");
   const low=all.filter(p=>estado(p)[0]!=="ok").length;
   $("#stock-sub").textContent=`${all.length} producto${all.length===1?"":"s"} · ${S.movs.filter(m=>inScope.has(m.sku)).length} movimientos registrados`+(low?` · ${low} requieren reposición`:"");
 }
@@ -5317,6 +5317,7 @@ function openPedForm(id){
      <section class="np-step" id="np-s2" hidden>
        <div class="np-h"><span class="np-n">2</span><b>Completar la línea</b><button type="button" class="btn ghost sm" id="pf-chg" style="margin-left:auto">Cambiar elemento</button></div>
        <div class="preview" id="pf-prod"></div>
+       <div id="pf-ya"></div>
        <div class="form" style="padding:0">
          <div class="field"><label class="lb" for="pf-cant">Cantidad <em>*</em></label><div style="display:flex;gap:6px;align-items:center"><input type="number" id="pf-cant" min="0" step="any" inputmode="decimal" style="flex:1"><span class="unit" id="pf-uni"></span></div></div>
          <div class="field"><label class="lb" for="pf-sol">Solicitante <em>*</em></label><input type="text" id="pf-sol" list="dl-personas" placeholder="Nombre y apellido"></div>
@@ -5360,6 +5361,21 @@ function openPedForm(id){
 function pfSeg(sel,v){$$(sel+" button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===v?"true":"false"))}
 const pfSegVal=sel=>{const b=$(sel+' button[aria-pressed="true"]');return b?b.dataset.v:""};
 function pfStage1(){PF.cur=null;PF.editIx=-1;$("#np-s2").hidden=true;$("#np-s1").hidden=false;$("#pf-q").value="";pfSearch();setTimeout(()=>$("#pf-q")&&$("#pf-q").focus(),30);pfButtons()}
+/* elementos ya pedidos: cantidad pendiente de recibir en notas de pedido no anuladas (enviadas o sin enviar) */
+let PPM={k:null,m:null};
+function pedPendMap(){let ex="";try{ex=PF.editing?PF.editing.id:""}catch(e){}const key=[S.peds,S.movs,S.peds.size,S.movs.length,ex];
+  if(PPM.k&&PPM.k.every((v,i)=>v===key[i]))return PPM.m;
+  const m=new Map();
+  pedList().forEach(p=>{if(p.estado==="anulado"||p.estado==="recibido"||p.id===ex)return;const g=npSeg(p);
+    g.req.forEach((req,sku)=>{const pend=Math.round((req-(g.rec.get(sku)||0))*1000)/1000;if(pend<=1e-9)return;
+      if(!m.has(sku))m.set(sku,[]);m.get(sku).push({p,pend,k:p.enviado||p.estado==="enviado"?g.k:"sinenviar"})})});
+  PPM={k:key,m};return m}
+const pedPend=sku=>pedPendMap().get(sku)||[];
+function yaPedidoPill(sku,u){const L=pedPend(sku);if(!L.length)return "";const tot=Math.round(L.reduce((a,x)=>a+x.pend,0)*1000)/1000;
+  return ` <span class="pill" style="background:#ece6fa;color:#5b3fa8" title="${esc(L.map(x=>pedNum(x.p.numero)+": faltan recibir "+fmtN(x.pend)).join(" · "))}">Ya pedido · ${L.length===1?pedNum(L[0].p.numero):L.length+" NP"} (${fmtN(tot)}${u?" "+esc(u):""})</span>`}
+function yaPedidoHtml(sku,u){const L=pedPend(sku);if(!L.length)return "";
+  const et=x=>x.k==="sinenviar"?"todavía sin enviar":x.k==="parcial"?"con entrega parcial":x.k==="procesada"?"procesada por Compras":"enviada a Compras";
+  return `<div class="banner" style="margin:0;background:#ece6fa;color:#5b3fa8;border-color:transparent"><b>Este elemento ya está pedido.</b> ${L.map(x=>`<b>${pedNum(x.p.numero)}</b>${x.p.nroCompras?" (Compras "+esc(x.p.nroCompras)+")":""}: ${et(x)}${x.p.enviado?" (enviada el "+esc(fmtD(x.p.enviado).split(" ")[0])+")":""} · faltan recibir <b>${fmtN(x.pend)} ${esc(u||"u")}</b>`).join("; ")}. Revisá antes de volver a pedirlo.</div>`}
 function pfSearch(){
   const words=norm($("#pf-q").value).split(/\s+/).filter(Boolean),box=$("#pf-res");
   let L,title="";
@@ -5368,7 +5384,7 @@ function pfSearch(){
   else{box.innerHTML="";return}
   const inList=new Set(PF.list.map(i=>i.sku)),N=40;
   box.innerHTML=words.length&&!L.length?`<div class="empty" style="padding:14px">Ningún elemento coincide con "${esc($("#pf-q").value.trim())}".</div>`:
-    title+L.slice(0,N).map(p=>{const [c,t]=estado(p);return `<button type="button" class="np-it" data-pick="${esc(p.sku)}"><span class="mono meta">${esc(p.sku)}</span><span class="nm">${esc(p.nombre)}${isInv(p)?` <span class="pill" style="background:var(--accent-soft);color:var(--accent)">Inventario general</span>${p.marca?` <span class="meta">${esc(p.marca)}</span>`:""}`:""}${inList.has(p.sku)?' <span class="pill" style="background:var(--surface-2)">ya en el listado</span>':""}</span><span class="st">${fmtN(stockOf(p.sku))} ${esc(p.unidad||"u")}${c!=="ok"?` <span class="pill ${c}">${t}</span>`:""}</span></button>`}).join("")+(L.length>N?`<div class="meta" style="padding:6px 2px">${L.length-N} resultados más: escribí más letras para acotar.</div>`:"");
+    title+L.slice(0,N).map(p=>{const [c,t]=estado(p);return `<button type="button" class="np-it" data-pick="${esc(p.sku)}"><span class="mono meta">${esc(p.sku)}</span><span class="nm">${esc(p.nombre)}${isInv(p)?` <span class="pill" style="background:var(--accent-soft);color:var(--accent)">Inventario general</span>${p.marca?` <span class="meta">${esc(p.marca)}</span>`:""}`:""}${inList.has(p.sku)?' <span class="pill" style="background:var(--surface-2)">ya en el listado</span>':""}${yaPedidoPill(p.sku,p.unidad||"u")}</span><span class="st">${fmtN(stockOf(p.sku))} ${esc(p.unidad||"u")}${c!=="ok"?` <span class="pill ${c}">${t}</span>`:""}</span></button>`}).join("")+(L.length>N?`<div class="meta" style="padding:6px 2px">${L.length-N} resultados más: escribí más letras para acotar.</div>`:"");
 }
 function pfPick(sku,ix){
   const p=S.products.get(sku);if(!p)return;
@@ -5379,6 +5395,7 @@ function pfPick(sku,ix){
   $("#pf-prod").innerHTML=`<div style="min-width:0;flex:1 1 220px"><div class="mono meta">${esc(p.sku)}</div><div class="name">${esc(p.nombre)}</div><div class="meta">${esc(lastProv(p.sku)?"Proveedor habitual: "+lastProv(p.sku):p.ubicacion||"")}</div></div>
     <div><div class="meta">Stock actual</div><span class="stockv">${fmtN(stockOf(p.sku))}</span><span class="unit">${esc(p.unidad||"u")}</span></div>
     <div><div class="meta">Mínimo</div><span class="stockv">${p.minimo?fmtN(p.minimo):"—"}</span>${c!=="ok"?` <span class="pill ${c}">${t}</span>`:""}</div>`;
+  $("#pf-ya").innerHTML=yaPedidoHtml(p.sku,p.unidad||"u");
   $("#pf-uni").textContent=p.unidad||"u";
   $("#pf-cant").value=it?it.cantidad:(sugQty(p)||"");
   $("#pf-sol").value=it?it.solicitante:(last.solicitante||"");
@@ -5411,7 +5428,7 @@ function pfAdd(){if(!PF.cur)return;const ed=PF.editIx>=0,it=pfCommit();if(!it)re
 function pfRenderList(){
   const tb=$("#pf-list tbody");if(!tb)return;const n=PF.list.length;
   tb.innerHTML=n?PF.list.map((i,ix)=>{const p=S.products.get(i.sku)||{nombre:i.sku,unidad:"u"};return `<tr${PF.editIx===ix?' style="background:var(--accent-soft)"':""}><td class="meta num">${ix+1}</td>
-    <td class="wrap"><div class="mono meta">${esc(i.sku)}</div>${esc(p.nombre)}${i.codProv?`<div class="meta">Cód. prov.: ${esc(i.codProv)}</div>`:""}</td>
+    <td class="wrap"><div class="mono meta">${esc(i.sku)}</div>${esc(p.nombre)}${yaPedidoPill(i.sku,p.unidad||"u")}${i.codProv?`<div class="meta">Cód. prov.: ${esc(i.codProv)}</div>`:""}</td>
     <td class="r num" style="font-weight:600">${fmtN(i.cantidad)} <span class="unit">${esc(p.unidad||"u")}</span></td>
     <td>${esc(i.solicitante)}</td><td>${esc(i.area)}</td><td class="mono">${esc(i.imputacion||"—")}</td>
     <td>${i.prioridad==="urgente"?'<span class="pill bad">Urgente</span>':'<span class="meta">Normal</span>'}</td><td class="meta">${PLAZOS[i.plazo||""]}</td><td class="meta wrap">${esc(i.obs||"")}</td>
@@ -5793,7 +5810,7 @@ pendingHash=decodeURIComponent((location.hash||"").slice(1))||null;if(pendingHas
   db.collection("agenda").onSnapshot(s=>{S.agenda=new Map(s.docs.map(x=>[x.id,Object.assign({},x.data(),{id:x.id})]));if(ROUTE.it&&ROUTE.it.view==="agenda"&&!AG_EDIT)renderAgenda()},()=>{});
   db.collection("trarqueos").onSnapshot(s=>{S.trarq=new Map(s.docs.map(x=>[x.id,Object.assign({},x.data(),{id:x.id})]));S.loadedTA=true;if(ROUTE.it&&ROUTE.it.view==="tr-arq"&&!$("#v-tr-arq").contains(document.activeElement))renderTrArq()},onErr);
   db.collection("recuentos").onSnapshot(s=>{S.recs=new Map(s.docs.map(x=>[x.id,Object.assign({},x.data(),{id:x.id})]));S.loadedR=true;renderRec()},onErr);
-  db.collection("pedidos").onSnapshot(s=>{S.peds=new Map(s.docs.map(x=>[x.id,Object.assign({},x.data(),{id:x.id})]));S.loadedPd=true;renderPed()},onErr);
+  db.collection("pedidos").onSnapshot(s=>{S.peds=new Map(s.docs.map(x=>[x.id,Object.assign({},x.data(),{id:x.id})]));S.loadedPd=true;renderPed();try{renderStock()}catch(e){}},onErr);
   db.collection("proveedores").onSnapshot(s=>{S.provs=new Map(s.docs.map(x=>[x.id,Object.assign({},x.data(),{id:x.id})]));S.loadedV=true;renderAll()},onErr);
   db.collection("movimientos").orderBy("fecha","desc").onSnapshot(s=>{S.movs=s.docs.map(x=>Object.assign({id:x.id},x.data()));S.loadedM=true;renderAll()},onErr);
 })();
