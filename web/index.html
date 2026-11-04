@@ -1844,7 +1844,7 @@ function renderStock(){
     if(stockFilter==="low"&&estado(p)[0]!=="warn")return false;
     if(stockFilter==="zero"&&estado(p)[0]!=="bad")return false;
     if(stockFilter==="today"&&!todaySkus.has(p.sku))return false;
-    if(q&&!(p.sku+" "+p.nombre+" "+(p.ubicacion||"")+" "+(p.categoria||"")).toLowerCase().includes(q))return false;
+    if(q&&!(p.sku+" "+p.nombre+" "+(p.ubicacion||"")+" "+(p.categoria||"")+" "+(p.codProv||"")).toLowerCase().includes(q))return false;
     return true});
   const tb=$("#t-stock tbody");
   if(!S.loadedP){tb.innerHTML=`<tr><td colspan="6" class="span"><div class="empty">Cargando…</div></td></tr>`;return}
@@ -1853,7 +1853,7 @@ function renderStock(){
   if(!rows.length){tb.innerHTML=`<tr><td colspan="6" class="span"><div class="empty">Ningún producto coincide con el filtro.</div></td></tr>`;return}
   tb.innerHTML=rows.map(p=>{const [c,t]=estado(p);return `<tr class="click" data-sku="${esc(p.sku)}">
     <td class="mono">${esc(p.sku)}</td>
-    <td class="span"><div class="name">${esc(p.nombre)}</div></td>
+    <td class="span"><div class="name">${esc(p.nombre)}</div>${p.codProv?`<div class="meta">Cód. prov.: <span class="mono">${esc(p.codProv)}</span></div>`:""}</td>
     <td class="hide-m meta">${esc(p.categoria||"—")}</td>
     <td class="meta">${esc(p.ubicacion||"—")}</td>
     <td class="r"><span class="stockv">${fmtN(stockOf(p.sku))}</span><span class="unit">${esc(p.unidad||"u")}</span></td>
@@ -1962,6 +1962,7 @@ function openProduct(sku,refresh){
         ${isInv(p)?`<dt>Nivel</dt><dd>Inventario general</dd><dt>Marca / modelo</dt><dd>${esc(p.marca||"—")}</dd><dt>Equipo</dt><dd>${esc(p.equipo||"—")}</dd><dt>Estado</dt><dd>${invEstPill(p)}</dd><dt>Ubicación</dt><dd>${esc(p.ubicacion||"—")}</dd>${invLast(p)?`<dt>Última salida</dt><dd>${invLastTxt(p)}</dd>`:""}`:`<dt>Categoría</dt><dd>${esc(p.categoria||"—")}</dd>
         <dt>Ubicación</dt><dd>${esc(p.ubicacion||"—")}</dd>
         <dt>Stock mínimo</dt><dd class="num">${p.minimo?fmtN(p.minimo)+" "+esc(p.unidad||"u"):"—"}</dd>`}
+        <dt>Cód. proveedor</dt><dd><span class="mono">${esc(p.codProv||"—")}</span> <button type="button" class="btn ghost sm need-dep" id="d-codprov" style="padding:0 6px">✎ ${p.codProv?"Cambiar":"Agregar"}</button></dd>
         ${p.obs?`<dt>Notas</dt><dd>${esc(p.obs)}</dd>`:""}
       </dl>
       <div class="big-actions need-dep">
@@ -1976,6 +1977,7 @@ function openProduct(sku,refresh){
     ${ms.length?`<div class="card table-wrap"><table><tbody>${ms.map(m=>`<tr><td class="meta mono" style="white-space:nowrap">${esc(fmtD(m.fecha))}</td><td><span class="tipo ${m.tipo}">${m.tipo}</span>${movAttHtml(m)}${movEditBtn(m)}</td><td class="r num qty ${m.tipo}" style="font-weight:600">${m.tipo==="egreso"||m.cantidad<0?"−":"+"}${fmtN(Math.abs(m.cantidad))}</td><td class="meta">${esc(m.tipo==="ingreso"?m.origen:m.tipo==="egreso"?m.destino:"Recuento")} · ${esc(m.autoriza||"")}</td></tr>`).join("")}</tbody></table></div>`:`<div class="meta">Sin movimientos para este elemento.</div>`}
   </div>`);
   currentModalSku=sku;
+  {const bc=$("#d-codprov");if(bc)bc.addEventListener("click",()=>openCodProv(sku))}
   if(scroll)$("#scrim").scrollTop=scroll;
   $$("[data-quick]").forEach(b=>b.addEventListener("click",()=>{const tp=b.dataset.quick;closeModal();startMov(sku,tp)}));
   $("#d-edit").addEventListener("click",()=>openProductForm(sku));
@@ -2001,6 +2003,7 @@ function openProductForm(sku,pre){
     <div class="field p-invf"${INVF?"":" hidden"}><label class="lb" for="p-equipo">Equipo al que pertenece</label><input type="text" id="p-equipo" list="dl-equipos" value="${esc(p?p.equipo||"":"")}" placeholder="Ej.: TEC48, compresor, grupo electrógeno"></div>
     <div class="field p-invf"${INVF?"":" hidden"}><label class="lb" for="p-estinv">Estado</label><select id="p-estinv">${Object.entries(INV_EST).map(([k,v])=>`<option value="${k}"${(p?p.estadoInv||"nuevo":"nuevo")===k?" selected":""}>${v[1]}</option>`).join("")}</select></div>`:""}
     <div class="field p-noinv"${INVF?" hidden":""}><label class="lb" for="p-min">Stock mínimo</label><input type="number" id="p-min" step="any" min="0" inputmode="decimal" value="${p&&p.minimo?p.minimo:""}" placeholder="Aviso de reposición"></div>
+    <div class="field"><label class="lb" for="p-codprov">Código de proveedor <span class="meta" style="font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></label><input type="text" id="p-codprov" class="mono" value="${esc(p?p.codProv||"":"")}" placeholder="Código del artículo en el proveedor"></div>
     <div class="field"><label class="lb" for="p-ubi">Ubicación en depósito</label><input type="text" id="p-ubi" value="${esc(p?p.ubicacion:(pre.ubicacion||""))}" placeholder="Estantería A · Nivel 2"></div>
     ${p?`<div class="field"><label class="lb" for="p-stk">Cantidad en depósito</label><input type="text" id="p-stk" inputmode="decimal" value="${String(stockOf(p.sku)).replace(".",",")}"><span class="hint">Stock actual: ${fmtN(stockOf(p.sku))} ${esc(p.unidad||"u")}. Si lo cambiás, queda registrado como ajuste.</span></div>
     <div class="field" id="p-stk-aut-w" hidden><label class="lb" for="p-stk-aut">Autoriza el cambio de stock <em>*</em></label><input type="text" id="p-stk-aut" list="dl-personas" placeholder="Nombre y apellido"></div>`:""}
@@ -2038,7 +2041,7 @@ function openProductForm(sku,pre){
       if(Math.round((nv-stockOf(p.sku))*1000)/1000){const au=$("#p-stk-aut").value.trim();if(!au){toast("Indicá quién autoriza el cambio de stock.");$("#p-stk-aut").focus();return}stkMov=stockMov(Object.assign({},p,{nombre}),nv,au,"Corrección desde la ficha del producto","")}}
     const pres=PE.map(x=>({n:String(x.n||"").trim(),f:+x.f||0})).filter(x=>x.n||x.f);
     if(pres.some(x=>!x.n||!(x.f>0))){toast("Cada presentación necesita nombre y una cantidad mayor a cero.");return}
-    const body={sku:s,nombre,categoria:$("#p-cat").value.trim(),unidad:$("#p-uni").value.trim()||"u",minimo:+$("#p-min").value||0,ubicacion:$("#p-ubi").value.trim(),obs:$("#p-obs").value.trim(),presentaciones:pres,soloPres:!!(pres.length&&$("#p-solo").checked),creado:p?p.creado:new Date().toISOString(),actualizado:new Date().toISOString()};
+    const body={sku:s,nombre,codProv:$("#p-codprov").value.trim(),categoria:$("#p-cat").value.trim(),unidad:$("#p-uni").value.trim()||"u",minimo:+$("#p-min").value||0,ubicacion:$("#p-ubi").value.trim(),obs:$("#p-obs").value.trim(),presentaciones:pres,soloPres:!!(pres.length&&$("#p-solo").checked),creado:p?p.creado:new Date().toISOString(),actualizado:new Date().toISOString()};
     if(p&&p.porCaja)body.porCaja=p.porCaja;
     const NIV=nvs?nvs.value:NIV0;
     if(NIV!=="inv"&&/^INV-/i.test(s)){toast("Los códigos INV- son siempre del Inventario general.");return}
@@ -2211,6 +2214,7 @@ const IMP_FIELDS=[
   {k:"unidad",l:"Unidad",syn:["unidad","um","u.m.","u/m","unid","medida","unidad de medida"]},
   {k:"stock",l:"Stock actual",syn:["stock","cantidad","cant","cant.","existencia","saldo","disponible","stock actual","inventario","qty"]},
   {k:"minimo",l:"Stock mínimo",syn:["minimo","stock minimo","min","punto de pedido","reposicion","stock min"]},
+  {k:"codProv",l:"Código de proveedor",syn:["cod. proveedor","cod proveedor","codigo proveedor","codigo de proveedor","codigo del proveedor","cod. prov.","cod prov","cod. prov","codigo prov","part number","numero de parte","n° de parte","cod. fabricante","codigo fabricante"]},
   {k:"ubicacion",l:"Ubicación",syn:["ubicacion","deposito","estanteria","posicion","lugar","sector","estante"]},
   {k:"obs",l:"Notas",syn:["observaciones","obs","notas","comentarios","marca","proveedor","especificacion"]}
 ];
@@ -2254,10 +2258,10 @@ function openImport(){
 }
 async function downloadTemplate(){
   try{await loadXlsx()}catch(e){toast("No se pudo cargar el lector de Excel. Revisá la conexión.");return}
-  const rows=[["SKU","Nombre detallado","Categoría","Unidad","Stock actual","Stock mínimo","Ubicación","Notas"],
-    ["HB-0001","EJEMPLO · Guante de vaqueta reforzado talle 9","EPP","par",24,10,"Estantería A · Nivel 1","Borrar esta fila"],
-    ["","EJEMPLO · Aceite hidráulico ISO 68 balde 20 l","Lubricantes","balde",6,2,"Sector líquidos","Sin SKU: se asigna uno automático"]];
-  const ws=XLSX.utils.aoa_to_sheet(rows);ws["!cols"]=[{wch:10},{wch:46},{wch:16},{wch:8},{wch:12},{wch:12},{wch:22},{wch:34}];
+  const rows=[["SKU","Nombre detallado","Categoría","Unidad","Stock actual","Stock mínimo","Ubicación","Cód. proveedor","Notas"],
+    ["HB-0001","EJEMPLO · Guante de vaqueta reforzado talle 9","EPP","par",24,10,"Estantería A · Nivel 1","GV-09R","Borrar esta fila"],
+    ["","EJEMPLO · Aceite hidráulico ISO 68 balde 20 l","Lubricantes","balde",6,2,"Sector líquidos","","Sin SKU: se asigna uno automático"]];
+  const ws=XLSX.utils.aoa_to_sheet(rows);ws["!cols"]=[{wch:10},{wch:46},{wch:16},{wch:8},{wch:12},{wch:12},{wch:22},{wch:16},{wch:34}];
   const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Elementos");
   const out=XLSX.write(wb,{bookType:"xlsx",type:"array"});
   save("plantilla-importacion-deposito.xlsx",new Blob([out]));
@@ -2294,7 +2298,7 @@ function buildPlan(){
     let sku=cleanSku(rawSku),note="";
     if(rawSku&&sku!==rawSku)note="SKU adaptado (sin espacios ni símbolos)";
     const item={line,nombre,categoria:String(get(r,"categoria")||"").trim(),unidad:String(get(r,"unidad")||"").trim(),
-      stock:m.stock==null?null:parseNum(get(r,"stock")),minimo:parseNum(get(r,"minimo")),ubicacion:String(get(r,"ubicacion")||"").trim(),obs:String(get(r,"obs")||"").trim()};
+      stock:m.stock==null?null:parseNum(get(r,"stock")),minimo:parseNum(get(r,"minimo")),ubicacion:String(get(r,"ubicacion")||"").trim(),codProv:String(get(r,"codProv")||"").trim(),obs:String(get(r,"obs")||"").trim()};
     if(!nombre){plan.push(Object.assign(item,{sku:sku||"—",act:"error",msg:"Falta el nombre"}));return}
     let existing=sku?parseSku(sku):null;
     if(!sku&&!existing){const bn=byName.get(norm(nombre));if(bn){existing=bn;note="Coincide por nombre con "+bn}}
@@ -2371,8 +2375,8 @@ async function runImport(){
     const body={sku:p.sku,nombre:p.nombre,
       categoria:p.categoria||(prev&&prev.categoria)||"",unidad:p.unidad||(prev&&prev.unidad)||"u",
       minimo:p.minimo!=null?p.minimo:((prev&&prev.minimo)||0),ubicacion:p.ubicacion||(prev&&prev.ubicacion)||"",
-      obs:p.obs||(prev&&prev.obs)||"",creado:prev?prev.creado:now,actualizado:now};
-    if(prev){["presentaciones","soloPres","porCaja"].forEach(k=>{if(prev[k]!=null)body[k]=prev[k]})}
+      obs:p.obs||(prev&&prev.obs)||"",codProv:p.codProv||(prev&&prev.codProv)||"",creado:prev?prev.creado:now,actualizado:now};
+    if(prev){["presentaciones","soloPres","porCaja","inventario","marca","equipo","estadoInv"].forEach(k=>{if(prev[k]!=null)body[k]=prev[k]})}
     tasks.push({label:p.sku,run:()=>db.doc("products/"+p.sku).set(body)});
     const ref=`Importación ${IMP.file}`.slice(0,120);
     if(p.act==="new"&&p.stock>0)tasks.push({label:p.sku,run:()=>db.collection("movimientos").add({sku:p.sku,nombre:p.nombre,tipo:"ingreso",cantidad:p.stock,origen:"Stock inicial",proveedorId:"",destino:"",solicitante:"",autoriza:aut,remito:ref,obs:"Carga inicial desde Excel",fecha:now,by:myId||""})});
@@ -2704,7 +2708,7 @@ async function save(filename,data,opt){
   try{await downloads.save({filename,data})}catch(e){if(e&&e.code==="declined")return;if(e&&e.code==="rate_limited"){toast("Ya hay una descarga pendiente de confirmar.");return}toast("No se pudo generar la descarga.")}
 }
 $("#btn-export-stock").addEventListener("click",()=>{
-  const rows=[["SKU","Elemento","Categoría","Unidad","Ubicación","Stock actual","Stock mínimo","Estado"]].concat(prodList().filter(scopeTest(STOCK_SCOPE)).map(p=>[p.sku,p.nombre,p.categoria,p.unidad,p.ubicacion,fmtN(stockOf(p.sku)),p.minimo||"",estado(p)[1]]));
+  const rows=[["SKU","Elemento","Cód. proveedor","Categoría","Unidad","Ubicación","Stock actual","Stock mínimo","Estado"]].concat(prodList().filter(scopeTest(STOCK_SCOPE)).map(p=>[p.sku,p.nombre,p.codProv||"",p.categoria,p.unidad,p.ubicacion,fmtN(stockOf(p.sku)),p.minimo||"",estado(p)[1]]));
   save("stock-"+localDay(new Date().toISOString())+".csv",toCsv(rows))});
 $("#btn-export-hist").addEventListener("click",()=>{
   const rows=[["Fecha","Tipo","SKU","Elemento","Cantidad","Unidad","Origen","Destino","Solicitó","Autorizó","Remito/Pedido","Observaciones"]].concat(S.movs.filter(movEquipos).map(m=>{const p=S.products.get(m.sku);return[fmtD(m.fecha),m.tipo,m.sku,m.nombre,String(m.tipo==="egreso"?-m.cantidad:m.cantidad).replace(".",","),(p&&p.unidad)||"",m.origen,m.destino,m.solicitante,m.autoriza,m.remito,m.obs]}));
@@ -5416,6 +5420,16 @@ $("#rec-ord").addEventListener("click",openRecOrder);
 /* ---------- nueva nota de pedido: 1) buscar · 2) completar la línea · 3) cargar al listado o generar NP ---------- */
 const PLAZOS={"24":"24 Hs","48":"48 Hs","72":"72 Hs","":"Sin plazo"};
 const PF={list:[],cur:null,editIx:-1,editing:null};
+/* código de proveedor desde la ficha (perfil Depósito o superior) */
+function openCodProv(sku){const p=S.products.get(sku);if(!p||!guardWrite("deposito"))return;
+  modal(`<div class="modal-h"><div><div class="mono meta">${esc(sku)}</div><h3>Código de proveedor</h3><div class="meta">${esc(p.nombre)}</div></div><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
+   <form class="form" id="f-cp" autocomplete="off" style="padding:18px">
+     <div class="field full"><label class="lb" for="cp-v">Código del artículo en el proveedor</label><input type="text" id="cp-v" class="mono" value="${esc(p.codProv||"")}" placeholder="Ej.: 1R-0750"><span class="hint">Se propone solo al pedir este elemento en una nota de pedido. Dejalo vacío para quitarlo.</span></div>
+     <div class="form-actions"><button type="button" class="btn" data-close>Cancelar</button><button type="submit" class="btn primary">Guardar</button></div>
+   </form>`);
+  setTimeout(()=>{const i=$("#cp-v");i.focus();i.select()},40);
+  $("#f-cp").addEventListener("submit",async e=>{e.preventDefault();if(!guardWrite("deposito"))return;const v=$("#cp-v").value.trim(),now=new Date().toISOString();
+    try{await db.doc("products/"+sku).update({codProv:v,actualizado:now});S.products.set(sku,Object.assign({},S.products.get(sku)||p,{codProv:v,actualizado:now}));toast(v?"Código de proveedor guardado":"Código de proveedor quitado");openProduct(sku)}catch(err){writeError(err)}})}
 function lastCod(sku){const p=S.products.get(sku);if(p&&p.codProv)return p.codProv;for(const pd of pedList()){const i=(pd.items||[]).find(x=>x.sku===sku&&x.codProv);if(i)return i.codProv}return ""}
 const pfDraftKey="dep-np-borrador";
 function pfSaveDraft(){if(PF.editing)return;try{if(PF.list.length)localStorage.setItem(pfDraftKey,JSON.stringify(PF.list));else localStorage.removeItem(pfDraftKey)}catch(e){}}
@@ -5500,7 +5514,7 @@ function yaPedidoHtml(sku,u){const L=pedPend(sku);if(!L.length)return "";
 function pfSearch(){
   const words=norm($("#pf-q").value).split(/\s+/).filter(Boolean),box=$("#pf-res");
   let L,title="";
-  if(words.length){L=prodList().filter(p=>{const h=norm(p.sku+" "+p.nombre+(isInv(p)?" "+(p.marca||"")+" "+(p.equipo||""):""));return words.every(w=>h.includes(w))});
+  if(words.length){L=prodList().filter(p=>{const h=norm(p.sku+" "+p.nombre+" "+(p.codProv||"")+(isInv(p)?" "+(p.marca||"")+" "+(p.equipo||""):""));return words.every(w=>h.includes(w))});
     L.sort((a,b)=>{const q=norm($("#pf-q").value),as=norm(a.sku)===q||norm(a.nombre)===q?0:norm(a.sku).startsWith(q)||norm(a.nombre).startsWith(q)?1:2,bs=norm(b.sku)===q||norm(b.nombre)===q?0:norm(b.sku).startsWith(q)||norm(b.nombre).startsWith(q)?1:2;return as-bs||a.nombre.localeCompare(b.nombre,"es")})}
   else{box.innerHTML="";return}
   const inList=new Set(PF.list.map(i=>i.sku)),N=40;
