@@ -589,6 +589,11 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
         <label class="lb" for="m-destino">Destino de la salida <em>*</em></label>
         <input type="text" id="m-destino" list="dl-destino" placeholder="Área, equipo, pozo o cliente">
       </div>
+      <div class="field" id="m-ubi-wrap" hidden>
+        <label class="lb" for="m-ubi">Ubicación</label>
+        <select id="m-ubi"></select>
+        <span class="hint" id="m-ubi-h">Mismo listado de depósitos que los trépanos. Si cambia, se actualiza en el listado.</span>
+      </div>
       <div class="field" id="m-obra-wrap" hidden>
         <label class="lb" for="m-obra">N° de obra</label>
         <input type="text" id="m-obra" placeholder="Ej.: 260115" inputmode="text">
@@ -1480,7 +1485,7 @@ $("#inv-file").addEventListener("change",async e=>{const f=e.target.files[0];e.t
     if(usados.has(cod.toUpperCase()))err="Código repetido en el archivo";usados.add(cod.toUpperCase());
     const ek=invEstKey(g(r,"est"));if(!ek)err=err||`Estado "${g(r,"est")}" no reconocido`;
     const cant=parseNum(g(r,"cant")||"0");if(cant==null||cant<0)err=err||"Cantidad no válida";
-    return {fila:hi+2+i,sku:ex?ex.sku:cod,ex,nombre:nom||(ex&&ex.nombre)||"",marca:g(r,"mar"),equipo:normEq(g(r,"eq")),estadoInv:ek||"nuevo",ubicacion:g(r,"ub"),cant:cant||0,unidad:g(r,"un")||"u",obs:g(r,"obs"),err}}).filter(Boolean);
+    return {fila:hi+2+i,sku:ex?ex.sku:cod,ex,nombre:nom||(ex&&ex.nombre)||"",marca:g(r,"mar"),equipo:normEq(g(r,"eq")),estadoInv:ek||"nuevo",ubicacion:(u=>trBases().find(x=>norm(x)===norm(u))||u)(g(r,"ub")),cant:cant||0,unidad:g(r,"un")||"u",obs:g(r,"obs"),err}}).filter(Boolean);
   if(!plan.length){toast("El archivo no tiene filas para importar.");return}
   const ok=plan.filter(x=>!x.err),nu=ok.filter(x=>!x.ex),up=ok.filter(x=>x.ex),bad=plan.filter(x=>x.err);
   modal(`<div class="modal-h"><div><div class="meta">${esc(f.name)}</div><h3>Importar al inventario general</h3></div><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
@@ -2004,7 +2009,8 @@ function openProductForm(sku,pre){
     <div class="field p-invf"${INVF?"":" hidden"}><label class="lb" for="p-estinv">Estado</label><select id="p-estinv">${Object.entries(INV_EST).map(([k,v])=>`<option value="${k}"${(p?p.estadoInv||"nuevo":"nuevo")===k?" selected":""}>${v[1]}</option>`).join("")}</select></div>`:""}
     <div class="field p-noinv"${INVF?" hidden":""}><label class="lb" for="p-min">Stock mínimo</label><input type="number" id="p-min" step="any" min="0" inputmode="decimal" value="${p&&p.minimo?p.minimo:""}" placeholder="Aviso de reposición"></div>
     <div class="field"><label class="lb" for="p-codprov">Código de proveedor <span class="meta" style="font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></label><input type="text" id="p-codprov" class="mono" value="${esc(p?p.codProv||"":"")}" placeholder="Código del artículo en el proveedor"></div>
-    <div class="field"><label class="lb" for="p-ubi">Ubicación en depósito</label><input type="text" id="p-ubi" value="${esc(p?p.ubicacion:(pre.ubicacion||""))}" placeholder="Estantería A · Nivel 2"></div>
+    <div class="field${INVF||NIVSEL?" p-noinv":""}"${INVF?" hidden":""}><label class="lb" for="p-ubi">Ubicación en depósito</label><input type="text" id="p-ubi" value="${esc(p?p.ubicacion:(pre.ubicacion||""))}" placeholder="Estantería A · Nivel 2"></div>
+    ${INVF||NIVSEL?(()=>{const cur=String(p?p.ubicacion||"":"").trim(),L=trBases().slice(),m=L.find(x=>norm(x)===norm(cur));if(cur&&!m)L.push(cur);const sel=m||cur||(INVF&&!p?L[0]:"");return `<div class="field p-invf"${INVF?"":" hidden"}><label class="lb" for="p-ubisel">Ubicación</label><select id="p-ubisel"><option value="">Elegí la ubicación…</option>${L.map(x=>`<option value="${esc(x)}"${x===sel?" selected":""}>${esc(x)}</option>`).join("")}</select><span class="hint">Mismo listado de depósitos que los trépanos (Configuración › Depósitos).</span></div>`})():""}
     ${p?`<div class="field"><label class="lb" for="p-stk">Cantidad en depósito</label><input type="text" id="p-stk" inputmode="decimal" value="${String(stockOf(p.sku)).replace(".",",")}"><span class="hint">Stock actual: ${fmtN(stockOf(p.sku))} ${esc(p.unidad||"u")}. Si lo cambiás, queda registrado como ajuste.</span></div>
     <div class="field" id="p-stk-aut-w" hidden><label class="lb" for="p-stk-aut">Autoriza el cambio de stock <em>*</em></label><input type="text" id="p-stk-aut" list="dl-personas" placeholder="Nombre y apellido"></div>`:""}
     ${p?"":`<div class="field"><label class="lb" for="p-ini">Stock inicial</label><input type="number" id="p-ini" step="any" min="0" inputmode="decimal" placeholder="0"><span class="hint">Se registra como ingreso con origen "Stock inicial".</span></div>`}
@@ -2019,6 +2025,7 @@ function openProductForm(sku,pre){
   const nvs=$("#p-nivel");if(nvs)nvs.addEventListener("change",()=>{const inv=nvs.value==="inv";$$("#f-prod .p-invf").forEach(x=>x.hidden=!inv);$$("#f-prod .p-noinv").forEach(x=>x.hidden=inv);
     if(nvs.value==="metal"&&!/metal[uú]rg/i.test($("#p-cat").value))$("#p-cat").value=MET_CAT;
     if(nvs.value!=="metal"&&/metal[uú]rg/i.test($("#p-cat").value))$("#p-cat").value="";
+    {const us=$("#p-ubisel"),ut=$("#p-ubi");if(us&&ut){if(inv&&!us.value){const m=[...us.options].find(o=>o.value&&norm(o.value)===norm(ut.value));if(m)us.value=m.value}if(!inv&&us.value&&!ut.value.trim())ut.value=us.value}}
     if(inv&&!$("#p-cat").value.trim())$("#p-cat").value=INV_CAT;if(!inv&&$("#p-cat").value===INV_CAT)$("#p-cat").value=""});
   const PE=presOf(p||{}).map(x=>({n:x.n,f:x.f}));
   const drawPE=()=>{$("#p-pres").innerHTML=PE.map((x,k)=>`<div class="pres-row"><input type="text" data-pe="n" data-k="${k}" value="${esc(x.n)}" placeholder="Nombre (ej.: Caja 20 kg)"><span class="meta">=</span><input type="number" step="any" min="0" data-pe="f" data-k="${k}" value="${x.f||""}" placeholder="Cant."><span class="unit pe-u">${esc($("#p-uni").value||"u")}</span><button type="button" class="btn ghost sm" data-pedel="${k}" aria-label="Quitar">✕</button></div>`).join("")};
@@ -2041,7 +2048,7 @@ function openProductForm(sku,pre){
       if(Math.round((nv-stockOf(p.sku))*1000)/1000){const au=$("#p-stk-aut").value.trim();if(!au){toast("Indicá quién autoriza el cambio de stock.");$("#p-stk-aut").focus();return}stkMov=stockMov(Object.assign({},p,{nombre}),nv,au,"Corrección desde la ficha del producto","")}}
     const pres=PE.map(x=>({n:String(x.n||"").trim(),f:+x.f||0})).filter(x=>x.n||x.f);
     if(pres.some(x=>!x.n||!(x.f>0))){toast("Cada presentación necesita nombre y una cantidad mayor a cero.");return}
-    const body={sku:s,nombre,codProv:$("#p-codprov").value.trim(),categoria:$("#p-cat").value.trim(),unidad:$("#p-uni").value.trim()||"u",minimo:+$("#p-min").value||0,ubicacion:$("#p-ubi").value.trim(),obs:$("#p-obs").value.trim(),presentaciones:pres,soloPres:!!(pres.length&&$("#p-solo").checked),creado:p?p.creado:new Date().toISOString(),actualizado:new Date().toISOString()};
+    const body={sku:s,nombre,codProv:$("#p-codprov").value.trim(),categoria:$("#p-cat").value.trim(),unidad:$("#p-uni").value.trim()||"u",minimo:+$("#p-min").value||0,ubicacion:((nvs?nvs.value==="inv":INVF)&&$("#p-ubisel"))?$("#p-ubisel").value:$("#p-ubi").value.trim(),obs:$("#p-obs").value.trim(),presentaciones:pres,soloPres:!!(pres.length&&$("#p-solo").checked),creado:p?p.creado:new Date().toISOString(),actualizado:new Date().toISOString()};
     if(p&&p.porCaja)body.porCaja=p.porCaja;
     const NIV=nvs?nvs.value:NIV0;
     if(NIV!=="inv"&&/^INV-/i.test(s)){toast("Los códigos INV- son siempre del Inventario general.");return}
@@ -2126,8 +2133,17 @@ function setTipo(t){
 $("#m-tipo").addEventListener("click",e=>{const b=e.target.closest("button[data-t]");if(b)setTipo(b.dataset.t)});
 function nowLocal(){const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16)}
 function startMov(sku,tipo){tipo=tipo||"ingreso";const pp=S.products.get(sku);const sc=pp&&Object.keys(SCOPES).find(k=>SCOPES[k].test(pp));go(tipo==="ajuste"?"productos/ajuste":sc==="inv"?"productos/inv-"+(tipo==="ingreso"?"entrada":"salida"):(sc||"productos")+"/"+(tipo==="ingreso"?"entrada":"salida"),{tipo});setTipo(tipo);const p=S.products.get(sku);if(p)$("#m-prod").value=p.sku+" · "+p.nombre;$("#m-fecha").value=nowLocal();updatePreview();setTimeout(()=>$("#m-cant").focus(),50)}
+/* inventario general: ubicación al dar ingreso (se propone la actual del elemento) */
+function invUbiRefresh(){const w=$("#m-ubi-wrap");if(!w)return;const sel=$("#m-ubi"),sku=parseSku($("#m-prod").value),p=sku&&S.products.get(sku),on=MOV_SCOPE==="inv"&&movTipo==="ingreso";
+  w.hidden=!on;if(!on){sel.dataset.sku="";return}
+  const cur=p&&p.ubicacion?String(p.ubicacion).trim():"",keep=sel.dataset.sku===(sku||"")?sel.value:null;
+  const nk=v=>String(v||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
+  const opts=trBases().slice();if(cur&&!opts.some(o=>nk(o)===nk(cur)))opts.push(cur);
+  sel.innerHTML=`<option value="">Elegí la ubicación…</option>`+opts.map(o=>`<option value="${esc(o)}">${esc(o)}</option>`).join("");
+  const match=v=>opts.find(o=>nk(o)===nk(v))||"";
+  sel.value=keep!==null?match(keep):match(cur);sel.dataset.sku=sku||""}
 function updatePreview(){
-  try{npSelRefresh()}catch(e){}
+  try{npSelRefresh()}catch(e){}try{invUbiRefresh()}catch(e){}
   const sku=parseSku($("#m-prod").value),w=$("#m-preview-wrap");
   if(!sku){w.hidden=true;return}
   const p=S.products.get(sku),cur=stockOf(sku),q=movQty();
@@ -2143,7 +2159,7 @@ $("#m-cant").addEventListener("input",()=>{unHint();updatePreview()});
 $("#m-un").addEventListener("change",()=>{unHint();updatePreview()});
 $("#m-prod").addEventListener("input",unRefresh);
 $("#m-doc").addEventListener("input",()=>docHint($("#m-doc"),$("#m-doc-h")));
-$("#f-mov").addEventListener("reset",()=>setTimeout(()=>{$("#m-np").dataset.sku="";$("#m-doc-h").innerHTML="";$("#m-fecha").value=nowLocal();UN_SKU=null;unRefresh();mAttClear();if(MDP)MDP.clear();updatePreview();origenHint()},0));
+$("#f-mov").addEventListener("reset",()=>setTimeout(()=>{$("#m-np").dataset.sku="";$("#m-ubi").dataset.sku="#";$("#m-doc-h").innerHTML="";$("#m-fecha").value=nowLocal();UN_SKU=null;unRefresh();mAttClear();if(MDP)MDP.clear();updatePreview();origenHint()},0));
 $("#f-mov").addEventListener("submit",async e=>{
   e.preventDefault();if(!guardWrite(movTipo==="ajuste"?"admin":"deposito"))return;
   const sku=parseSku($("#m-prod").value);
@@ -2175,14 +2191,18 @@ $("#f-mov").addEventListener("submit",async e=>{
   if(movTipo==="ingreso"&&$("#m-np").value&&!$("#m-np-wrap").hidden){const np=S.peds.get($("#m-np").value);if(np){body.npId=np.id;body.np=pedNum(np.numero)}}
   const dId=(MDP&&movTipo!=="ajuste"?MDP.get():null)||((docByKey(body.remito)||{}).id)||null;if(dId){body.docId=dId;if(!body.remito){const dd=S.docs.get(dId);if(dd)body.remito=dd.numero}}
   const btn=$("#m-submit");btn.disabled=true;
+  if(MOV_SCOPE==="inv"&&movTipo==="ingreso"&&!$("#m-ubi-wrap").hidden&&!$("#m-ubi").value){toast("Elegí la ubicación del elemento.");$("#m-ubi").focus();btn.disabled=false;return}
   const useAtt=movTipo!=="ajuste"&&M_ATT.length;
   if(useAtt){if(!assets){toast("Tu acceso no permite subir imágenes: quitalas o pedí permiso de edición.");btn.disabled=false;return}
     const lbl=btn.textContent;try{for(let i=0;i<M_ATT.length;i++){btn.textContent=`Subiendo imagen ${i+1} de ${M_ATT.length}…`;await attUpload(M_ATT[i]);mAttRender()}}
     catch(err){toast(attErr(err)+` La ${movTipo==="ingreso"?"entrada":"salida"} no se registró: revisá los adjuntos y reintentá.`);btn.textContent=lbl;btn.disabled=false;return}
     btn.textContent=lbl;body.adjuntos=M_ATT.map(attRow)}
-  try{await db.collection("movimientos").add(body);if(useAtt)mAttClear();if(MDP&&!$("#m-docp").dataset.keep)MDP.clear();
+  const nuevaUbi=MOV_SCOPE==="inv"&&movTipo==="ingreso"&&!$("#m-ubi-wrap").hidden?$("#m-ubi").value.trim():"";
+  if(nuevaUbi)body.ubicacion=nuevaUbi;
+  try{await db.collection("movimientos").add(body);if(useAtt)mAttClear();
+    if(nuevaUbi&&nuevaUbi!==(p.ubicacion||"")){const now=new Date().toISOString();try{await db.doc("products/"+sku).update({ubicacion:nuevaUbi,actualizado:now});S.products.set(sku,Object.assign({},S.products.get(sku)||p,{ubicacion:nuevaUbi,actualizado:now}))}catch(e){toast("La entrada se registró, pero no se pudo actualizar la ubicación.")}}if(MDP&&!$("#m-docp").dataset.keep)MDP.clear();
     toast(`${{ingreso:"Entrada registrada",egreso:"Salida registrada",ajuste:"Ajuste registrado"}[movTipo]}: ${pr?`${fmtN(cnt)} × ${pr.n} (${fmtN(q)} ${p.unidad||"u"})`:`${fmtN(Math.abs(q))} ${p.unidad||"u"}`} de ${sku}`);
-    ["#m-cant","#m-doc","#m-obs","#m-prod","#m-obra"].forEach(s=>$(s).value="");$("#m-fecha").value=nowLocal();UN_SKU=null;unRefresh();updatePreview();
+    ["#m-cant","#m-doc","#m-obs","#m-prod","#m-obra"].forEach(s=>$(s).value="");$("#m-ubi").dataset.sku="#";$("#m-fecha").value=nowLocal();UN_SKU=null;unRefresh();updatePreview();
   }catch(err){writeError(err)}finally{btn.disabled=false}
 });
 
@@ -4748,7 +4768,7 @@ function renderSHist(){
   if(!L.length){tb.innerHTML=`<tr><td colspan="${MET?8:9}" class="span"><div class="empty">Ningún movimiento coincide con el filtro.</div></td></tr>`;$("#sh-more").hidden=true;return}
   if(MET){tb.innerHTML=L.slice(0,SH_LIMIT).map(m=>`<tr${m.historico?' style="opacity:.6"':""}><td class="mono meta">${esc(fmtD(m.fecha).split(" ")[0])}</td>
     <td><span class="pill ${m.tipo==="ingreso"?"ok":m.tipo==="egreso"?"warn":""}">${m.tipo==="ingreso"?"Entrada":m.tipo==="egreso"?"Salida":"Ajuste"}</span>${m.historico?' <span class="pill" style="background:var(--surface-2)">No suma</span>':""}${m.stockNegativo?' <span class="pill bad" title="Registrado con stock negativo">Stock negativo</span>':""}${movAttHtml(m)}</td>
-    <td><div class="mono meta">${esc(m.sku)}</div>${esc(m.nombre||"")}</td><td>${INV?(m.tipo==="egreso"?`<span class="meta">hacia</span> ${esc(m.destino||"—")}${m.solicitante?`<div class="meta">Solicitó: ${esc(m.solicitante)}</div>`:""}`:m.tipo==="ingreso"?`<span class="meta">desde</span> ${esc(m.origen||"—")}`:'<span class="meta">Recuento / ajuste</span>'):m.tipo==="egreso"?(m.solicitante?`<span class="meta">Retira:</span> ${esc(m.solicitante)}`:"—"):esc(m.origen||"—")}</td><td class="meta">${esc(m.remito||"—")}</td>
+    <td><div class="mono meta">${esc(m.sku)}</div>${esc(m.nombre||"")}</td><td>${INV?(m.tipo==="egreso"?`<span class="meta">hacia</span> ${esc(m.destino||"—")}${m.solicitante?`<div class="meta">Solicitó: ${esc(m.solicitante)}</div>`:""}`:m.tipo==="ingreso"?`<span class="meta">desde</span> ${esc(m.origen||"—")}${m.ubicacion?`<div class="meta">Guardado en: ${esc(m.ubicacion)}</div>`:""}`:'<span class="meta">Recuento / ajuste</span>'):m.tipo==="egreso"?(m.solicitante?`<span class="meta">Retira:</span> ${esc(m.solicitante)}`:"—"):esc(m.origen||"—")}</td><td class="meta">${esc(m.remito||"—")}</td>
     <td class="r num"><b class="qty ${m.tipo}">${m.q>0?"+":"−"}${fmtN(Math.abs(m.q))}</b> <span class="meta">${esc(m.unidad)}</span>${cajasTxt(m)}</td><td class="r num"><b>${fmtN(m.saldo)}</b></td><td class="span meta">${esc(m.obs||"")}${m.ediciones&&m.ediciones.length?`<div class="meta">✎ editado</div>`:""}${movEditBtn(m)}</td></tr>`).join("");$("#sh-more").hidden=L.length<=SH_LIMIT;return}
   tb.innerHTML=L.slice(0,SH_LIMIT).map(m=>`<tr${m.historico?' style="opacity:.6"':""}><td class="mono meta">${esc(fmtD(m.fecha).split(" ")[0])}</td>
     <td><span class="pill ${m.tipo==="ingreso"?"ok":m.tipo==="egreso"?"warn":""}">${m.tipo==="ingreso"?"Entrada":m.tipo==="egreso"?"Salida":"Ajuste"}</span>${m.historico?' <span class="pill" style="background:var(--surface-2)">No suma</span>':""}${m.stockNegativo?' <span class="pill bad" title="Registrado con stock negativo">Stock negativo</span>':""}${movAttHtml(m)}${multi?`<div class="meta">${esc(m.nombre||"")}</div>`:""}</td>
