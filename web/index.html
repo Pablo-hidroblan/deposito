@@ -169,6 +169,11 @@ main{padding-inline:20px;padding-block:20px 60px;min-width:0;max-width:1220px;wi
 .bit-dh b{font-family:var(--f-display);font-size:18px;font-weight:600}
 .bit-dh b::first-letter{text-transform:uppercase}
 .bit-e{padding:9px 14px;border-bottom:1px solid var(--line);display:grid;gap:4px}
+.bc-e{padding:0;overflow:hidden}.bc-h{padding:10px 14px;border-bottom:1px solid var(--line);display:grid;gap:4px}
+.bc-t{width:100%;border-collapse:collapse}.bc-t td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:middle}.bc-t tr:last-child td{border-bottom:0}
+.bc-t input[type=text],.bc-t input[type=number],.bc-t select{min-width:0;width:100%;padding:6px 8px}
+.bc-t tr.off{opacity:.55}.bc-bar{position:sticky;bottom:8px;display:flex;gap:10px;align-items:center;padding:10px 14px;margin-top:12px;box-shadow:0 4px 16px rgba(0,0,0,.12)}
+@media (max-width:700px){.bc-t,.bc-t tbody,.bc-t tr,.bc-t td{display:block;width:100%}.bc-t tr{display:grid;grid-template-columns:28px minmax(0,1fr) minmax(0,1fr);gap:6px;padding:8px 10px;border-bottom:1px solid var(--line)}.bc-t td{padding:0;border:0;width:auto!important;min-width:0!important}.bc-t td.bc-p{grid-column:2/4}.bc-t td.bc-ti{grid-column:2}.bc-t td.bc-q{grid-column:3}.bc-t td.bc-d{grid-column:2/4}.bc-t td.bc-s{grid-column:2/4}}
 .bit-e:last-child{border-bottom:0}
 .bit-t{overflow-wrap:anywhere}
 .bit-t mark{background:var(--warn-soft);color:inherit;border-radius:2px}
@@ -997,6 +1002,15 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
     <div id="bh-list" style="display:grid;gap:12px"></div>
     <div style="text-align:center;margin-top:12px"><button class="btn" id="bh-more" hidden>Mostrar más días</button></div>
   </section>
+  <section id="v-bit-conc" data-view="bit-conc" hidden>
+    <div class="section-head"><div><h2>Pasar al stock</h2><p class="sub" id="bc-sub">Elementos mencionados en Movimientos diarios (con código, o bentonita, grava y tripolifosfato por su nombre) que todavía no tienen su entrada o salida en el stock.</p></div></div>
+    <div class="toolbar">
+      <label class="meta" for="bc-desde">Novedades desde</label><input type="date" id="bc-desde" style="width:auto">
+      <label class="chk" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="bc-all"> Mostrar también lo ya pasado o ignorado</label>
+    </div>
+    <div id="bc-list" style="display:grid;gap:12px"></div>
+    <div class="card bc-bar" id="bc-bar" hidden><span class="meta" id="bc-n" style="margin-right:auto"></span><button class="btn primary" id="bc-go">Registrar seleccionados</button></div>
+  </section>
 
   <!-- HISTORIAL POR NIVEL -->
   <section id="v-shist" data-view="shist" hidden>
@@ -1225,6 +1239,7 @@ const MENU=[
   {id:"diario",name:"Movimientos diarios",ic:"diario",items:[
     {id:"registrar",name:"Registrar movimiento",view:"bit-reg",need:"deposito"},
     {id:"historial",name:"Historial de movimientos",view:"bit-hist"},
+    {id:"astock",name:"Pasar al stock",view:"bit-conc",need:"deposito"},
     {id:"cargaregistros",name:"Cargar documentos",view:"docload",need:"deposito",sec:"Registros de entrada y salida"},
     {id:"verregistro",name:"Documentación cargada",view:"docs",sec:"Registros de entrada y salida"}]},
   {id:"productos",name:"Insumos Equipos",ic:"productos",items:[
@@ -1354,6 +1369,7 @@ function enterView(view,r,opt){
   if(view==="shist"){SH_SCOPE=sc;SH_LIMIT=300;renderSHist()}
   if(view==="bit-reg"){if(!$("#br-fecha").value)$("#br-fecha").value=lsGet("dep-bit-fecha")||todayStr();if(!$("#br-who").value)$("#br-who").value=lsGet("dep-bit-who")||"";renderBitReg()}
   if(view==="bit-hist")renderBitHist();
+  if(view==="bit-conc"){if(!$("#bc-desde").value)$("#bc-desde").value=lsGet("dep-bc-desde")||addDays(todayStr(),-7);renderBitConc()}
   if(view==="camtest")renderCamTest();
   if(view==="backup")renderBackup();
   if(view==="migrar")renderMigrar();
@@ -1374,7 +1390,7 @@ $("#side-scrim").addEventListener("click",()=>setDrawer(false));
 document.addEventListener("click",e=>{const g=e.target.closest("[data-goto]");if(g&&!e.target.closest("#tree")){e.preventDefault();if($("#scrim"))closeModal();go(g.dataset.goto)}});
 function grpStat(g){
   const PA=prodList(),P=PA.filter(isEquipos),dayN=S.movs.filter(m=>isToday(m.fecha)).length;
-  if(g.id==="diario"){const td=S.bit.filter(e=>e.fecha===todayStr()).length;return S.bit.length?`<b>${S.bit.length}</b> novedades en la bitácora · <b>${td}</b> hoy`:"Bitácora vacía"}
+  if(g.id==="diario"){const td=S.bit.filter(e=>e.fecha===todayStr()).length;let pn=0;try{pn=bcPendCount()}catch(e){}return (S.bit.length?`<b>${S.bit.length}</b> novedades en la bitácora · <b>${td}</b> hoy`:"Bitácora vacía")+(pn?` · <b>${pn}</b> para pasar al stock`:"")}
   if(g.id==="productos"){const z=P.filter(p=>estado(p)[0]==="bad").length,l=P.filter(p=>estado(p)[0]==="warn").length;const ni=PA.filter(isInv).length;return `<b>${P.length}</b> productos · <b>${z}</b> sin stock${l?` · <b>${l}</b> bajo mínimo`:""}${ni?` · <b>${ni}</b> en inventario general`:""}`}
   if(g.id==="compras"){const pe=pedList().filter(p=>p.estado==="pendiente").length;return `<b>${pe}</b> nota${pe===1?"":"s"} pendiente${pe===1?"":"s"} de envío`}
   if(g.id==="catalogo_")return `<b>${P.length}</b> productos · <b>${provList().length}</b> proveedores · <b>${cliList().length}</b> clientes`;
@@ -1737,6 +1753,8 @@ const AYUDA=[
   "Andá a <b>Compras › Seguimiento NP</b>: cada nota muestra su estado (Enviada, Procesada, Entrega parcial o Recibido).","Tocá la nota para ver qué se pidió, qué llegó y qué falta.","Cuando llega material, tocá <b>Dar ingreso</b>, marcá los ítems que llegaron y ajustá la cantidad.","Si algo llegó mal, en ese ítem elegí <b>Pedir recambio / devolución</b> y escribí el motivo.","Tocá <b>Continuar</b>, elegí el proveedor y el remito si los tenés, y tocá <b>Ingresar</b>.","Si pediste un recambio, se abre el mensaje de WhatsApp para avisarle a Compras."]},
  {id:"diario",c:"Movimientos diarios",t:"Registrar una novedad del día",k:"bitacora novedad diario registrar movimiento del dia whatsapp compartir",v:["bit-reg","bit-hist"],r:"diario/registrar",p:"deposito",s:[
   "Andá a <b>Movimientos diarios › Registrar movimiento</b>.","Revisá la <b>Fecha</b> y quién <b>Registra</b>.","Escribí la <b>Novedad</b> (por ejemplo: «Se entregan 2 gomas a TEC25»). Podés sumar fotos.","Tocá <b>Cargar novedad</b>.","Para mandarlo al grupo: <b>Compartir por WhatsApp</b>, elegí el período y compartí."]},
+ {id:"astock",c:"Movimientos diarios",t:"Pasar al stock lo anotado en Movimientos diarios",k:"pasar stock automatico conciliar bitacora salida entrada sin cargar una por una codigo bentonita grava tripolifosfato fin del dia descontar sumar",v:["bit-conc"],r:"diario/astock",p:"deposito",s:[
+  "Al anotar la novedad, escribí la cantidad y el código entre paréntesis: «Sale para TEC52 - obra 260251, 4 gomas piston 5\" (G-GP-005)… (R-04-0299)». Bentonita, grava y tripolifosfato se reconocen por el nombre («7 palets de bentonita»).","Al final del día andá a <b>Movimientos diarios › Pasar al stock</b>.","Revisá lo detectado: cantidad, entrada/salida y destino u origen. Lo que ya cargaste a mano aparece como <b>Ya registrado</b> y no se tilda.","Tocá <b>Registrar seleccionados</b>: se hacen todas las entradas y salidas juntas.","Si algo no corresponde, tocá <b>Ignorar</b> para que no vuelva a aparecer."]},
  {id:"docs",c:"Movimientos diarios",t:"Cargar remitos y facturas",k:"remito factura documento foto cargar documentos respaldo registro numero",v:["docload","docs"],r:"diario/cargaregistros",p:"deposito",s:[
   "Andá a <b>Movimientos diarios › Cargar documentos</b>.","Escribí el <b>Nº de referencia</b> (por ejemplo R-04-0567), el tipo y el proveedor o destino.","Tocá <b>Adjuntar archivos</b> o <b>Cámara</b> para sumar la foto o el PDF.","Si hay más documentos, tocá <b>Agregar otro registro</b>.","Tocá <b>Guardar registro</b>.","En las entradas y salidas escribí ese mismo número en <b>Nº de registro</b> y quedan vinculados."]},
  {id:"recuento",c:"Recuento",t:"Hacer un recuento de stock",k:"recuento contar control inventario fisico conteo recorrido",v:["rec"],r:"productos/recuento",p:"deposito",s:[
@@ -1942,7 +1960,7 @@ $("#p-q").addEventListener("input",renderProd);
 $("#t-prod").addEventListener("click",e=>{const ed=e.target.closest("[data-edit]");if(ed){e.stopPropagation();openProductForm(ed.dataset.edit);return}const r=e.target.closest("tr[data-sku]");if(r)openProduct(r.dataset.sku)});
 $("#btn-new-prod").addEventListener("click",()=>openProductForm(null));
 
-function renderAll(){if(ROUTE.it&&ROUTE.it.view==="shist")setTimeout(renderSHist,0);if(ROUTE.it&&ROUTE.it.view==="lbl"&&!$("#l-rows"))openLabels([],$("#lbl-host"));recompute();renderLists();renderStock();renderInv();renderNpSeg();renderProd();renderProv();renderPed();renderHome();origenHint();if(!$("#v-hist").hidden)renderHist();updatePreview();if(currentModalSku&&S.products.has(currentModalSku))openProduct(currentModalSku,true)}
+function renderAll(){if(ROUTE.it&&ROUTE.it.view==="shist")setTimeout(renderSHist,0);try{renderBitConc()}catch(e){}if(ROUTE.it&&ROUTE.it.view==="lbl"&&!$("#l-rows"))openLabels([],$("#lbl-host"));recompute();renderLists();renderStock();renderInv();renderNpSeg();renderProd();renderProv();renderPed();renderHome();origenHint();if(!$("#v-hist").hidden)renderHist();updatePreview();if(currentModalSku&&S.products.has(currentModalSku))openProduct(currentModalSku,true)}
 
 /* ---------- modal ---------- */
 let currentModalSku=null;
@@ -4196,7 +4214,8 @@ function bitDays(L){const m=new Map();L.forEach(e=>{if(!m.has(e.fecha))m.set(e.f
 function bitEntryHtml(e,q){
   let t=esc(e.texto);if(q){const re=new RegExp("("+q.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+")","ig");t=t.replace(re,"<mark>$1</mark>")}
   const at=(e.adjuntos||[]).length?`<div class="bit-att">${e.adjuntos.map((a,i)=>attThumb(a,e.id,i,"sm")).join("")}</div>`:"";
-  return `<div class="bit-e" data-bit="${e.id}"><div class="bit-t">${t}</div>${at}<div class="bit-m">${bitCatPill(e.categoria)}${(e.equipos||[]).map(x=>`<span class="pill" style="background:var(--surface-2)">${esc(x)}</span>`).join("")}${e.registro?`<span class="meta">${esc(e.registro)}</span>`:""}${(e.adjuntos||[]).length?`<span class="meta">📎 ${e.adjuntos.length}</span>`:""}<button class="btn ghost sm need-dep" data-bitedit="${e.id}">Editar</button></div></div>`;
+  let pn=0;try{pn=e.fecha>=addDays(todayStr(),-14)?bcItems(e).filter(x=>x.st==="nuevo").length:0}catch(er){}
+  return `<div class="bit-e" data-bit="${e.id}"><div class="bit-t">${t}</div>${at}<div class="bit-m">${bitCatPill(e.categoria)}${pn&&roleOk("deposito")?`<a href="#" class="pill warn" data-goto="diario/astock" title="Registrar en el stock">${pn} para pasar al stock</a>`:""}${(e.equipos||[]).map(x=>`<span class="pill" style="background:var(--surface-2)">${esc(x)}</span>`).join("")}${e.registro?`<span class="meta">${esc(e.registro)}</span>`:""}${(e.adjuntos||[]).length?`<span class="meta">📎 ${e.adjuntos.length}</span>`:""}<button class="btn ghost sm need-dep" data-bitedit="${e.id}">Editar</button></div></div>`;
 }
 /* adjuntos (imágenes de respaldo) */
 const ATT_MAX=20*1024*1024,ATT_OK=["image/png","image/jpeg","image/gif","image/webp","application/pdf"];
@@ -4669,7 +4688,117 @@ function renderBitHist(){
 }
 ["#bh-q","#bh-desde","#bh-hasta","#bh-cat","#bh-eq"].forEach(s=>$(s).addEventListener("input",()=>{BIT_DAYS=30;renderBitHist()}));
 $("#bh-more").addEventListener("click",()=>{BIT_DAYS+=30;renderBitHist()});
-function renderBitAll(){renderBitReg();renderBitHist()}
+function renderBitAll(){renderBitReg();renderBitHist();try{renderBitConc()}catch(e){}}
+/* ---------- pasar al stock lo anotado en Movimientos diarios ---------- */
+function addDays(d,n){const [y,m,dd]=d.split("-").map(Number);const x=new Date(y,m-1,dd+n);return x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0")+"-"+String(x.getDate()).padStart(2,"0")}
+const BC_NUM={un:1,una:1,uno:1,dos:2,tres:3,cuatro:4,cinco:5,seis:6,siete:7,ocho:8,nueve:9,diez:10,once:11,doce:12,quince:15,veinte:20,media:.5,medio:.5};
+const BC_SKU=/\b([A-Z]{1,3}-[A-Z0-9]{1,8}-\d{2,4})\b/g;
+function bcTipo(e){const n=norm(e.texto).replace(/^[^a-z]+/,"");
+  if(/^(ingresa|ingresan|ingreso|se recibe|se reciben|se recibio|recib|llega|llegan|llego|entra|entran|descarg|se descarg|vuelve|vuelven|se devuelve a base|devuelve a base|retorna)/.test(n))return"ingreso";
+  if(/^(sale|salen|salio|se entrega|se entregan|entrega|entregan|se envia|se envian|envio|despach|se despacha|se carga|se cargan|carga para|se prepara|retira|retiran|se retira|se lleva|se llevan|se devuelve|devuelve)/.test(n))return"egreso";
+  return e.categoria==="recepcion"?"ingreso":e.categoria==="entrega"?"egreso":""}
+function bcQty(seg){ /* primera cantidad válida del tramo */
+  const t=" "+String(seg).replace(/\bobra\s*:?\s*\d+/gi," ").replace(/\bTEC\s*-?\s*\d+/gi," ").replace(/\([^)]*\)/g," ")+" ";
+  const re=/(?:^|[\s,;:(])(\d+(?:[.,]\d+)?|un|una|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|quince|veinte|media|medio)(?=\s)/gi;let m;
+  while((m=re.exec(t))){const after=t.slice(m.index+m[0].length);
+    if(/^\s*(\d+\/\d+|["'”″]|(mm|cm|mts?|m|lts?|l|kgs?|cc|hp|v|pulg)\b)/i.test(after))continue;
+    const w=m[1].toLowerCase(),v=BC_NUM[w]!=null?BC_NUM[w]:parseFloat(w.replace(",","."));if(!(v>0))continue;
+    const unit=(/^\s*([a-záéíóúñ]+(?:\s?bags?)?)/i.exec(after)||[])[1]||"";return {q:v,unit}}
+  return {q:null,unit:""}}
+function bcSeg(txt,idx){ /* tramo de texto que corresponde al elemento que empieza/termina en idx */
+  let a=0;const pre=txt.slice(0,idx);const cuts=[pre.lastIndexOf(","),pre.lastIndexOf(";"),pre.lastIndexOf(":"),pre.lastIndexOf(")"),pre.search(/\s(y|e)\s(?!.*\s(y|e)\s)/)];
+  cuts.forEach(c=>{if(c>=0&&c+1>a)a=c+1});return pre.slice(a)}
+function bcPres(p,unit){if(!unit)return -1;const u=norm(unit).replace(/s$/,"").slice(0,4);if(u.length<3)return -1;const L=presOf(p);
+  if(norm(p.unidad||"").startsWith(u))return -1;return L.findIndex(x=>norm(x.n).startsWith(u))}
+function bcItems(e){
+  const txt=String(e.texto||""),out=[],seen=new Map(),tipo=bcTipo(e),done=e.stock||{};
+  const add=(sku,cands,idx,label)=>{const seg=bcSeg(txt,idx),{q,unit}=bcQty(seg);let k=sku||("?"+label);const n=(seen.get(k)||0)+1;seen.set(k,n);if(n>1)k+="~"+n;
+    const p=sku&&S.products.get(sku);out.push({key:k,sku:sku||"",cands,q,pres:p?bcPres(p,unit):-1,label})};
+  let m;BC_SKU.lastIndex=0;const hasScope=new Set();
+  while((m=BC_SKU.exec(txt))){const sku=m[1].toUpperCase();const p=S.products.get(sku);if(!p)continue;["bentonita","grava","tripolifosfato"].forEach(k=>{if(SCOPES[k].test(p))hasScope.add(k)});add(sku,[],m.index,sku)}
+  const nameRules=[["bentonita",/\bbentonit\w*/gi],["tripolifosfato",/\btripoli\w*/gi],["grava",/\bgrava\s*(?:de\s*)?(\d+)\s*[-a\/]\s*(\d+)?\s*(?:mm)?|\bgrava\b/gi]];
+  nameRules.forEach(([k,re])=>{if(hasScope.has(k))return;let x;re.lastIndex=0;while((x=re.exec(txt))){
+    let L=prodList().filter(p=>SCOPES[k].test(p));
+    if(k==="grava"&&x[1]&&x[2]){const f=L.filter(p=>new RegExp("(^|\\D)"+x[1]+"\\s*-\\s*"+x[2]+"(?!\\d)").test(p.nombre||""));if(f.length)L=f}
+    add(L.length===1?L[0].sku:"",L.map(p=>p.sku),x.index,k==="grava"&&x[1]?`grava ${x[1]}-${x[2]||""}`:k)}});
+  const eq=(e.equipos||[])[0]||"",obra=(/\bobra\s*:?\s*(\d{4,})/i.exec(txt)||[])[1]||"";
+  const rem=(/\(\s*\**\s*((?:R|RE|RTO|FA|FC|FB|FAC|REM)\s*-?\s*\d{1,5}\s*-\s*\d+)\s*\**\s*\)/i.exec(txt)||[])[1]||"";
+  let org="";const pv=/de proveedor(?:es)?\s+(.+?)(?=\s+(?:un|una|dos|tres|\d)|,|\.|\(|$)/i.exec(txt);if(pv)org=pv[1].trim();
+  else{const te=/\bde\s+(TEC\s*-?\s*\d+)/i.exec(txt);if(te)org=normEq(te[1]);else if(/de taller metal[uú]rg/i.test(txt))org=MET_CAT}
+  const day=e.fecha,remK=rem?norm(rem).replace(/\s/g,""):"";
+  out.forEach(it=>{it.tipo=tipo;it.dest=tipo==="egreso"?eq:"";it.org=tipo==="ingreso"?org:"";it.obra=obra;it.rem=rem;
+    const d=done[it.key];
+    if(d==="ign"){it.st="ign";return}
+    if(d){it.st="hecho";it.movId=d;return}
+    if(it.sku&&S.movs.some(mv=>mv.bitId===e.id&&mv.sku===it.sku&&mv.bitKey===it.key)){it.st="hecho";return}
+    const dup=it.sku&&S.movs.find(mv=>mv.sku===it.sku&&mv.tipo===tipo&&!mv.bitId&&((remK&&mv.remito&&norm(mv.remito).replace(/\s/g,"")===remK)||localDay(mv.fecha)===day));
+    if(dup){it.st="ya";it.dup=dup;return}
+    it.st="nuevo"});
+  return out}
+function bcPendCount(){const d0=addDays(todayStr(),-14);let n=0;S.bit.forEach(e=>{if(e.fecha>=d0)n+=bcItems(e).filter(x=>x.st==="nuevo").length});return n}
+const BC_ED=new Map();let BC_ROWS=[];
+function bcState(e,it){const k=e.id+"|"+it.key;if(!BC_ED.has(k))BC_ED.set(k,{chk:it.st==="nuevo"&&!!it.sku&&it.q>0&&!!it.tipo&&!!(it.tipo==="egreso"?it.dest:it.org),sku:it.sku,q:it.q==null?"":it.q,pres:it.pres,tipo:it.tipo,dest:it.tipo==="egreso"?it.dest:it.org});return BC_ED.get(k)}
+function renderBitConc(){const box=$("#bc-list");if(!box||$("#v-bit-conc").hidden)return;
+  const d0=$("#bc-desde").value||addDays(todayStr(),-7),all=$("#bc-all").checked;
+  const E=S.bit.filter(e=>e.fecha>=d0).sort((a,b)=>b.fecha.localeCompare(a.fecha)||(a.orden||0)-(b.orden||0));
+  BC_ROWS=[];let html="",nNew=0,nYa=0;
+  E.forEach(e=>{const its=bcItems(e).filter(it=>all||it.st==="nuevo"||it.st==="ya");if(!its.length)return;
+    html+=`<div class="card bc-e"><div class="bc-h"><div class="meta">${esc(fmtDay(e.fecha))}${e.registro?" · "+esc(e.registro):""}</div><div class="bit-t">${esc(e.texto)}</div></div><table class="bc-t"><tbody>${its.map(it=>{
+      const s=bcState(e,it),i=BC_ROWS.push({e,it})-1,p=s.sku&&S.products.get(s.sku),fin=it.st==="hecho"||it.st==="ign";if(it.st==="nuevo")nNew++;if(it.st==="ya")nYa++;
+      const prodCell=it.cands.length>1||(!it.sku&&!p)?`<select data-bcf="sku" data-bci="${i}" aria-label="Elemento"><option value="">Elegí cuál (${esc(it.label)})…</option>${(it.cands.length?it.cands:[]).map(k=>{const x=S.products.get(k);return `<option value="${esc(k)}"${k===s.sku?" selected":""}>${esc(k)} · ${esc(x?x.nombre:"")}</option>`}).join("")}</select>`:`<div class="mono meta">${esc(s.sku)}</div><div>${esc(p?p.nombre:"")}</div><div class="meta">Stock: ${p?fmtN(stockOf(s.sku))+" "+esc(p.unidad||"u"):"—"}</div>`;
+      const pr=p?presOf(p):[];
+      const stTxt=it.st==="hecho"?`<span class="pill ok">Pasado al stock</span>`:it.st==="ign"?`<span class="pill" style="background:var(--surface-2);color:var(--muted)">Ignorado</span>`:it.st==="ya"?`<span class="pill info" style="background:var(--accent-soft);color:var(--accent)" title="${esc(fmtD(it.dup.fecha))}">Ya registrado</span><div class="meta">${it.dup.tipo==="egreso"?"Salida":"Entrada"} de ${fmtN(Math.abs(it.dup.cantidad))}${it.dup.remito?" · "+esc(it.dup.remito):""} el ${esc(fmtD(it.dup.fecha).split(" ")[0])}</div>`:`<span class="pill warn">Pendiente</span>`;
+      return `<tr class="${s.chk?"":"off"}"><td style="width:28px"><input type="checkbox" data-bcf="chk" data-bci="${i}"${s.chk?" checked":""}${fin?" disabled":""} aria-label="Registrar"></td>
+        <td class="bc-p" style="min-width:180px">${prodCell}</td>
+        <td class="bc-ti" style="width:110px"><select data-bcf="tipo" data-bci="${i}"${fin?" disabled":""} aria-label="Tipo"><option value="">¿Entrada o salida?</option><option value="egreso"${s.tipo==="egreso"?" selected":""}>Salida</option><option value="ingreso"${s.tipo==="ingreso"?" selected":""}>Entrada</option></select></td>
+        <td class="bc-q" style="width:150px"><div style="display:flex;gap:4px"><input type="number" min="0" step="any" inputmode="decimal" data-bcf="q" data-bci="${i}" value="${esc(s.q)}" placeholder="Cant."${fin?" disabled":""} style="max-width:70px">${pr.length?`<select data-bcf="pres" data-bci="${i}"${fin?" disabled":""}><option value="-1">${esc(p.unidad||"u")}</option>${pr.map((x,j)=>`<option value="${j}"${+s.pres===j?" selected":""}>${esc(x.n)}</option>`).join("")}</select>`:`<span class="meta" style="align-self:center">${esc(p?p.unidad||"u":"")}</span>`}</div></td>
+        <td class="bc-d" style="width:170px"><input type="text" data-bcf="dest" data-bci="${i}" list="${s.tipo==="ingreso"?"dl-origen":"dl-destino"}" value="${esc(s.dest||"")}" placeholder="${s.tipo==="ingreso"?"Origen":"Destino"}"${fin?" disabled":""}></td>
+        <td class="bc-s" style="width:170px">${stTxt}${fin?"":`<div><button type="button" class="btn ghost sm" data-bcign="${i}">Ignorar</button></div>`}</td></tr>`}).join("")}</tbody></table></div>`});
+  box.innerHTML=html||`<div class="card empty"><b>No hay nada pendiente</b>Todo lo anotado en Movimientos diarios desde el ${esc(fmtDay(d0))} ya tiene su entrada o salida en el stock. Para que se detecte, anotá la cantidad y el código del elemento, por ejemplo: «Sale para TEC52, 4 gomas pistón 5" (G-GP-005) (R-04-0299)».</div>`;
+  $("#bc-sub").innerHTML=`${nNew?`<b>${nNew}</b> pendiente${nNew===1?"":"s"} de pasar al stock`:"Sin pendientes"}${nYa?` · <b>${nYa}</b> que parece${nYa===1?"":"n"} ya registrado${nYa===1?"":"s"} a mano (no se tilda${nYa===1?"":"n"})`:""}. Revisá y tocá <b>Registrar seleccionados</b>.`;
+  bcBar()}
+function bcBar(){const n=BC_ROWS.filter(r=>bcState(r.e,r.it).chk&&r.it.st!=="hecho"&&r.it.st!=="ign").length;$("#bc-bar").hidden=!BC_ROWS.length;$("#bc-n").textContent=n?`${n} elemento${n===1?"":"s"} seleccionado${n===1?"":"s"}`:"Tildá los elementos a registrar";$("#bc-go").disabled=!n;$("#bc-go").textContent=n?`Registrar ${n} movimiento${n===1?"":"s"}`:"Registrar seleccionados"}
+$("#bc-desde").addEventListener("change",()=>{lsSet("dep-bc-desde",$("#bc-desde").value);renderBitConc()});
+$("#bc-all").addEventListener("change",renderBitConc);
+$("#bc-list").addEventListener("change",e=>{const el=e.target.closest("[data-bcf]");if(!el)return;const R=BC_ROWS[+el.dataset.bci];if(!R)return;const s=bcState(R.e,R.it),f=el.dataset.bcf;
+  if(f==="chk"){s.chk=el.checked;el.closest("tr").classList.toggle("off",!s.chk);bcBar();return}
+  if(f==="q")s.q=el.value;else if(f==="pres")s.pres=+el.value;else if(f==="dest")s.dest=el.value;
+  else if(f==="tipo"){s.tipo=el.value;s.dest=s.tipo==="egreso"?R.it.dest||((R.e.equipos||[])[0]||""):(R.it.org||"");s.chk=true;renderBitConc();return}
+  else if(f==="sku"){s.sku=el.value;const p=S.products.get(s.sku);s.pres=p?bcPres(p,""):-1;s.chk=!!s.sku;renderBitConc();return}
+  if(!s.chk&&R.it.st==="nuevo"){s.chk=true;const c=el.closest("tr").querySelector('[data-bcf="chk"]');if(c)c.checked=true;el.closest("tr").classList.remove("off")}bcBar()});
+$("#bc-list").addEventListener("input",e=>{const el=e.target.closest('[data-bcf="q"],[data-bcf="dest"]');if(!el)return;const R=BC_ROWS[+el.dataset.bci];if(!R)return;const s=bcState(R.e,R.it);if(el.dataset.bcf==="q")s.q=el.value;else s.dest=el.value});
+async function bcMark(e,map){const cur=Object.assign({},(S.bit.find(x=>x.id===e.id)||e).stock||{},map);await withRetry(()=>db.doc("bitacora/"+e.id).update({stock:cur}));const b=S.bit.find(x=>x.id===e.id);if(b)b.stock=cur}
+$("#bc-list").addEventListener("click",async e=>{const b=e.target.closest("[data-bcign]");if(!b)return;if(!guardWrite("deposito"))return;const R=BC_ROWS[+b.dataset.bcign];if(!R)return;
+  b.disabled=true;try{await bcMark(R.e,{[R.it.key]:"ign"});toast("Ignorado: no se pasará al stock.");renderBitConc()}catch(err){b.disabled=false;writeError(err)}});
+$("#bc-go").addEventListener("click",async()=>{if(!guardWrite("deposito"))return;
+  const sel=BC_ROWS.filter(r=>bcState(r.e,r.it).chk&&r.it.st!=="hecho"&&r.it.st!=="ign");if(!sel.length)return;
+  for(const r of sel){const s=bcState(r.e,r.it),p=S.products.get(s.sku),q=+String(s.q).replace(",",".");
+    const where=`«${(p&&p.nombre)||r.it.label}» (${fmtDay(r.e.fecha)})`;
+    if(!p){toast("Elegí el elemento para "+where+".");return}
+    if(!s.tipo){toast("Indicá si es entrada o salida: "+where+".");return}
+    if(!(q>0)){toast("Indicá la cantidad de "+where+".");return}
+    const pr=s.pres>=0?presOf(p)[s.pres]:null;if(pr&&!Number.isInteger(q)){toast(`La cantidad de "${pr.n}" tiene que ser un número entero: ${where}.`);return}
+    if(s.tipo==="egreso"&&p.soloPres&&presOf(p).length&&!pr){toast(`Elegí la presentación (${presOf(p).map(x=>x.n).join(", ")}) de ${where}.`);return}
+    if(!String(s.dest||"").trim()){toast((s.tipo==="egreso"?"Indicá el destino de ":"Indicá el origen de ")+where+".");return}}
+  const btn=$("#bc-go");btn.disabled=true;const lbl=btn.textContent;let ok=0;const fail=[];const marks=new Map();
+  for(const r of sel){const s=bcState(r.e,r.it),p=S.products.get(s.sku),cnt=+String(s.q).replace(",","."),pr=s.pres>=0?presOf(p)[s.pres]:null,q=pr?Math.round(cnt*pr.f*1000)/1000:cnt;
+    btn.textContent=`Registrando ${ok+fail.length+1} de ${sel.length}…`;
+    const e=r.e,dest=normEq(String(s.dest).trim()),prov=s.tipo==="ingreso"?findProv(dest):null;
+    const fecha=e.creado&&localDay(e.creado)===e.fecha?e.creado:new Date(e.fecha+"T12:00:00").toISOString();
+    const antes=stockOf(s.sku),despues=Math.round((antes+(s.tipo==="egreso"?-q:q))*1000)/1000;
+    const body={obra:r.it.obra||"",sku:s.sku,nombre:p.nombre,tipo:s.tipo,cantidad:q,origen:s.tipo==="ingreso"?(prov?prov.razonSocial:dest):"",proveedorId:prov?prov.id:"",destino:s.tipo==="egreso"?dest:"",solicitante:"",autoriza:s.tipo==="egreso"?(e.registro||""):"",remito:r.it.rem||"",obs:"Desde Movimientos diarios: "+String(e.texto||"").slice(0,180),fecha,by:myId||"",bitId:e.id,bitKey:r.it.key};
+    if(SCOPES.metal.test(p))body.nivel="metal";if(pr){body.presN=pr.n;body.presCant=cnt;body.presF=+pr.f}
+    if(despues<0&&s.tipo==="egreso")body.stockNegativo={antes,despues};
+    try{const d=docByKey(body.remito);if(d)body.docId=d.id}catch(er){}
+    try{const ref=await withRetry(()=>db.collection("movimientos").add(body));ok++;
+      if(!marks.has(e.id))marks.set(e.id,{e,m:{}});marks.get(e.id).m[r.it.key]=(ref&&ref.id)||"ok";BC_ED.delete(e.id+"|"+r.it.key)}
+    catch(err){fail.push(where0(p,e))}}
+  for(const {e,m} of marks.values()){try{await bcMark(e,m)}catch(err){}}
+  btn.textContent=lbl;btn.disabled=false;
+  toast(fail.length?`Se registraron ${ok} de ${sel.length}. No se pudieron registrar: ${fail.join(", ")}.`:`Listo: ${ok} movimiento${ok===1?"":"s"} registrado${ok===1?"":"s"} en el stock.`);
+  renderBitConc()});
+function where0(p,e){return `${p.sku} (${fmtDay(e.fecha)})`}
+
 /* exportar */
 $("#bh-xls").addEventListener("click",async()=>{const L=bitFiltered();if(!L.length){toast("No hay novedades para exportar.");return}
   try{await loadXlsx()}catch(e){toast("No se pudo cargar el generador de Excel.");return}
