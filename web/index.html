@@ -169,6 +169,7 @@ main{padding-inline:20px;padding-block:20px 60px;min-width:0;max-width:1220px;wi
 .bit-dh b{font-family:var(--f-display);font-size:18px;font-weight:600}
 .bit-dh b::first-letter{text-transform:uppercase}
 .bit-e{padding:9px 14px;border-bottom:1px solid var(--line);display:grid;gap:4px}
+.eq-chg{background:var(--accent-soft)}#t-eqp td[contenteditable]{outline:none;min-width:40px}#t-eqp td[contenteditable]:focus{box-shadow:inset 0 0 0 2px var(--accent)}
 .bc-e{padding:0;overflow:hidden}.bc-h{padding:10px 14px;border-bottom:1px solid var(--line);display:grid;gap:4px}
 .bc-t{width:100%;border-collapse:collapse}.bc-t td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:middle}.bc-t tr:last-child td{border-bottom:0}
 .bc-t input[type=text],.bc-t input[type=number],.bc-t select{min-width:0;width:100%;padding:6px 8px}
@@ -588,11 +589,12 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
       <div class="field" id="m-origen-wrap">
         <label class="lb" for="m-origen" id="m-origen-lb">Origen de la entrada <em>*</em></label>
         <input type="text" id="m-origen" list="dl-origen" placeholder="Elegí un proveedor o devolución de obra…">
-        <span class="hint" id="m-origen-hint"></span>
+        <span class="hint" id="m-origen-hint"></span><span class="hint" id="m-org-eq"></span>
       </div>
       <div class="field" id="m-destino-wrap" hidden>
         <label class="lb" for="m-destino">Destino de la salida <em>*</em></label>
         <input type="text" id="m-destino" list="dl-destino" placeholder="Área, equipo, pozo o cliente">
+        <span class="hint" id="m-dest-eq"></span>
       </div>
       <div class="field" id="m-ubi-wrap" hidden>
         <label class="lb" for="m-ubi">Ubicación</label>
@@ -1002,6 +1004,13 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
     <div id="bh-list" style="display:grid;gap:12px"></div>
     <div style="text-align:center;margin-top:12px"><button class="btn" id="bh-more" hidden>Mostrar más días</button></div>
   </section>
+  <section id="v-eqinfo" data-view="eqinfo" hidden>
+    <div class="section-head"><div><h2>Equipos de trabajo</h2><p class="sub" id="eq-sub">Datos del reporte diario de equipos: obra, jefe de equipo, estado.</p></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn need-dep" id="eq-add">Agregar equipo</button><button class="btn primary need-dep" id="eq-upd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3M7 8l5-5 5 5M4 21h16"/></svg>Actualizar con el reporte</button></div></div>
+    <div class="toolbar"><input class="grow" type="search" id="eq-q" placeholder="Buscar equipo, obra, jefe, provincia…"></div>
+    <div class="card"><div class="table-wrap"><table class="cards" id="t-eq"><thead><tr><th>Equipo</th><th>Estado</th><th>Detalle</th><th>Jefe de equipo</th><th class="hide-m">Rodado</th><th>N° obra</th><th>Obra</th><th class="hide-m">Provincia</th><th class="hide-m r">Prof. actual / final</th><th class="hide-m">Reporte</th></tr></thead><tbody></tbody></table></div></div>
+    <p class="meta" style="margin-top:10px">Al poner el equipo (ej.: TEC52) como destino de una salida, origen de una entrada o en <b>Pasar al stock</b>, la app completa sola el N° de obra y el jefe de equipo con estos datos.</p>
+  </section>
   <section id="v-bit-conc" data-view="bit-conc" hidden>
     <div class="section-head"><div><h2>Pasar al stock</h2><p class="sub" id="bc-sub">Elementos mencionados en Movimientos diarios (con código, o bentonita, grava y tripolifosfato por su nombre) que todavía no tienen su entrada o salida en el stock.</p></div></div>
     <div class="toolbar">
@@ -1186,7 +1195,7 @@ const ICON_IN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke
 const ICON_OUT='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7-7 7 7"/></svg>';
 
 let db=null,user=null,downloads=null,assets=null,ASSETS_READY=false,canWrite=true,myId=null;
-const S={agenda:new Map(),trarq:new Map(),loadedTA:false,docs:new Map(),loadedDc:false,recs:new Map(),loadedR:false,recL:new Map(),loadedRL:false,perfiles:new Map(),usuarios:new Map(),bit:[],loadedB:false,sugs:new Map(),loadedSg:false,trep:new Map(),trmov:[],loadedT:false,clis:new Map(),loadedC:false,peds:new Map(),loadedPd:false,products:new Map(),provs:new Map(),loadedV:false,movs:[],stock:new Map(),config:{baseUrl:"",origenes:[],destinos:[],categorias:[],personas:[]},loadedP:false,loadedM:false,names:{}};
+const S={eqi:new Map(),loadedEq:false,agenda:new Map(),trarq:new Map(),loadedTA:false,docs:new Map(),loadedDc:false,recs:new Map(),loadedR:false,recL:new Map(),loadedRL:false,perfiles:new Map(),usuarios:new Map(),bit:[],loadedB:false,sugs:new Map(),loadedSg:false,trep:new Map(),trmov:[],loadedT:false,clis:new Map(),loadedC:false,peds:new Map(),loadedPd:false,products:new Map(),provs:new Map(),loadedV:false,movs:[],stock:new Map(),config:{baseUrl:"",origenes:[],destinos:[],categorias:[],personas:[]},loadedP:false,loadedM:false,names:{}};
 let stockFilter="all",histLimit=200,movTipo="ingreso",pendingHash=null;
 
 function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
@@ -1293,6 +1302,7 @@ const MENU=[
     {id:"mapa",name:"Mapa de la aplicación",view:"map"},
     {id:"camara",name:"Prueba de cámara",view:"camtest"},
     {id:"respaldo",name:"Copia de seguridad",view:"backup",need:"admin"},
+    {id:"equipos",name:"Equipos de trabajo",view:"eqinfo"},
     {id:"migrar",name:"Pasar datos de la planilla anterior",view:"migrar",need:"admin"},
     {id:"productos",name:"Productos",view:"prod",title:"Productos",sub:"Catálogo de elementos del depósito, importación desde Excel y etiquetas.",sec:"Catálogo"},
     {id:"proveedores",name:"Proveedores",view:"prov",sec:"Catálogo"},
@@ -1369,6 +1379,7 @@ function enterView(view,r,opt){
   if(view==="shist"){SH_SCOPE=sc;SH_LIMIT=300;renderSHist()}
   if(view==="bit-reg"){if(!$("#br-fecha").value)$("#br-fecha").value=lsGet("dep-bit-fecha")||todayStr();if(!$("#br-who").value)$("#br-who").value=lsGet("dep-bit-who")||"";renderBitReg()}
   if(view==="bit-hist")renderBitHist();
+  if(view==="eqinfo")renderEqInfo();
   if(view==="bit-conc"){if(!$("#bc-desde").value)$("#bc-desde").value=lsGet("dep-bc-desde")||addDays(todayStr(),-7);renderBitConc()}
   if(view==="camtest")renderCamTest();
   if(view==="backup")renderBackup();
@@ -1753,6 +1764,8 @@ const AYUDA=[
   "Andá a <b>Compras › Seguimiento NP</b>: cada nota muestra su estado (Enviada, Procesada, Entrega parcial o Recibido).","Tocá la nota para ver qué se pidió, qué llegó y qué falta.","Cuando llega material, tocá <b>Dar ingreso</b>, marcá los ítems que llegaron y ajustá la cantidad.","Si algo llegó mal, en ese ítem elegí <b>Pedir recambio / devolución</b> y escribí el motivo.","Tocá <b>Continuar</b>, elegí el proveedor y el remito si los tenés, y tocá <b>Ingresar</b>.","Si pediste un recambio, se abre el mensaje de WhatsApp para avisarle a Compras."]},
  {id:"diario",c:"Movimientos diarios",t:"Registrar una novedad del día",k:"bitacora novedad diario registrar movimiento del dia whatsapp compartir",v:["bit-reg","bit-hist"],r:"diario/registrar",p:"deposito",s:[
   "Andá a <b>Movimientos diarios › Registrar movimiento</b>.","Revisá la <b>Fecha</b> y quién <b>Registra</b>.","Escribí la <b>Novedad</b> (por ejemplo: «Se entregan 2 gomas a TEC25»). Podés sumar fotos.","Tocá <b>Cargar novedad</b>.","Para mandarlo al grupo: <b>Compartir por WhatsApp</b>, elegí el período y compartí."]},
+ {id:"equipos",c:"Administración",t:"Actualizar los equipos con el reporte diario",k:"equipos reporte diario obra jefe de equipo tec actualizar whatsapp captura completar automatico",v:["eqinfo"],r:"admin/equipos",p:"deposito",s:[
+  "Andá a <b>Administración › Equipos de trabajo</b> y tocá <b>Actualizar con el reporte</b>.","Elegí la <b>captura</b> que llega por WhatsApp (Claude la lee), o pegá la tabla copiada del Excel, o subí el Excel.","Revisá la tabla: lo que cambia respecto de lo guardado aparece resaltado. Podés corregir tocando la celda.","Tocá <b>Guardar</b>. Desde ahí, al poner el equipo en una salida o entrada se completan la obra y el jefe de equipo."]},
  {id:"astock",c:"Movimientos diarios",t:"Pasar al stock lo anotado en Movimientos diarios",k:"pasar stock automatico conciliar bitacora salida entrada sin cargar una por una codigo bentonita grava tripolifosfato fin del dia descontar sumar",v:["bit-conc"],r:"diario/astock",p:"deposito",s:[
   "Al anotar la novedad, escribí la cantidad y el código entre paréntesis: «Sale para TEC52 - obra 260251, 4 gomas piston 5\" (G-GP-005)… (R-04-0299)». Bentonita, grava y tripolifosfato se reconocen por el nombre («7 palets de bentonita»).","Al final del día andá a <b>Movimientos diarios › Pasar al stock</b>.","Revisá lo detectado: cantidad, entrada/salida y destino u origen. Lo que ya cargaste a mano aparece como <b>Ya registrado</b> y no se tilda.","Tocá <b>Registrar seleccionados</b>: se hacen todas las entradas y salidas juntas.","Si algo no corresponde, tocá <b>Ignorar</b> para que no vuelva a aparecer."]},
  {id:"docs",c:"Movimientos diarios",t:"Cargar remitos y facturas",k:"remito factura documento foto cargar documentos respaldo registro numero",v:["docload","docs"],r:"diario/cargaregistros",p:"deposito",s:[
@@ -1839,7 +1852,7 @@ function renderLists(){
   $("#dl-prod").innerHTML=prodList().filter(scopeTest(MOV_SCOPE)).map(p=>`<option value="${esc(p.sku+" · "+p.nombre)}"></option>`).join("");
   const provNames=new Set(provList().map(v=>v.razonSocial.toLowerCase()));
   const o=uniq(S.config.origenes.concat(S.movs.filter(m=>m.tipo==="ingreso"&&!m.proveedorId).map(m=>m.origen))).filter(x=>!provNames.has(x.toLowerCase())&&!inactiveProvName(x));
-  const d=uniq(S.config.destinos.concat(S.movs.filter(m=>m.tipo==="egreso").map(m=>m.destino)));
+  const d=uniq(S.config.destinos.concat(eqKeysSorted(),S.movs.filter(m=>m.tipo==="egreso").map(m=>m.destino)));
   const pe=uniq(S.config.personas.concat(S.movs.map(m=>m.autoriza),S.movs.map(m=>m.solicitante)));
   const c=uniq(S.config.categorias.concat(prodList().map(p=>p.categoria)));
   $("#dl-origen").innerHTML=provList().filter(v=>v.activo!==false).map(v=>`<option value="${esc(v.razonSocial)}" label="Proveedor${v.cuit?" · CUIT "+esc(v.cuit):""}${v.rubro?" · "+esc(v.rubro):""}"></option>`).join("")+o.map(x=>`<option value="${esc(x)}"></option>`).join("");
@@ -2161,7 +2174,7 @@ function invUbiRefresh(){const w=$("#m-ubi-wrap");if(!w)return;const sel=$("#m-u
   const match=v=>opts.find(o=>nk(o)===nk(v))||"";
   sel.value=keep!==null?match(keep):match(cur);sel.dataset.sku=sku||""}
 function updatePreview(){
-  try{npSelRefresh()}catch(e){}try{invUbiRefresh()}catch(e){}
+  try{npSelRefresh()}catch(e){}try{invUbiRefresh()}catch(e){}try{eqHintMov()}catch(e){}
   const sku=parseSku($("#m-prod").value),w=$("#m-preview-wrap");
   if(!sku){w.hidden=true;return}
   const p=S.products.get(sku),cur=stockOf(sku),q=movQty();
@@ -2173,11 +2186,12 @@ function updatePreview(){
 }
 $("#m-prod").addEventListener("input",updatePreview);
 $("#m-origen").addEventListener("input",origenHint);
+["#m-origen","#m-destino"].forEach(x=>{$(x).addEventListener("input",()=>eqHintMov());$(x).addEventListener("change",()=>eqHintMov())});
 $("#m-cant").addEventListener("input",()=>{unHint();updatePreview()});
 $("#m-un").addEventListener("change",()=>{unHint();updatePreview()});
 $("#m-prod").addEventListener("input",unRefresh);
 $("#m-doc").addEventListener("input",()=>docHint($("#m-doc"),$("#m-doc-h")));
-$("#f-mov").addEventListener("reset",()=>setTimeout(()=>{$("#m-np").dataset.sku="";$("#m-ubi").dataset.sku="#";$("#m-doc-h").innerHTML="";$("#m-fecha").value=nowLocal();UN_SKU=null;unRefresh();mAttClear();if(MDP)MDP.clear();updatePreview();origenHint()},0));
+$("#f-mov").addEventListener("reset",()=>setTimeout(()=>{$("#m-obra").dataset.auto="";$("#m-solic").dataset.auto="";$("#m-np").dataset.sku="";$("#m-ubi").dataset.sku="#";$("#m-doc-h").innerHTML="";$("#m-fecha").value=nowLocal();UN_SKU=null;unRefresh();mAttClear();if(MDP)MDP.clear();updatePreview();origenHint()},0));
 $("#f-mov").addEventListener("submit",async e=>{
   e.preventDefault();if(!guardWrite(movTipo==="ajuste"?"admin":"deposito"))return;
   const sku=parseSku($("#m-prod").value);
@@ -2205,6 +2219,7 @@ $("#f-mov").addEventListener("submit",async e=>{
   if(prov&&prov.activo===false){toast("Ese proveedor está inactivo. Reactivalo en Proveedores o elegí otro.");return}
   const body={obra:MOV_SCOPE&&!met?$("#m-obra").value.trim():"",sku,nombre:p.nombre,tipo:movTipo,cantidad:q,origen:movTipo==="ingreso"?(prov?prov.razonSocial:origen):"",proveedorId:prov?prov.id:"",destino:movTipo==="egreso"?(met?MET_CAT:destino):"",solicitante:movTipo==="egreso"?retira:"",autoriza:met||movTipo==="ingreso"?"":aut,remito:met&&movTipo==="egreso"?"":docN,obs:$("#m-obs").value.trim(),fecha,by:myId||""};
   if(met)body.nivel="metal";if(pr){body.presN=pr.n;body.presCant=cnt;body.presF=+pr.f}
+  {const ei=eqInfo(movTipo==="egreso"?destino:movTipo==="ingreso"?origen:"");if(ei&&eqObraOk(ei.obra)){if(!body.obra)body.obra=ei.obra;if(body.obra===ei.obra&&ei.obraNombre)body.obraNombre=ei.obraNombre}}
   if(despues<0&&movTipo!=="ingreso")body.stockNegativo={antes,despues};
   if(movTipo==="ingreso"&&$("#m-np").value&&!$("#m-np-wrap").hidden){const np=S.peds.get($("#m-np").value);if(np){body.npId=np.id;body.np=pedNum(np.numero)}}
   const dId=(MDP&&movTipo!=="ajuste"?MDP.get():null)||((docByKey(body.remito)||{}).id)||null;if(dId){body.docId=dId;if(!body.remito){const dd=S.docs.get(dId);if(dd)body.remito=dd.numero}}
@@ -2220,7 +2235,7 @@ $("#f-mov").addEventListener("submit",async e=>{
   try{await db.collection("movimientos").add(body);if(useAtt)mAttClear();
     if(nuevaUbi&&nuevaUbi!==(p.ubicacion||"")){const now=new Date().toISOString();try{await db.doc("products/"+sku).update({ubicacion:nuevaUbi,actualizado:now});S.products.set(sku,Object.assign({},S.products.get(sku)||p,{ubicacion:nuevaUbi,actualizado:now}))}catch(e){toast("La entrada se registró, pero no se pudo actualizar la ubicación.")}}if(MDP&&!$("#m-docp").dataset.keep)MDP.clear();
     toast(`${{ingreso:"Entrada registrada",egreso:"Salida registrada",ajuste:"Ajuste registrado"}[movTipo]}: ${pr?`${fmtN(cnt)} × ${pr.n} (${fmtN(q)} ${p.unidad||"u"})`:`${fmtN(Math.abs(q))} ${p.unidad||"u"}`} de ${sku}`);
-    ["#m-cant","#m-doc","#m-obs","#m-prod","#m-obra"].forEach(s=>$(s).value="");$("#m-ubi").dataset.sku="#";$("#m-fecha").value=nowLocal();UN_SKU=null;unRefresh();updatePreview();
+    ["#m-cant","#m-doc","#m-obs","#m-prod","#m-obra"].forEach(s=>$(s).value="");$("#m-obra").dataset.auto="";$("#m-solic").dataset.auto="";$("#m-ubi").dataset.sku="#";$("#m-fecha").value=nowLocal();UN_SKU=null;unRefresh();updatePreview();
   }catch(err){writeError(err)}finally{btn.disabled=false}
 });
 
@@ -4721,7 +4736,7 @@ function bcItems(e){
     let L=prodList().filter(p=>SCOPES[k].test(p));
     if(k==="grava"&&x[1]&&x[2]){const f=L.filter(p=>new RegExp("(^|\\D)"+x[1]+"\\s*-\\s*"+x[2]+"(?!\\d)").test(p.nombre||""));if(f.length)L=f}
     add(L.length===1?L[0].sku:"",L.map(p=>p.sku),x.index,k==="grava"&&x[1]?`grava ${x[1]}-${x[2]||""}`:k)}});
-  const eq=(e.equipos||[])[0]||"",obra=(/\bobra\s*:?\s*(\d{4,})/i.exec(txt)||[])[1]||"";
+  const eq=(e.equipos||[])[0]||"",eqi=eqInfo(eq),obra=(/\bobra\s*:?\s*(\d{4,})/i.exec(txt)||[])[1]||(eqi&&eqObraOk(eqi.obra)?eqi.obra:"");
   const rem=(/\(\s*\**\s*((?:R|RE|RTO|FA|FC|FB|FAC|REM)\s*-?\s*\d{1,5}\s*-\s*\d+)\s*\**\s*\)/i.exec(txt)||[])[1]||"";
   let org="";const pv=/de proveedor(?:es)?\s+(.+?)(?=\s+(?:un|una|dos|tres|\d)|,|\.|\(|$)/i.exec(txt);if(pv)org=pv[1].trim();
   else{const te=/\bde\s+(TEC\s*-?\s*\d+)/i.exec(txt);if(te)org=normEq(te[1]);else if(/de taller metal[uú]rg/i.test(txt))org=MET_CAT}
@@ -4788,6 +4803,7 @@ $("#bc-go").addEventListener("click",async()=>{if(!guardWrite("deposito"))return
     const antes=stockOf(s.sku),despues=Math.round((antes+(s.tipo==="egreso"?-q:q))*1000)/1000;
     const body={obra:r.it.obra||"",sku:s.sku,nombre:p.nombre,tipo:s.tipo,cantidad:q,origen:s.tipo==="ingreso"?(prov?prov.razonSocial:dest):"",proveedorId:prov?prov.id:"",destino:s.tipo==="egreso"?dest:"",solicitante:"",autoriza:s.tipo==="egreso"?(e.registro||""):"",remito:r.it.rem||"",obs:"Desde Movimientos diarios: "+String(e.texto||"").slice(0,180),fecha,by:myId||"",bitId:e.id,bitKey:r.it.key};
     if(SCOPES.metal.test(p))body.nivel="metal";if(pr){body.presN=pr.n;body.presCant=cnt;body.presF=+pr.f}
+    {const ei=eqInfo(dest);if(ei&&eqObraOk(ei.obra)){if(!body.obra)body.obra=ei.obra;if(body.obra===ei.obra&&ei.obraNombre)body.obraNombre=ei.obraNombre}}
     if(despues<0&&s.tipo==="egreso")body.stockNegativo={antes,despues};
     try{const d=docByKey(body.remito);if(d)body.docId=d.id}catch(er){}
     try{const ref=await withRetry(()=>db.collection("movimientos").add(body));ok++;
@@ -4798,6 +4814,104 @@ $("#bc-go").addEventListener("click",async()=>{if(!guardWrite("deposito"))return
   toast(fail.length?`Se registraron ${ok} de ${sel.length}. No se pudieron registrar: ${fail.join(", ")}.`:`Listo: ${ok} movimiento${ok===1?"":"s"} registrado${ok===1?"":"s"} en el stock.`);
   renderBitConc()});
 function where0(p,e){return `${p.sku} (${fmtDay(e.fecha)})`}
+/* ---------- equipos de trabajo (reporte diario de equipos) ---------- */
+let SAMPLE=null,SAMPLE_IMG=false;
+const EQ_F=[["equipo","Equipo"],["estado","Estado"],["detalle","Detalle"],["jefe","Jefe de equipo"],["rodado","Rodado"],["obra","N° de obra"],["obraNombre","Obra"],["provincia","Provincia"],["profActual","Prof. actual"],["profFinal","Prof. final"]];
+const EQ_SYN=[["equipo",/^(equipo|tec)$/],["estado",/^estado/],["detalle",/^(detalle|tarea|actividad)/],["jefe",/^jefe/],["rodado",/^(rodado|patente|dominio)/],["obra",/^(n|nro|numero|n°|no|nº)\.?\s*(de\s*)?obra|^obra\s*(n|nro|numero|n°|nº)/],["obraNombre",/^(obra|nombre de (la )?obra|cliente)$/],["provincia",/^provincia/],["profActual",/^prof.*actual/],["profFinal",/^prof.*final/]];
+function eqKey(v){const t=String(v==null?"":v).replace(/\s+/g," ").trim();if(!t)return"";return normEq(t).toUpperCase().replace(/[\s\/#.]+/g,"")}
+function eqObraOk(o){o=String(o||"").trim();return !!o&&!/^(n\/?a|no aplica|-+|s\/?d|base)$/i.test(o)}
+function eqVal(v){v=String(v==null?"":v).trim();return /^-+$/.test(v)?"":v}
+function eqInfo(v){const k=eqKey(v);return k?S.eqi.get(k)||null:null}
+function eqNum(k){const m=/(\d+)/.exec(k);return m?+m[1]:1e9}
+function eqKeysSorted(){return Array.from(S.eqi.keys()).sort((a,b)=>eqNum(a)-eqNum(b)||a.localeCompare(b))}
+const eqEstPill=e=>{const t=String(e||"").trim();if(!t)return'<span class="meta">—</span>';const n=norm(t);return `<span class="pill ${/^no /.test(n)||/fuera|parad|baja/.test(n)?"bad":/^operativ/.test(n)?"ok":"warn"}">${esc(t)}</span>`};
+const eqDay=d=>d?fmtDay(d).replace(/^[^,]+,\s*/,""):"";
+function eqLine(i){if(!i)return"";const p=[];if(eqObraOk(i.obra))p.push("Obra "+esc(i.obra)+(i.obraNombre?" · "+esc(i.obraNombre):""));else if(i.obraNombre)p.push(esc(i.obraNombre));if(eqVal(i.jefe))p.push("Jefe: "+esc(i.jefe));if(i.estado)p.push(esc(i.estado.toLowerCase()));
+  return `<b>${esc(i.equipo||i.id)}</b> · ${p.join(" · ")}${i.fechaReporte?` <span class="meta">(reporte del ${esc(eqDay(i.fechaReporte))})</span>`:""}`}
+function eqHintMov(){const dH=$("#m-dest-eq"),oH=$("#m-org-eq");if(!dH)return;
+  const v=movTipo==="egreso"?$("#m-destino").value:movTipo==="ingreso"?$("#m-origen").value:"",i=eqInfo(v);
+  dH.innerHTML=movTipo==="egreso"&&i?eqLine(i):"";oH.innerHTML=movTipo==="ingreso"&&i?eqLine(i):"";
+  const set=(el,on,v)=>{if(!on)return;if(!el.value.trim()||(el.dataset.auto&&el.value===el.dataset.auto)){el.value=v;el.dataset.auto=v}};
+  set($("#m-obra"),!$("#m-obra-wrap").hidden,i&&eqObraOk(i.obra)?i.obra:"");
+  set($("#m-solic"),movTipo==="egreso"&&!$("#m-solic-wrap").hidden,i?eqVal(i.jefe):"")}
+function renderEqInfo(){const tb=$("#t-eq tbody");if(!tb||$("#v-eqinfo").hidden)return;
+  const q=norm($("#eq-q").value),L=eqKeysSorted().map(k=>S.eqi.get(k)).filter(i=>!q||norm(EQ_F.map(f=>i[f[0]]||"").join(" ")+" "+i.id).includes(q));
+  const last=Array.from(S.eqi.values()).map(i=>i.fechaReporte||"").sort().pop();
+  $("#eq-sub").innerHTML=S.loadedEq?(S.eqi.size?`<b>${S.eqi.size}</b> equipo${S.eqi.size===1?"":"s"}${last?` · último reporte cargado: <b>${esc(eqDay(last))}</b>`:""}`:"Todavía no hay equipos: tocá <b>Actualizar con el reporte</b>."):"Cargando…";
+  tb.innerHTML=L.map(i=>`<tr data-eq="${esc(i.id)}" style="cursor:pointer"><td style="white-space:nowrap"><b>${esc(i.equipo||i.id)}</b></td><td>${eqEstPill(i.estado)}</td><td>${esc(i.detalle||"")}</td><td>${esc(eqVal(i.jefe)||"—")}</td><td class="hide-m mono meta">${esc(eqVal(i.rodado))}</td><td class="mono">${esc(i.obra||"—")}</td><td>${esc(i.obraNombre||"")}</td><td class="hide-m">${esc(i.provincia||"")}</td><td class="hide-m r num">${esc(eqVal(i.profActual)||"–")} / ${esc(eqVal(i.profFinal)||"–")}</td><td class="hide-m meta">${esc(i.fechaReporte?eqDay(i.fechaReporte):"")}</td></tr>`).join("")||`<tr><td colspan="10" class="meta" style="padding:14px">${S.eqi.size?"Ningún equipo coincide con la búsqueda.":"Sin datos todavía."}</td></tr>`}
+$("#eq-q").addEventListener("input",renderEqInfo);
+$("#t-eq").addEventListener("click",e=>{const r=e.target.closest("tr[data-eq]");if(r)eqEdit(r.dataset.eq)});
+$("#eq-add").addEventListener("click",()=>eqEdit(null));
+$("#eq-upd").addEventListener("click",eqUpdate);
+function eqEdit(id){if(!guardWrite("deposito"))return;const i=id?S.eqi.get(id):null;
+  modal(`<div class="modal-h"><div><div class="meta">Equipos de trabajo</div><h3>${i?esc(i.equipo||i.id):"Agregar equipo"}</h3></div><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
+   <form class="form" id="f-eq" autocomplete="off" style="padding:18px">
+    ${EQ_F.map(([k,l])=>`<div class="field${k==="detalle"||k==="obraNombre"?" full":""}"><label class="lb" for="eq-${k}">${l}${k==="equipo"?" <em>*</em>":""}</label><input type="text" id="eq-${k}" value="${esc(i?i[k]||"":"")}"${k==="equipo"&&i?" readonly":""}${k==="equipo"?' placeholder="Ej.: TEC 52"':""}></div>`).join("")}
+    <div class="form-actions">${i?`<button type="button" class="btn danger" id="eq-del" style="margin-right:auto">Eliminar</button>`:""}<button type="button" class="btn" data-close>Cancelar</button><button type="submit" class="btn primary">Guardar</button></div></form>`,"wide");
+  if(i)$("#eq-del").onclick=async ev=>{const b=ev.currentTarget;if(!b.dataset.ok){b.dataset.ok=1;b.textContent="¿Eliminar? Tocá de nuevo";return}try{await db.doc("equipos/"+i.id).delete();toast("Equipo eliminado.");closeModal()}catch(err){writeError(err)}};
+  $("#f-eq").addEventListener("submit",async e=>{e.preventDefault();const o={};EQ_F.forEach(([k])=>o[k]=$("#eq-"+k).value.trim());const k=i?i.id:eqKey(o.equipo);if(!k){toast("Indicá el equipo.");return}
+    if(!i&&S.eqi.has(k)){toast("Ese equipo ya existe: tocalo en la lista para editarlo.");return}
+    try{await db.doc("equipos/"+k).set(Object.assign((({id,...x})=>x)(i||{}),o,{fechaReporte:(i&&i.fechaReporte)||"",editadoAMano:new Date().toISOString(),actualizado:new Date().toISOString(),by:myId||""}));toast("Equipo guardado.");closeModal()}catch(err){writeError(err)}})}
+/* lectura de la tabla (pegada o Excel) */
+function eqFromAoa(aoa){let hi=-1,map=null,fecha="";
+  for(let r=0;r<Math.min(aoa.length,15)&&hi<0;r++){const row=(aoa[r]||[]).map(c=>norm(String(c==null?"":c)));
+    const fi=row.findIndex(c=>/^fecha/.test(c));if(fi>=0){for(let c=fi+1;c<row.length;c++){const d=eqDate(aoa[r][c]);if(d){fecha=d;break}}}
+    if(row.some(c=>/^(equipo|tec)$/.test(c))){hi=r;map={};row.forEach((c,ci)=>{const f=EQ_SYN.find(([k,re])=>re.test(c)&&!(k in map));if(f)map[f[0]]=ci})}}
+  if(hi<0)throw new Error("No encontré la fila de títulos (EQUIPO, ESTADO, DETALLE…). Copiá la tabla con los títulos.");
+  const filas=[];for(let r=hi+1;r<aoa.length;r++){const row=aoa[r]||[];const o={};Object.keys(map).forEach(k=>o[k]=String(row[map[k]]==null?"":row[map[k]]).replace(/\s+/g," ").trim());if(!o.equipo||!/\d/.test(o.equipo))continue;filas.push(o)}
+  if(!filas.length)throw new Error("No encontré filas de equipos debajo de los títulos.");return {fecha,filas}}
+function eqDate(v){if(v==null||v==="")return"";if(typeof v==="number"&&v>40000&&v<80000){const d=new Date(Math.round((v-25569)*864e5));return d.toISOString().slice(0,10)}
+  const m=/(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})/.exec(String(v));if(m){const y=m[3].length===2?"20"+m[3]:m[3];return `${y}-${m[2].padStart(2,"0")}-${m[1].padStart(2,"0")}`}
+  const m2=/(\d{4})-(\d{2})-(\d{2})/.exec(String(v));return m2?m2[0]:""}
+let EQP=null;
+function eqUpdate(){if(!guardWrite("deposito"))return;EQP=null;
+  modal(`<div class="modal-h"><div><div class="meta">Equipos de trabajo</div><h3>Actualizar con el reporte</h3></div><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
+   <div class="form" style="padding:18px">
+    <div class="field full" id="eq-img-w"${SAMPLE_IMG?"":" hidden"}><span class="lb">Captura del reporte (la imagen que llega por WhatsApp)</span><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><label class="btn primary" for="eq-img">Elegir captura…</label><input type="file" id="eq-img" accept="image/*" hidden><button type="button" class="btn" id="eq-stop" hidden>Detener</button></div><span class="hint">Claude lee la imagen y arma la tabla (tarda entre 20 segundos y 1 minuto). Revisala antes de guardar.</span></div>
+    <div class="field full"><label class="lb" for="eq-paste">${SAMPLE_IMG?"O pegá":"Pegá"} la tabla copiada del Excel del reporte</label><textarea id="eq-paste" rows="4" placeholder="Seleccioná en el Excel desde FECHA (o desde los títulos EQUIPO, ESTADO…) hasta la última fila, copiá y pegá acá"></textarea>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px"><button type="button" class="btn sm" id="eq-parse">Leer lo pegado</button><label class="btn sm" for="eq-xls">Subir el Excel del reporte</label><input type="file" id="eq-xls" accept=".xlsx,.xls,.csv" hidden></div></div>
+    <p class="meta" id="eq-st" style="margin:0"></p>
+   </div><div id="eq-prev" style="padding:0 18px 18px"></div>`,"wide");
+  $("#eq-parse").onclick=()=>{const t=$("#eq-paste").value;if(!t.trim()){toast("Pegá primero la tabla.");return}
+    try{const aoa=t.replace(/\r/g,"").split("\n").map(l=>l.includes("\t")?l.split("\t"):l.split(/\s{2,}|;/));eqPreview(eqFromAoa(aoa),"Tabla pegada")}catch(err){toast(err.message)}};
+  $("#eq-xls").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;$("#eq-st").textContent="Leyendo el Excel…";
+    try{await loadXlsx();const wb=XLSX.read(await f.arrayBuffer(),{type:"array"});let res=null,err=null;
+      for(const n of wb.SheetNames){try{res=eqFromAoa(XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,defval:""}));break}catch(x){err=x}}
+      if(!res)throw err||new Error("No encontré la tabla de equipos.");$("#eq-st").textContent="";eqPreview(res,f.name)}catch(err){$("#eq-st").textContent="";toast(err.message||"No se pudo leer el archivo.")}};
+  let ctl=null;$("#eq-stop").onclick=()=>ctl&&ctl.abort();
+  $("#eq-img").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f||!SAMPLE)return;ctl=new AbortController();$("#eq-stop").hidden=false;$("#eq-st").textContent="Claude está leyendo la captura…";
+    try{const j=await SAMPLE.json(`La imagen adjunta es el reporte diario de equipos de perforación de la empresa Hidroblan (una tabla). Transcribí TODAS las filas de la tabla, una por equipo, copiando los textos tal cual aparecen (respetá números de obra como "260301-bis", "N/A" o "NO APLICA").
+Respondé SOLO con un objeto JSON con esta forma:
+{"fecha":"AAAA-MM-DD","filas":[{"equipo":"TEC 23","estado":"OPERATIVO","detalle":"Traslado de equipo","jefe":"MUÑOZ J.","rodado":"AC632RX","obra":"260236","obraNombre":"ATAMISQUE","provincia":"Mendoza","profActual":"","profFinal":""}]}
+- "fecha": la fecha que figura arriba de la tabla (viene como DD/MM/AAAA), convertida a AAAA-MM-DD; "" si no hay.
+- Columnas: EQUIPO→equipo, ESTADO→estado, DETALLE→detalle, JEFE DE EQUIPO→jefe, RODADO→rodado, N° de OBRA→obra, OBRA→obraNombre, PROVINCIA→provincia, PROF ACTUAL→profActual, PROF FINAL→profFinal.
+- Celdas vacías, grisadas o con "-" van como "". No inventes datos.`,{images:[f],signal:ctl.signal,modelTier:"default",cache:false});
+      if(!j||!Array.isArray(j.filas)||!j.filas.length)throw {code:"invalid_json"};
+      const filas=j.filas.map(o=>{const x={};EQ_F.forEach(([k])=>x[k]=String(o&&o[k]!=null?o[k]:"").replace(/\s+/g," ").trim());return x}).filter(x=>x.equipo);
+      $("#eq-st").textContent="";eqPreview({fecha:eqDate(j.fecha)||"",filas},"Captura: "+f.name)}
+    catch(err){const c=err&&err.code;$("#eq-st").textContent="";
+      if(c==="not_granted"||c==="sampling_disabled"||c==="images_unavailable"||c==="capability_disabled"||c==="not_declared"){SAMPLE_IMG=false;$("#eq-img-w").hidden=true;toast("No está disponible la lectura de imágenes con Claude en esta vista. Pegá la tabla o subí el Excel.")}
+      else if(c!=="cancelled")toast(c==="rate_limited"?"Claude está ocupado o se alcanzó el límite de uso: probá en un rato.":c==="image_rejected"?"No se pudo usar esa imagen: probá con otra captura (JPG o PNG).":"No se pudo leer la captura. Probá de nuevo o pegá la tabla.")}
+    finally{$("#eq-stop").hidden=true;ctl=null}}}
+function eqPreview(res,src){EQP=res;const box=$("#eq-prev");
+  const rows=res.filas.map((o,i)=>{const k=eqKey(o.equipo),old=S.eqi.get(k);const cell=f=>`<td contenteditable="true" data-eqr="${i}" data-eqk="${f}" class="${old&&eqVal(old[f])!==eqVal(o[f])?"eq-chg":""}"${old&&eqVal(old[f])!==eqVal(o[f])?` title="Antes: ${esc(old[f]||"—")}"`:""}>${esc(o[f]||"")}</td>`;
+    return `<tr><td style="white-space:nowrap"><b>${esc(o.equipo)}</b>${old?"":' <span class="pill info" style="background:var(--accent-soft);color:var(--accent)">Nuevo</span>'}</td>${EQ_F.slice(1).map(([f])=>cell(f)).join("")}</tr>`}).join("");
+  const nChg=res.filas.filter(o=>{const old=S.eqi.get(eqKey(o.equipo));return !old||EQ_F.some(([f])=>eqVal(old[f])!==eqVal(o[f]))}).length;
+  box.innerHTML=`<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:8px"><div class="field" style="margin:0"><label class="lb" for="eq-fecha">Fecha del reporte</label><input type="date" id="eq-fecha" value="${esc(res.fecha||todayStr())}"></div><p class="meta" style="margin:0 auto 6px 0">${esc(src)} · ${res.filas.length} equipos · ${nChg} con cambios (resaltados). Tocá una celda para corregirla.</p></div>
+   <div class="card table-wrap" style="max-height:340px;overflow:auto"><table class="prev" id="t-eqp"><thead><tr>${EQ_F.map(f=>`<th>${f[1]}</th>`).join("")}</tr></thead><tbody>${rows}</tbody></table></div>
+   <div class="form-actions" style="margin-top:12px"><button type="button" class="btn" data-close>Cancelar</button><button type="button" class="btn primary" id="eq-save">Guardar ${res.filas.length} equipos</button></div>`;
+  $("#eq-save").onclick=eqSave}
+async function eqSave(){if(!EQP||!guardWrite("deposito"))return;const btn=$("#eq-save");
+  $$("#t-eqp [data-eqr]").forEach(td=>{const o=EQP.filas[+td.dataset.eqr];if(o)o[td.dataset.eqk]=td.textContent.replace(/\s+/g," ").trim()});
+  const fecha=$("#eq-fecha").value||todayStr(),now=new Date().toISOString();let ok=0,skip=0;btn.disabled=true;
+  try{for(const o of EQP.filas){const k=eqKey(o.equipo);if(!k)continue;const old=S.eqi.get(k);
+      if(old&&old.fechaReporte&&old.fechaReporte>fecha){skip++;continue}
+      const body={};EQ_F.forEach(([f])=>body[f]=o[f]||"");Object.assign(body,{fechaReporte:fecha,actualizado:now,by:myId||""});
+      btn.textContent=`Guardando ${ok+1} de ${EQP.filas.length}…`;await withRetry(()=>db.doc("equipos/"+k).set(body));ok++}
+    await withRetry(()=>db.doc("eq_reportes/"+fecha).set({fecha,filas:EQP.filas,cargado:now,by:myId||""}));
+    toast(`Equipos actualizados: ${ok}${skip?` · ${skip} sin cambiar porque ya tenían un reporte más nuevo`:""}.`);closeModal()}
+  catch(err){btn.disabled=false;btn.textContent="Guardar";writeError(err)}}
+
 
 /* exportar */
 $("#bh-xls").addEventListener("click",async()=>{const L=bitFiltered();if(!L.length){toast("No hay novedades para exportar.");return}
@@ -6080,6 +6194,7 @@ pendingHash=decodeURIComponent((location.hash||"").slice(1))||null;if(pendingHas
   const [d,u,dl]=await Promise.all([claude.use("db"),claude.use("user"),claude.use("downloads")]);
   db=d;user=u;downloads=dl;
   claude.use("mail").then(m=>{mailer=m||null},()=>{});
+  claude.use("sample").then(async x=>{SAMPLE=x||null;if(SAMPLE){try{const l=await SAMPLE.limits();SAMPLE_IMG=!!(l&&l.images)}catch(e){SAMPLE_IMG=false}}},()=>{});
   claude.use("assets").then(a=>{assets=a;ASSETS_READY=true;attUi();mAttUi()},()=>{ASSETS_READY=true;attUi();mAttUi()});
   if(!db){banner("No se pudo conectar con el servidor. Revisá la conexión y recargá la página.","bad");S.loadedP=true;S.loadedM=true;renderAll();return}
   if(user){try{myId=await user.id()}catch(e){}}
@@ -6088,6 +6203,7 @@ pendingHash=decodeURIComponent((location.hash||"").slice(1))||null;if(pendingHas
   db.collection("usuarios").onSnapshot(s=>{S.usuarios=new Map(s.docs.map(x=>[x.id,x.data()]));if(ROUTE.it&&ROUTE.it.view==="users")renderUsers()},()=>{});
   db.doc("config/app").onSnapshot(s=>{const c=s.exists?s.data():{};S.config=Object.assign({contactos:[],baseUrl:"",origenes:[],destinos:[],categorias:[],personas:[],equipos:[],comprasEmail:"",depositos:[],trTipos:[],diametros:[]},c);if(!$("#v-conf").hidden&&!document.activeElement.closest("#f-conf"))fillConfForm();renderLists();renderTrAll();renderBackup();renderHome();if(currentModalSku)openProduct(currentModalSku,true)},onErr);
   db.collection("products").onSnapshot(s=>{S.products=new Map(s.docs.map(x=>{const v=x.data();return[x.id,Object.assign({},v,{sku:x.id})]}));S.loadedP=true;renderAll();if(pendingHash){const h=pendingHash;pendingHash=null;const sku=parseSku(h);if(sku)openProduct(sku)}},onErr);
+  db.collection("equipos").onSnapshot(s=>{S.eqi=new Map(s.docs.map(x=>[x.id,Object.assign({id:x.id},x.data())]));S.loadedEq=true;renderEqInfo();renderLists();try{eqHintMov()}catch(e){}try{renderBitConc()}catch(e){}},onErr);
   db.collection("bitacora").onSnapshot(s=>{S.bit=s.docs.map(x=>Object.assign({id:x.id},x.data()));S.loadedB=true;renderBitAll();renderHome()},onErr);
   db.collection("sugerencias").onSnapshot(s=>{S.sugs=new Map(s.docs.map(x=>[x.id,Object.assign({},x.data(),{id:x.id})]));S.loadedSg=true;if(ROUTE.it&&ROUTE.it.view==="map"&&!($("#map-panel").contains(document.activeElement)&&document.activeElement.matches("input,textarea,select")))renderMap();else if(ROUTE.it&&ROUTE.it.view==="map")renderSgTable();renderHome()},onErr);
   db.collection("clientes").onSnapshot(s=>{S.clis=new Map(s.docs.map(x=>[x.id,Object.assign({},x.data(),{id:x.id})]));S.loadedC=true;renderCli();renderLists();renderHome()},onErr);
