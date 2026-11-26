@@ -651,6 +651,7 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
     <div id="rec-list-v">
       <div class="section-head"><div><h2>Recuento de stock</h2><p class="sub">Contá lo que hay en el depósito producto por producto. Al cerrar el recuento, el stock de cada producto contado pasa a ser la cantidad observada.</p></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn need-adm" id="rec-ord"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Orden del recuento</button><button class="btn primary need-dep" id="rec-new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Nuevo recuento</button></div></div>
+      <div id="rec-dup" hidden style="margin-bottom:12px"></div>
       <form class="card form" id="rec-f" hidden autocomplete="off">
         <div class="field"><label class="lb" for="rec-fecha">Fecha <em>*</em></label><input type="date" id="rec-fecha"></div>
         <div class="field"><label class="lb" for="rec-who">Realiza el recuento <em>*</em></label><input type="text" id="rec-who" list="dl-personas" placeholder="Nombre y apellido"></div>
@@ -2151,7 +2152,7 @@ function movUi(t){
    [{n:"Caja 20 kg", f:20}] (f = cuántas unidades base trae) y soloPres (en salidas, solo presentaciones). */
 const UN_LABEL={u:"Unidades",kg:"Kilos",m:"Metros",l:"Litros",par:"Pares",bolsas:"Bolsas",bolsa:"Bolsas",pallets:"Pallets",Tn:"Toneladas",BigBag:"BigBags",caja:"Cajas",rollo:"Rollos",tambor:"Tambores"};
 const unLabel=u=>UN_LABEL[u]||(u?u.charAt(0).toUpperCase()+u.slice(1):"Unidades");
-const presOf=p=>Array.isArray(p&&p.presentaciones)?p.presentaciones.filter(x=>x&&x.n&&+x.f>0):[];
+const presOf=p=>{let a=p&&p.presentaciones;if(typeof a==="string"){try{a=JSON.parse(a)}catch(e){a=null}}if(a&&!Array.isArray(a)&&typeof a==="object")a=Object.values(a);return Array.isArray(a)?a.filter(x=>x&&String(x.n||"").trim()&&+String(x.f).replace(",",".")>0).map(x=>Object.assign({},x,{f:+String(x.f).replace(",",".")})):[]};
 const presTxt=(n,tipo,k,u)=>`${fmtN(n)} ${tipo==="bolsa"?"bolsa":"caja"}${n===1?"":"s"} × ${fmtN(k)}${u&&u!=="u"?" "+u:""}`;
 const movPresTxt=m=>m.presN?`${fmtN(m.presCant)} × ${m.presN}`:(m.cajas?presTxt(m.cajas,m.pres,m.porCaja,m.unidad):"");
 function unOptions(sel,p,tipo,keep){
@@ -5547,7 +5548,7 @@ const recName=(fecha,seq,alc)=>`Recuento ${REC_ALC[alc]?REC_ALC[alc].name.toLowe
 const recNextSeq=(f,alc)=>recList().filter(r=>r.fecha===f&&(r.alcance||"")===(alc||"")).reduce((m,r)=>Math.max(m,r.seq||1),0)+1;
 const REC_EST={abierto:["warn","En curso"],cerrado:["ok","Finalizado · archivado"],anulado:["bad","Anulado"]};
 const fmtDif=d=>d>0?`<span class="dif-pos">+${fmtN(d)}</span>`:d<0?`<span class="dif-neg">−${fmtN(-d)}</span>`:'<span class="meta">0</span>';
-function renderRec(opt){
+function renderRec(opt){try{recDupBanner()}catch(e){}
   if($("#v-rec").hidden)return;
   if(REC_CUR&&S.recs.has(REC_CUR)){renderRecDet();return}
   $("#rec-list-v").hidden=false;$("#rec-det-v").hidden=true;
@@ -5705,14 +5706,36 @@ function recClose(){
    </div>`);
   $("#rf-go").onclick=()=>recFinalize($("#rf-go"));
 }
+function recAjId(rid,sku){return ("aj-"+rid+"-"+sku).replace(/[^A-Za-z0-9_\-.~:@+]/g,"_").slice(0,190)}
+/* ajustes de recuento duplicados (mismo recuento y mismo producto más de una vez) */
+function recDups(){const g=new Map();for(const m of S.movs){if(!m.recuentoId||m.tipo!=="ajuste")continue;const k=m.recuentoId+"|"+m.sku;if(!g.has(k))g.set(k,[]);g.get(k).push(m)}
+  return Array.from(g.values()).filter(a=>a.length>1).map(a=>{a.sort((x,y)=>(x.id===recAjId(x.recuentoId,x.sku)?-1:0)-(y.id===recAjId(y.recuentoId,y.sku)?-1:0)||String(x.fecha).localeCompare(String(y.fecha)));return {keep:a[0],extra:a.slice(1)}})}
+function recDupBanner(){const box=$("#rec-dup");if(!box)return;const D=recDups();if(!D.length||!roleOk("admin")){box.hidden=true;return}
+  const n=D.reduce((t,d)=>t+d.extra.length,0);box.hidden=false;
+  box.innerHTML=`<div class="card" style="padding:12px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-color:var(--bad,#c0392b)"><div style="flex:1;min-width:220px"><b>Hay ${n} ajuste${n===1?"":"s"} de recuento repetido${n===1?"":"s"}</b><div class="meta">${D.length} producto${D.length===1?"":"s"} quedaron con el mismo ajuste registrado más de una vez, y eso altera el stock. Revisalos y corregilos.</div></div><button class="btn primary" id="rec-dup-go">Revisar y corregir</button></div>`;
+  $("#rec-dup-go").onclick=recDupFix}
+function recDupFix(){if(!guardWrite("admin"))return;const D=recDups();if(!D.length){toast("No hay ajustes repetidos.");return}
+  const rows=D.map(d=>{const p=S.products.get(d.keep.sku),u=esc((p&&p.unidad)||"u"),rec=S.recs.get(d.keep.recuentoId),extra=d.extra.reduce((t,m)=>t+(+m.cantidad||0),0),st=stockOf(d.keep.sku);
+    return `<tr><td><div class="mono meta">${esc(d.keep.sku)}</div>${esc(d.keep.nombre||(p&&p.nombre)||"")}</td><td class="meta">${esc((rec&&rec.nombre)||d.keep.remito||"")}</td><td class="r num">${d.extra.length+1} × ${fmtN(d.keep.cantidad)}</td><td class="r num">${fmtN(st)} ${u}</td><td class="r num"><b>${fmtN(Math.round((st-extra)*1000)/1000)} ${u}</b></td></tr>`}).join("");
+  const n=D.reduce((t,d)=>t+d.extra.length,0);
+  modal(`<div class="modal-h"><div><div class="meta">Recuento de stock</div><h3>Ajustes repetidos</h3></div><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
+   <div style="padding:18px;display:grid;gap:12px"><p class="meta" style="margin:0">Cada producto contado lleva <b>un solo</b> ajuste por recuento. Estos quedaron registrados más de una vez. Al corregir se borran las copias (queda uno) y el stock vuelve al valor que dejó el recuento.</p>
+   <div class="card table-wrap" style="max-height:340px;overflow:auto"><table class="prev"><thead><tr><th>Producto</th><th>Recuento</th><th class="r">Ajustes</th><th class="r">Stock hoy</th><th class="r">Stock corregido</th></tr></thead><tbody>${rows}</tbody></table></div>
+   <div class="form-actions"><button class="btn" data-close>Cancelar</button><button class="btn primary" id="rd-go">Borrar ${n} copia${n===1?"":"s"}</button></div></div>`,"wide");
+  $("#rd-go").onclick=async()=>{const b=$("#rd-go");b.disabled=true;let ok=0;
+    try{for(const d of D){for(const m of d.extra){b.textContent=`Corrigiendo ${ok+1} de ${n}…`;await withRetry(()=>db.doc("movimientos/"+m.id).delete());ok++}
+        try{await withRetry(()=>db.doc(`recuentos/${d.keep.recuentoId}/lineas/${d.keep.sku}`).update({ajusteId:d.keep.id}))}catch(e){}}
+      toast(`Listo: se borraron ${ok} ajuste${ok===1?"":"s"} repetido${ok===1?"":"s"}. El stock quedó corregido.`);closeModal();recDupBanner()}
+    catch(err){writeError(err);toast(`Se corrigieron ${ok} de ${n}. Podés volver a intentarlo.`);b.disabled=false;b.textContent="Reintentar"}}}
 async function recFinalize(b){
   if(!guardWrite("admin"))return;const r=S.recs.get(REC_CUR);if(!r||r.estado!=="abierto")return;
   b.disabled=true;const L=Array.from(S.recL.values()),D=L.filter(l=>Math.abs(l.dif||0)>1e-9&&!l.ajusteId);
   let who="";try{if(user&&myId){const ps=await user.profiles([myId]);who=(ps&&ps[myId]&&ps[myId].name)||""}}catch(e){}if(!who)who=IS_OWNER?"Administradora":"Administrador";let done=0;
   try{for(const l of D){b.textContent=`Ajustando ${done+1} de ${D.length}…`;
       const mv={sku:l.sku,nombre:l.nombre,tipo:"ajuste",cantidad:l.dif,origen:"",proveedorId:"",destino:"",obra:"",solicitante:"",autoriza:who,remito:r.nombre,obs:`${r.nombre} · contado ${fmtN(l.contado)}, sistema ${fmtN(l.sistema)} · realizó ${r.responsable||""}${l.obs?" · "+l.obs:""}`,fecha:l.ts,by:myId||"",recuentoId:r.id};
-      const m=await withRetry(()=>db.collection("movimientos").add(mv));
-      await withRetry(()=>db.doc(`recuentos/${r.id}/lineas/${l.sku}`).update({ajusteId:m.id}));l.ajusteId=m.id;done++}
+      const prev=S.movs.find(x=>x.recuentoId===r.id&&x.sku===l.sku),mid=prev?prev.id:recAjId(r.id,l.sku);
+      if(!prev)await withRetry(()=>db.doc("movimientos/"+mid).set(mv));
+      await withRetry(()=>db.doc(`recuentos/${r.id}/lineas/${l.sku}`).update({ajusteId:mid}));l.ajusteId=mid;done++}
     b.textContent="Archivando…";
     const now=new Date().toISOString(),patch={estado:"cerrado",cerrado:now,cerradoPor:who,cerradoPorId:myId||"",n:L.length,nDif:L.filter(l=>Math.abs(l.dif||0)>1e-9).length};
     await withRetry(()=>db.doc("recuentos/"+r.id).update(patch));Object.assign(r,patch);REC_GUIDE=false;
