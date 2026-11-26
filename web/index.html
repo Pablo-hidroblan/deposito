@@ -788,11 +788,9 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
 
   <!-- PRODUCTOS -->
   <section id="v-prod" data-view="prod" hidden>
-    <div id="cc-pend" hidden style="margin-bottom:12px"></div>
     <div class="section-head">
       <div><h2 id="pr-title">Productos</h2><p class="sub" id="pr-sub">Alta, edición y baja de elementos del catálogo.</p></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn need-adm" id="btn-codes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h11l-3-3M20 17H9l3 3"/></svg>Cambiar códigos</button>
         <button class="btn need-adm" id="btn-import"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3M7 8l5-5 5 5M4 21h16"/></svg>Importar Excel</button>
         <button class="btn" id="btn-labels"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Imprimir etiquetas</button>
         <button class="btn primary need-adm" id="btn-new-prod"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Nuevo producto</button>
@@ -1393,7 +1391,7 @@ function enterView(view,r,opt){
     ["#btn-carga","#btn-ped-s"].forEach(s=>$(s).hidden=!!sc);$("#btn-st-mov").hidden=!!sc;
     $("#stock-scope-actions").innerHTML=sc?`<button class="btn in need-dep" data-goto="${r.grp.id}/entrada">${ICON_IN}Entrada</button><button class="btn out need-dep" data-goto="${r.grp.id}/salida">${ICON_OUT}Salida</button><button class="btn need-adm" data-newscope="${sc}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Nuevo producto</button>`:"";
     stockFilter="all";renderStock();if(it.openNew)setTimeout(()=>newScopedProduct(sc),0)}
-  if(view==="prod"){try{ccPending()}catch(e){}$("#pr-title").textContent=it.title||"Productos";$("#pr-sub").textContent=it.sub||"";renderProd()}
+  if(view==="prod"){$("#pr-title").textContent=it.title||"Productos";$("#pr-sub").textContent=it.sub||"";renderProd()}
   if(view==="hist")renderHist();
   if(view==="inv")renderInv();
   if(view==="ped"){renderPed();if(!opt.noNew&&!opt.pop&&roleOk("deposito")&&canWrite)setTimeout(()=>{if(!$("#scrim")&&!$("#v-ped").hidden)openPedForm(null)},0)}
@@ -1939,7 +1937,6 @@ function parseSku(v){
   v=v.trim();
   if(S.products.has(v))return v;
   const up=v.toUpperCase();for(const k of S.products.keys())if(k.toUpperCase()===up)return k;
-  const al=(S.config&&S.config.codAlias)||{};let a=al[up],n=0;while(a&&!S.products.has(a)&&al[a]&&n++<6)a=al[a];if(a&&S.products.has(a))return a;
   return null;
 }
 
@@ -2024,8 +2021,8 @@ function openProduct(sku,refresh){
     <div style="min-width:0">
       <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:12px"><span class="stockv" style="font-size:40px">${fmtN(stockOf(sku))}</span><span class="unit" style="font-size:15px">${esc(p.unidad||"u")} en stock</span><span class="pill ${c}">${t}</span></div>
       <dl class="kv">
-        ${isInv(p)?`<dt>Nivel</dt><dd>Inventario general</dd><dt>Marca / modelo</dt><dd>${esc(p.marca||"—")}</dd><dt>Equipo</dt><dd>${esc(p.equipo||"—")}</dd><dt>Estado</dt><dd>${invEstPill(p)}</dd><dt>Ubicación</dt><dd>${esc(p.ubicacion||"—")}</dd>${p.aplicacion?`<dt>Se usa en</dt><dd>${esc(p.aplicacion)}</dd>`:""}${p.codAnterior?`<dt>Código anterior</dt><dd class="mono">${esc(p.codAnterior)}</dd>`:""}${invLast(p)?`<dt>Última salida</dt><dd>${invLastTxt(p)}</dd>`:""}`:`<dt>Categoría</dt><dd>${esc(p.categoria||"—")}</dd>
-        <dt>Ubicación</dt><dd>${esc(p.ubicacion||"—")}</dd>${p.aplicacion?`<dt>Se usa en</dt><dd>${esc(p.aplicacion)}</dd>`:""}${p.codAnterior?`<dt>Código anterior</dt><dd class="mono">${esc(p.codAnterior)}</dd>`:""}
+        ${isInv(p)?`<dt>Nivel</dt><dd>Inventario general</dd><dt>Marca / modelo</dt><dd>${esc(p.marca||"—")}</dd><dt>Equipo</dt><dd>${esc(p.equipo||"—")}</dd><dt>Estado</dt><dd>${invEstPill(p)}</dd><dt>Ubicación</dt><dd>${esc(p.ubicacion||"—")}</dd>${invLast(p)?`<dt>Última salida</dt><dd>${invLastTxt(p)}</dd>`:""}`:`<dt>Categoría</dt><dd>${esc(p.categoria||"—")}</dd>
+        <dt>Ubicación</dt><dd>${esc(p.ubicacion||"—")}</dd>
         <dt>Stock mínimo</dt><dd class="num">${p.minimo?fmtN(p.minimo)+" "+esc(p.unidad||"u"):"—"}</dd>`}
         <dt>Cód. proveedor</dt><dd><span class="mono">${esc(p.codProv||"—")}</span> <button type="button" class="btn ghost sm need-dep" id="d-codprov" style="padding:0 6px">✎ ${p.codProv?"Cambiar":"Agregar"}</button></dd>
         ${p.obs?`<dt>Notas</dt><dd>${esc(p.obs)}</dd>`:""}
@@ -4843,112 +4840,6 @@ $("#bc-go").addEventListener("click",async()=>{if(!guardWrite("deposito"))return
   toast(fail.length?`Se registraron ${ok} de ${sel.length}. No se pudieron registrar: ${fail.join(", ")}.`:`Listo: ${ok} movimiento${ok===1?"":"s"} registrado${ok===1?"":"s"} en el stock.`);
   renderBitConc()});
 function where0(p,e){return `${p.sku} (${fmtDay(e.fecha)})`}
-/* ---------- cambio masivo de códigos (depuración del listado) ---------- */
-const ccN=v=>String(v==null?"":v).trim().toUpperCase().replace(/\s+/g,"");
-const ccLoose=v=>ccN(v).replace(/[^A-Z0-9]/g,"");
-function ccFind(code){const c=ccN(code);if(!c)return null;if(S.products.has(c))return c;const l=ccLoose(c);for(const k of S.products.keys())if(ccN(k)===c||ccLoose(k)===l)return k;return null}
-function ccSim(a,b){const t=x=>new Set(norm(x).replace(/[^a-z0-9ñ,.]+/g," ").split(" ").filter(w=>w.length>1));const A=t(a),B=t(b);if(!A.size||!B.size)return 1;let i=0;A.forEach(w=>{if(B.has(w))i++});return i/Math.max(A.size,B.size)}
-async function ccBulk(ops,onProg){ /* ops: {op,p,id,d} */
-  if(window.DEP&&typeof DEP.call==="function"){for(let i=0;i<ops.length;i+=100){onProg&&onProg(i,ops.length);await DEP.call("write",{ops:ops.slice(i,i+100)})}onProg&&onProg(ops.length,ops.length);return}
-  for(let i=0;i<ops.length;i++){const o=ops[i];onProg&&onProg(i,ops.length);const ref=db.doc(o.p+"/"+o.id);await withRetry(()=>o.op==="delete"?ref.delete():o.op==="update"?ref.update(o.d):ref.set(o.d))}onProg&&onProg(ops.length,ops.length)}
-let CC=null;
-function ccOpen(){if(!guardWrite("admin"))return;CC=null;
-  modal(`<div class="modal-h"><div><div class="meta">Productos</div><h3>Cambiar códigos con un listado</h3></div><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
-   <div style="padding:18px;display:grid;gap:12px;grid-template-columns:minmax(0,1fr)">
-    <p class="meta" style="margin:0">Subí el Excel con las columnas <b>ID</b> (código actual), <b>NUEVO ID</b> (código nuevo, o <b>Eliminar</b>), <b>ITEM</b> (nombre) y, si querés, <b>EQUIPO</b> (dónde se usa). Antes de cambiar nada vas a ver una vista previa. Los movimientos, notas de pedido y novedades pasan al código nuevo conservando fecha, cantidad y todo su detalle.</p>
-    <div><label class="btn primary" for="cc-file">Elegir el Excel…</label><input type="file" id="cc-file" accept=".xlsx,.xls,.csv" hidden> <span class="meta" id="cc-st"></span></div>
-    <div id="cc-prev"></div></div>`,"wide");
-  $("#cc-file").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;$("#cc-st").textContent="Leyendo…";
-    try{await loadXlsx();const wb=XLSX.read(await f.arrayBuffer(),{type:"array"});const aoa=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:false,defval:""});CC=ccPlan(aoa,f.name);$("#cc-st").textContent=f.name;ccRender()}
-    catch(err){$("#cc-st").textContent="";toast(err.message||"No se pudo leer el archivo.")}}}
-function ccPlan(aoa,fname){let hi=-1,c={};
-  for(let r=0;r<Math.min(aoa.length,10)&&hi<0;r++){const row=(aoa[r]||[]).map(x=>norm(x));const io=row.findIndex(x=>/^(id|codigo|codigo actual|cod\.? actual|sku|codigo anterior)$/.test(x)),inw=row.findIndex(x=>/nuevo/.test(x));
-    if(io>=0&&inw>=0){hi=r;c={o:io,n:inw,nom:row.findIndex(x=>/^(item|nombre|descripcion|elemento|producto)/.test(x)),ap:row.findIndex(x=>/^(equipo|equipos|aplicacion|uso)/.test(x))}}}
-  if(hi<0)throw new Error("No encontré las columnas «ID» y «NUEVO ID» en la primera hoja.");
-  const rows=[],errs=[];const g=(r,i)=>i>=0?String(r[i]==null?"":r[i]).replace(/\s+/g," ").trim():"";
-  for(let r=hi+1;r<aoa.length;r++){const a=aoa[r]||[],o=g(a,c.o),n=g(a,c.n),nom=g(a,c.nom),ap=g(a,c.ap);if(!o&&!n)continue;
-    const x={fila:r+1,o:ccN(o),n:ccN(n),nom,ap,del:/^(eliminar|borrar|baja|dar de baja)$/i.test(n.trim())};x.key=x.o?ccFind(x.o):null;
-    if(!x.del&&x.n){const same=x.key&&ccLoose(x.key)===ccLoose(x.n);if(same)x.n=x.key}
-    rows.push(x)}
-  const keys=new Set(rows.filter(x=>x.key).map(x=>x.key));
-  rows.forEach(x=>{const p=x.key&&S.products.get(x.key);
-    if(x.del){x.t=x.key?"baja":"nada";if(!x.key)x.warn="Ese código no está en la app: no hay nada que eliminar.";x.stock=x.key?stockOf(x.key):0;return}
-    if(!x.n){x.err="Falta el código nuevo.";return}
-    if(/[\/#?]/.test(x.n)){x.err="El código nuevo no puede tener «/», «#» ni «?».";return}
-    if(!x.key){x.t="alta";if(x.o)x.warn=`El código ${x.o} no está en la app: se da de alta como elemento nuevo.`;return}
-    x.t=x.n===x.key?"igual":"cambia";x.p=p;
-    x.sim=x.nom?ccSim(p.nombre,x.nom):1;x.useNom=!!x.nom&&x.nom!==p.nombre&&x.sim>=.5;x.nomDif=!!x.nom&&x.nom!==p.nombre&&x.sim<.5});
-  const dupO=new Map(),dupN=new Map();rows.forEach(x=>{if(x.key){dupO.set(x.key,(dupO.get(x.key)||0)+1)}if(x.t&&x.t!=="baja"&&x.t!=="nada"&&x.n)dupN.set(x.n,(dupN.get(x.n)||[]).concat(x))});
-  rows.forEach(x=>{if(x.key&&dupO.get(x.key)>1)x.err=`El código ${x.key} aparece más de una vez en la columna ID.`});
-  dupN.forEach((L,n)=>{if(L.length>1){const withKey=L.filter(x=>x.key);if(L.some(x=>!x.key))L.forEach(x=>x.err=x.err||`El código nuevo ${n} se repite.`);else withKey.slice(1).forEach(x=>{x.t="une";x.warn=`Se une con ${withKey[0].key}: su historial se suma a ${n}.`})}});
-  rows.forEach(x=>{if(x.err||!x.n||x.t==="baja"||x.t==="nada")return;const ex=ccFind(x.n);if(ex&&ex!==x.key&&!keys.has(ex))x.err=`${ex} ya lo usa «${S.products.get(ex).nombre}», que no figura en el listado. Agregalo al listado (con su código nuevo o «Eliminar») o elegí otro código.`});
-  const open=Array.from(S.recs.values()).filter(r=>r.estado==="abierto");if(open.length)errs.push(`Hay ${open.length} recuento${open.length===1?"":"s"} abierto${open.length===1?"":"s"}: finalizalo o anulalo antes de cambiar códigos.`);
-  const map=new Map();rows.forEach(x=>{if(!x.err&&x.key&&(x.t==="cambia"||x.t==="une"))map.set(x.key,x.n)});
-  const sc=p=>p&&!isInv(p)&&!SCOPES.metal.test(p);
-  const fuera=prodList().filter(p=>sc(p)&&!keys.has(p.sku));
-  return {fname,rows,errs,map,fuera}}
-function ccRender(){const P=CC,box=$("#cc-prev");if(!P)return;
-  const R=P.rows,cnt=t=>R.filter(x=>!x.err&&x.t===t).length,nErr=R.filter(x=>x.err).length+P.errs.length;
-  const movN=S.movs.filter(m=>P.map.has(m.sku)).length,pedN=pedList().filter(p=>(p.items||[]).some(i=>P.map.has(i.sku))).length;
-  const T={cambia:["warn","Cambia código"],une:["warn","Se une"],igual:["","Mismo código"],alta:["ok","Alta nueva"],baja:["bad","Se elimina"],nada:["","—"]};
-  const pill=x=>x.err?'<span class="pill bad">Revisar</span>':`<span class="pill ${T[x.t][0]}"${T[x.t][0]?"":' style="background:var(--surface-2);color:var(--muted)"'}>${T[x.t][1]}</span>`;
-  const rows=R.map((x,i)=>{const p=x.key&&S.products.get(x.key),mv=x.key?S.movs.filter(m=>m.sku===x.key).length:0;
-    const nomCell=x.t==="baja"||x.t==="nada"?esc((p&&p.nombre)||x.nom):x.t==="alta"?esc(x.nom||"(sin nombre)"):(x.nom&&x.nom!==p.nombre?`<label class="chk" style="display:flex;gap:6px;align-items:flex-start"><input type="checkbox" data-ccnom="${i}"${x.useNom?" checked":""}><span><span class="meta">Ahora:</span> ${esc(p.nombre)}<br><span class="meta">Listado:</span> ${esc(x.nom)}${x.nomDif?'<br><b style="color:var(--bad)">⚠ Nombre muy distinto: ¿es el mismo elemento?</b>':""}</span></label>`:esc(p.nombre));
-    return `<tr${x.err?' style="background:var(--bad-soft)"':x.nomDif?' style="background:var(--warn-soft)"':""}><td class="meta num">${x.fila}</td><td class="mono">${esc(x.key||x.o||"—")}</td><td class="mono"><b>${x.t==="baja"?"Eliminar":esc(x.n||"")}</b></td><td>${nomCell}${x.ap?`<div class="meta">Equipo: ${esc(x.ap)}</div>`:""}</td><td class="r num">${x.key?fmtN(stockOf(x.key)):"—"}</td><td class="r num">${mv||""}</td><td>${pill(x)}${x.err?`<div class="meta" style="color:var(--bad)">${esc(x.err)}</div>`:x.warn?`<div class="meta">${esc(x.warn)}</div>`:""}${x.t==="baja"&&x.stock?`<div class="meta">Stock ${fmtN(x.stock)} → se registra un ajuste a 0</div>`:""}${x.t==="baja"&&R.some(y=>!y.err&&y!==x&&y.n===x.key&&y.t!=="baja")?`<div class="meta">Su código pasa a otro elemento: su historial queda como ${esc(x.key)}-BAJA.</div>`:""}</td></tr>`}).join("");
-  box.innerHTML=`<div class="neg-grid" style="margin-bottom:10px"><div><small>Cambian código</small><b>${cnt("cambia")+cnt("une")}</b><span class="meta">${movN} movimientos · ${pedN} NP</span></div><div><small>Mismo código</small><b>${cnt("igual")}</b><span class="meta">actualiza nombre/equipo</span></div><div><small>Altas nuevas</small><b>${cnt("alta")}</b></div><div${cnt("baja")?' class="neg"':""}><small>Se eliminan</small><b>${cnt("baja")}</b></div></div>
-   ${nErr?`<div class="card" style="padding:10px 12px;border-color:var(--bad);margin-bottom:10px"><b style="color:var(--bad)">Hay ${nErr} punto${nErr===1?"":"s"} para revisar antes de aplicar.</b>${P.errs.map(e=>`<div class="meta">${esc(e)}</div>`).join("")}${R.filter(x=>x.err).map(x=>`<div class="meta">• Fila ${x.fila} (${esc(x.o||x.n||"")}): ${esc(x.err)}</div>`).join("")}<div class="meta">Corregí el Excel y volvé a subirlo.</div></div>`:""}
-   ${R.some(x=>x.nomDif)?`<div class="card" style="padding:10px 12px;border-color:var(--warn);margin-bottom:10px"><b>${R.filter(x=>x.nomDif).length} fila${R.filter(x=>x.nomDif).length===1?"":"s"} con un nombre muy distinto al actual</b> (resaltadas). Puede ser una corrección o que el código del listado no corresponda a ese elemento: revisalas. Por defecto se conserva el nombre actual; tildá la casilla para usar el del listado.</div>`:""}
-   <div class="card table-wrap" style="max-height:380px;overflow:auto"><table class="prev"><thead><tr><th>Fila</th><th>Código actual</th><th>Código nuevo</th><th>Elemento</th><th class="r">Stock</th><th class="r">Mov.</th><th>Qué pasa</th></tr></thead><tbody>${rows}</tbody></table></div>
-   ${P.fuera.length?`<details style="margin-top:8px"><summary class="meta" style="cursor:pointer">${P.fuera.length} elemento${P.fuera.length===1?"":"s"} de Insumos Equipos no figuran en el listado: quedan como están</summary><div class="meta" style="margin-top:6px">${P.fuera.map(p=>`<span class="mono">${esc(p.sku)}</span> ${esc(p.nombre)}`).join(" · ")}</div></details>`:""}
-   <label class="chk" style="display:flex;gap:8px;margin-top:10px"><input type="checkbox" id="cc-ok"> Ya descargué una copia de seguridad (Administración › Copia de seguridad) y revisé la vista previa.</label>
-   <div class="form-actions" style="margin-top:10px"><button class="btn" data-close>Cancelar</button><button class="btn primary" id="cc-go" disabled>Aplicar cambios</button></div>`;
-  box.querySelectorAll("[data-ccnom]").forEach(ch=>ch.onchange=()=>{P.rows[+ch.dataset.ccnom].useNom=ch.checked});
-  $("#cc-ok").onchange=()=>{$("#cc-go").disabled=!$("#cc-ok").checked||nErr>0};$("#cc-go").onclick=ccApply}
-function ccBuild(P,migId,who){const now=new Date().toISOString(),prods={},del=[],bajas=[],alias={};
-  const catOf=code=>{const pre=code.split("-").slice(0,2).join("-");const s=prodList().find(p=>p.sku.startsWith(pre+"-"));return s?{categoria:s.categoria||"",unidad:s.unidad||"u"}:{categoria:"",unidad:"u"}};
-  P.rows.forEach(x=>{if(x.err)return;const p=x.key&&S.products.get(x.key);
-    if(x.t==="baja"){del.push(x.key);if(Math.abs(x.stock||0)>1e-9)bajas.push({sku:x.key,nombre:p.nombre,stock:x.stock});return}
-    if(x.t==="nada")return;
-    if(x.t==="alta"){const c=catOf(x.n);prods[x.n]=Object.assign({sku:x.n,nombre:x.nom||x.n,categoria:c.categoria,unidad:c.unidad,minimo:0,ubicacion:"",obs:"",creado:now,actualizado:now},x.ap?{aplicacion:x.ap}:{});return}
-    if(x.t==="une"){del.push(x.key);if(x.key!==x.n)alias[x.key]=x.n;return}
-    const d=Object.assign({},p);delete d.id;d.sku=x.n;if(x.useNom&&x.nom)d.nombre=x.nom;if(x.ap)d.aplicacion=x.ap;d.actualizado=now;
-    if(x.key!==x.n){d.codAnterior=x.key;d.codCambio=now;alias[x.key]=x.n;del.push(x.key)}
-    prods[x.n]=d});
-  const delF=del.filter(k=>!prods[k]);Object.keys(alias).forEach(k=>{if(prods[k])delete alias[k]});
-  const map=Object.fromEntries(P.map);
-  /* un elemento eliminado cuyo código pasa a otro: su historial queda aparte como CÓDIGO-BAJA */
-  P.rows.forEach(x=>{if(!x.err&&x.t==="baja"&&prods[x.key])map[x.key]=x.key+"-BAJA"});
-  bajas.forEach(b=>{if(map[b.sku])b.sku=map[b.sku]});
-  return {id:migId,fecha:now,by:myId||"",who,estado:"en curso",archivo:P.fname,map,prods,del:delF,bajas,alias}}
-async function ccExec(M,prog){const map=new Map(Object.entries(M.map||{})),ops=[];
-  for(const m of S.movs){if(m.codMig===M.id||!map.has(m.sku))continue;ops.push({op:"update",p:"movimientos",id:m.id,d:{sku:map.get(m.sku),skuAnterior:m.skuAnterior||m.sku,codMig:M.id}})}
-  for(const p of pedList()){if(p.codMig===M.id||!(p.items||[]).some(i=>map.has(i.sku)))continue;ops.push({op:"update",p:"pedidos",id:p.id,d:{items:p.items.map(i=>map.has(i.sku)?Object.assign({},i,{sku:map.get(i.sku),skuAnterior:i.skuAnterior||i.sku}):i),codMig:M.id}})}
-  for(const e of S.bit){if(e.codMig===M.id||!e.stock||!Object.keys(e.stock).some(k=>map.has(k.split("~")[0])))continue;const st={};Object.entries(e.stock).forEach(([k,v])=>{const [s,n]=k.split("~");st[(map.get(s)||s)+(n?"~"+n:"")]=v});ops.push({op:"update",p:"bitacora",id:e.id,d:{stock:st,codMig:M.id}})}
-  (M.bajas||[]).forEach(b=>ops.push({op:"set",p:"movimientos",id:("baja-"+M.id+"-"+b.sku).replace(/[^A-Za-z0-9_\-.~:@+]/g,"_"),d:{sku:b.sku,nombre:b.nombre,tipo:"ajuste",cantidad:-b.stock,origen:"",proveedorId:"",destino:"",obra:"",solicitante:"",autoriza:M.who||"",remito:"Depuración del listado",obs:"Baja del elemento por depuración del listado (no hay más en existencia)",fecha:M.fecha,by:myId||"",codMig:M.id}}));
-  Object.entries(M.prods).forEach(([k,d])=>ops.push({op:"set",p:"products",id:k,d}));
-  (M.del||[]).forEach(k=>ops.push({op:"delete",p:"products",id:k}));
-  ops.push({op:"update",p:"config",id:"app",d:{codAlias:Object.assign({},S.config.codAlias||{},M.alias||{})}});
-  await ccBulk(ops,prog);
-  await withRetry(()=>db.doc("migraciones/"+M.id).update({estado:"aplicada",aplicada:new Date().toISOString()}));
-  return ops.length}
-async function ccApply(){if(!guardWrite("admin")||!CC)return;const b=$("#cc-go");b.disabled=true;
-  let who="";try{if(user&&myId){const ps=await user.profiles([myId]);who=(ps&&ps[myId]&&ps[myId].name)||""}}catch(e){}if(!who)who="Administrador";
-  const M=ccBuild(CC,"cm"+Date.now().toString(36),who);
-  try{b.textContent="Guardando el plan…";await withRetry(()=>db.doc("migraciones/"+M.id).set(M));
-    await ccExec(M,(i,n)=>{b.textContent=`Aplicando ${Math.min(i,n)} de ${n}…`});ccDone(M)}
-  catch(err){writeError(err);toast("Se cortó a mitad de camino. Volvé a Productos y tocá «Continuar el cambio de códigos»: retoma sin duplicar.");b.textContent="Aplicar cambios";closeModal();ccPending()}}
-function ccDone(M){const nuevos=Object.keys(M.prods).filter(k=>M.prods[k].codAnterior||!S.products.has(k));
-  modal(`<div class="modal-h"><h3>Códigos actualizados</h3><button class="btn ghost x" data-close aria-label="Cerrar">✕</button></div>
-   <div style="padding:18px;display:grid;gap:10px"><p style="margin:0">Listo. Los movimientos y notas de pedido quedaron con los códigos nuevos (cada movimiento guarda también su código anterior). ${(M.del||[]).length?`Se eliminaron ${(M.del||[]).length} códigos del listado.`:""}</p>
-   <p class="meta" style="margin:0">Las etiquetas QR viejas de los códigos que ya no existen abren el elemento con su código nuevo. Las de códigos que ahora usa <b>otro</b> elemento (intercambios) hay que reimprimirlas.</p>
-   <div class="form-actions"><button class="btn" data-close>Cerrar</button>${nuevos.length?`<button class="btn primary" id="cc-lbl">Imprimir etiquetas de los ${nuevos.length} códigos nuevos</button>`:""}</div></div>`);
-  const l=$("#cc-lbl");if(l)l.onclick=()=>{closeModal();go("admin/etiquetas",{skus:nuevos})}}
-async function ccPending(){const box=$("#cc-pend");if(!box||!db)return;box.hidden=true;if(!roleOk("admin"))return;
-  try{const q=await db.collection("migraciones").get();const M=q.docs.map(d=>Object.assign({id:d.id},d.data())).find(m=>m.estado==="en curso");if(!M)return;
-    box.hidden=false;box.innerHTML=`<div class="card" style="padding:12px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-color:var(--warn)"><div style="flex:1;min-width:220px"><b>Hay un cambio de códigos sin terminar</b><div class="meta">Empezado el ${esc(fmtD(M.fecha))}${M.archivo?" con «"+esc(M.archivo)+"»":""}. Continualo para que todo quede con los códigos nuevos.</div></div><button class="btn primary" id="cc-cont">Continuar el cambio de códigos</button></div>`;
-    $("#cc-cont").onclick=async e=>{const b=e.currentTarget;b.disabled=true;try{await ccExec(M,(i,n)=>{b.textContent=`Aplicando ${Math.min(i,n)} de ${n}…`});box.hidden=true;ccDone(M)}catch(err){writeError(err);b.disabled=false;b.textContent="Reintentar"}}}catch(e){}}
-
-$("#btn-codes").addEventListener("click",ccOpen);
 /* ---------- tablero de consumo mensual ---------- */
 let CM_SCOPE=null;const CM_MES=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"],CM_MESL=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
 const cmKeyLS=()=>"dep-cm-sel-"+(CM_SCOPE||"equipos");
