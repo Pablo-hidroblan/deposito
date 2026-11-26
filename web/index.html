@@ -169,7 +169,12 @@ main{padding-inline:20px;padding-block:20px 60px;min-width:0;max-width:1220px;wi
 .bit-dh b{font-family:var(--f-display);font-size:18px;font-weight:600}
 .bit-dh b::first-letter{text-transform:uppercase}
 .bit-e{padding:9px 14px;border-bottom:1px solid var(--line);display:grid;gap:4px}
-.eq-chg{background:var(--accent-soft)}#t-eqp td[contenteditable]{outline:none;min-width:40px}#t-eqp td[contenteditable]:focus{box-shadow:inset 0 0 0 2px var(--accent)}
+.eq-chg{background:var(--accent-soft)}
+.cm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,460px),1fr));gap:12px}.cm-card{padding:14px 16px;display:grid;gap:10px;min-width:0}
+.cm-h{display:flex;gap:8px;align-items:flex-start;justify-content:space-between}.cm-n{font-weight:600;line-height:1.3}
+.cm-k{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}@media (max-width:520px){.cm-k{grid-template-columns:repeat(2,minmax(0,1fr))}}.cm-k>div{display:grid;gap:1px;align-content:start}.cm-k b{font-size:1.05rem;font-variant-numeric:tabular-nums}
+.cm-leg{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.cm-sw{display:inline-block;width:12px;height:10px;border-radius:2px;background:var(--accent);margin-left:6px}.cm-sw:first-child{margin-left:0}.cm-sw.cm-av{height:0;border-top:2px dashed var(--ink);opacity:.55;background:none;width:16px}
+#cm-tip{position:fixed;z-index:1200;pointer-events:none;background:var(--ink);color:var(--surface);padding:6px 9px;border-radius:6px;font-size:.82rem;line-height:1.35;box-shadow:0 4px 14px rgba(0,0,0,.2);max-width:260px}#t-eqp td[contenteditable]{outline:none;min-width:40px}#t-eqp td[contenteditable]:focus{box-shadow:inset 0 0 0 2px var(--accent)}
 .bc-e{padding:0;overflow:hidden}.bc-h{padding:10px 14px;border-bottom:1px solid var(--line);display:grid;gap:4px}
 .bc-t{width:100%;border-collapse:collapse}.bc-t td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:middle}.bc-t tr:last-child td{border-bottom:0}
 .bc-t input[type=text],.bc-t input[type=number],.bc-t select{min-width:0;width:100%;padding:6px 8px}
@@ -1004,6 +1009,18 @@ dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
     <div id="bh-list" style="display:grid;gap:12px"></div>
     <div style="text-align:center;margin-top:12px"><button class="btn" id="bh-more" hidden>Mostrar más días</button></div>
   </section>
+  <section id="v-consumo" data-view="consumo" hidden>
+    <div class="section-head"><div><h2>Consumo mensual</h2><p class="sub" id="cm-sub"></p></div><div><button class="btn" id="cm-xls"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Exportar a Excel</button></div></div>
+    <div class="toolbar">
+      <select id="cm-niv" style="width:auto" aria-label="Nivel"><option value="">Insumos Equipos</option><option value="metal">Insumos Metalúrgicos</option><option value="grava">Grava</option><option value="bentonita">Bentonita</option><option value="tripolifosfato">Tripolifosfato</option><option value="inv">Inventario general</option></select>
+      <select id="cm-per" style="width:auto" aria-label="Período"><option value="6">Últimos 6 meses</option><option value="12" selected>Últimos 12 meses</option><option value="24">Últimos 24 meses</option><option value="0">Desde el primer registro</option></select>
+      <label for="cm-dest" id="cm-dest-lb" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Destino</label><select id="cm-dest" style="width:auto;max-width:220px"></select>
+      <input class="grow" type="search" id="cm-add" list="dl-cm" placeholder="Agregar un elemento al tablero (código o nombre)…" autocomplete="off">
+    </div>
+    <div id="cm-cards" class="cm-grid"></div>
+    <div class="lb" id="cm-rank-t" style="margin:18px 0 8px"></div>
+    <div class="card"><div class="table-wrap"><table class="cards"><thead><tr><th>#</th><th>Elemento</th><th class="r">Total</th><th class="r hide-m">Prom./mes</th><th class="hide-m">Mes a mes</th><th></th></tr></thead><tbody id="cm-rank"></tbody></table></div></div>
+  </section>
   <section id="v-eqinfo" data-view="eqinfo" hidden>
     <div class="section-head"><div><h2>Equipos de trabajo</h2><p class="sub" id="eq-sub">Datos del reporte diario de equipos: obra, jefe de equipo, estado.</p></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn need-dep" id="eq-add">Agregar equipo</button><button class="btn primary need-dep" id="eq-upd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3M7 8l5-5 5 5M4 21h16"/></svg>Actualizar con el reporte</button></div></div>
@@ -1256,6 +1273,7 @@ const MENU=[
     {id:"salida",name:"Salida",view:"mov",need:"deposito",tipos:["egreso"],title:"Salida de productos",sub:"Egreso de productos hacia un área, equipo, pozo o cliente."},
     {id:"stock",name:"Stock",view:"stock"},
     {id:"historial",name:"Historial",view:"hist"},
+    {id:"consumo",name:"Consumo mensual",view:"consumo"},
     {id:"recuento",name:"Recuento de stock",view:"rec"},
     {id:"ajuste",name:"Ajuste por recuento",view:"mov",need:"admin",tipos:["ajuste"],hidden:true,title:"Ajuste por recuento",sub:"Corrige el stock de un producto según lo contado en el depósito."},
     {id:"altabaja",name:"Alta / Baja de producto",view:"prod",need:"admin",title:"Alta / Baja de producto",sub:"Dar de alta productos nuevos, editarlos o darlos de baja."},
@@ -1267,7 +1285,8 @@ const MENU=[
     {id:"entrada",name:"Entrada",view:"mov",need:"deposito",tipos:["ingreso"],title:"Entrada de insumos metalúrgicos",sub:"Ingreso de insumos del taller metalúrgico."},
     {id:"salida",name:"Salida",view:"mov",need:"deposito",tipos:["egreso"],title:"Salida de insumos metalúrgicos",sub:"Retiro de insumos del taller metalúrgico, en unidades o en cajas."},
     {id:"stock",name:"Stock",view:"stock",title:"Stock de insumos metalúrgicos"},
-    {id:"historial",name:"Historial",view:"shist"}]},
+    {id:"historial",name:"Historial",view:"shist"},
+    {id:"consumo",name:"Consumo mensual",view:"consumo"}]},
   {id:"compras",name:"Compras",ic:"compras",items:[{id:"pedido",name:"Nueva NP",view:"ped"},{id:"seguimiento",name:"Seguimiento NP",view:"npseg"}]},
   {id:"trepanos",name:"Trépanos",ic:"trepanos",items:[
     {id:"stock",name:"Listado de stock",view:"tr-stock"},
@@ -1282,18 +1301,21 @@ const MENU=[
     {id:"salida",name:"Salida",view:"mov",need:"deposito",tipos:["egreso"],title:"Salida de grava",sub:"Egreso de grava hacia un equipo, pozo o cliente."},
     {id:"stock",name:"Stock",view:"stock",title:"Stock de grava"},
     {id:"historial",name:"Historial",view:"shist"},
+    {id:"consumo",name:"Consumo mensual",view:"consumo"},
     {id:"nuevo",name:"Nuevo producto",view:"stock",title:"Stock de grava",openNew:true,need:"admin"}]},
   {id:"bentonita",name:"Bentonita",ic:"bentonita",scope:"bentonita",items:[
     {id:"entrada",name:"Entrada",view:"mov",need:"deposito",tipos:["ingreso"],title:"Entrada de bentonita",sub:"Ingreso de bentonita al depósito."},
     {id:"salida",name:"Salida",view:"mov",need:"deposito",tipos:["egreso"],title:"Salida de bentonita",sub:"Egreso de bentonita hacia un equipo, pozo o cliente."},
     {id:"stock",name:"Stock",view:"stock",title:"Stock de bentonita"},
     {id:"historial",name:"Historial",view:"shist"},
+    {id:"consumo",name:"Consumo mensual",view:"consumo"},
     {id:"nuevo",name:"Nuevo producto",view:"stock",title:"Stock de bentonita",openNew:true,need:"admin"}]},
   {id:"tripolifosfato",name:"Tripolifosfato",ic:"tripolifosfato",scope:"tripolifosfato",items:[
     {id:"entrada",name:"Entrada",view:"mov",need:"deposito",tipos:["ingreso"],title:"Entrada de tripolifosfato",sub:"Ingreso de tripolifosfato al depósito."},
     {id:"salida",name:"Salida",view:"mov",need:"deposito",tipos:["egreso"],title:"Salida de tripolifosfato",sub:"Egreso de tripolifosfato hacia un equipo, pozo o cliente."},
     {id:"stock",name:"Stock",view:"stock",title:"Stock de tripolifosfato"},
     {id:"historial",name:"Historial",view:"shist"},
+    {id:"consumo",name:"Consumo mensual",view:"consumo"},
     {id:"nuevo",name:"Nuevo producto",view:"stock",title:"Stock de tripolifosfato",openNew:true,need:"admin"}]},
   {id:"admin",name:"Administración",ic:"admin",items:[
     {id:"ajustes",name:"Ajustes generales",view:"conf",need:"admin"},
@@ -1380,6 +1402,7 @@ function enterView(view,r,opt){
   if(view==="bit-reg"){if(!$("#br-fecha").value)$("#br-fecha").value=lsGet("dep-bit-fecha")||todayStr();if(!$("#br-who").value)$("#br-who").value=lsGet("dep-bit-who")||"";renderBitReg()}
   if(view==="bit-hist")renderBitHist();
   if(view==="eqinfo")renderEqInfo();
+  if(view==="consumo"){CM_SCOPE=sc;const pv=lsGet("dep-cm-per");if(pv!=null&&[...$("#cm-per").options].some(o=>o.value===pv))$("#cm-per").value=pv;$("#cm-dest").value="";renderConsumo()}
   if(view==="bit-conc"){if(!$("#bc-desde").value)$("#bc-desde").value=lsGet("dep-bc-desde")||addDays(todayStr(),-7);renderBitConc()}
   if(view==="camtest")renderCamTest();
   if(view==="backup")renderBackup();
@@ -1764,6 +1787,8 @@ const AYUDA=[
   "Andá a <b>Compras › Seguimiento NP</b>: cada nota muestra su estado (Enviada, Procesada, Entrega parcial o Recibido).","Tocá la nota para ver qué se pidió, qué llegó y qué falta.","Cuando llega material, tocá <b>Dar ingreso</b>, marcá los ítems que llegaron y ajustá la cantidad.","Si algo llegó mal, en ese ítem elegí <b>Pedir recambio / devolución</b> y escribí el motivo.","Tocá <b>Continuar</b>, elegí el proveedor y el remito si los tenés, y tocá <b>Ingresar</b>.","Si pediste un recambio, se abre el mensaje de WhatsApp para avisarle a Compras."]},
  {id:"diario",c:"Movimientos diarios",t:"Registrar una novedad del día",k:"bitacora novedad diario registrar movimiento del dia whatsapp compartir",v:["bit-reg","bit-hist"],r:"diario/registrar",p:"deposito",s:[
   "Andá a <b>Movimientos diarios › Registrar movimiento</b>.","Revisá la <b>Fecha</b> y quién <b>Registra</b>.","Escribí la <b>Novedad</b> (por ejemplo: «Se entregan 2 gomas a TEC25»). Podés sumar fotos.","Tocá <b>Cargar novedad</b>.","Para mandarlo al grupo: <b>Compartir por WhatsApp</b>, elegí el período y compartí."]},
+ {id:"consumo",c:"Insumos",t:"Ver el consumo mensual de un elemento (gráficos)",k:"consumo mensual grafico tablero comparar meses electrodos fluctuacion estadistica promedio ranking",v:["consumo"],r:"metal/consumo",s:[
+  "Andá a <b>Consumo mensual</b> dentro del nivel (Insumos Metalúrgicos, Insumos Equipos, Grava, Bentonita o Tripolifosfato).","Elegí el <b>período</b> y, si querés, el <b>destino</b> (o quién retira, en metalúrgicos).","Agregá elementos con el buscador o con <b>+ Comparar</b> en el ranking: cada uno tiene su gráfico mes a mes, con la línea de promedio.","Pasá el dedo o el mouse por una barra para ver la cantidad y las salidas de ese mes. <b>Exportar a Excel</b> baja la tabla mes a mes."]},
  {id:"equipos",c:"Administración",t:"Actualizar los equipos con el reporte diario",k:"equipos reporte diario obra jefe de equipo tec actualizar whatsapp captura completar automatico",v:["eqinfo"],r:"admin/equipos",p:"deposito",s:[
   "Andá a <b>Administración › Equipos de trabajo</b> y tocá <b>Actualizar con el reporte</b>.","Elegí la <b>captura</b> que llega por WhatsApp (Claude la lee), o pegá la tabla copiada del Excel, o subí el Excel.","Revisá la tabla: lo que cambia respecto de lo guardado aparece resaltado. Podés corregir tocando la celda.","Tocá <b>Guardar</b>. Desde ahí, al poner el equipo en una salida o entrada se completan la obra y el jefe de equipo."]},
  {id:"astock",c:"Movimientos diarios",t:"Pasar al stock lo anotado en Movimientos diarios",k:"pasar stock automatico conciliar bitacora salida entrada sin cargar una por una codigo bentonita grava tripolifosfato fin del dia descontar sumar",v:["bit-conc"],r:"diario/astock",p:"deposito",s:[
@@ -1973,7 +1998,7 @@ $("#p-q").addEventListener("input",renderProd);
 $("#t-prod").addEventListener("click",e=>{const ed=e.target.closest("[data-edit]");if(ed){e.stopPropagation();openProductForm(ed.dataset.edit);return}const r=e.target.closest("tr[data-sku]");if(r)openProduct(r.dataset.sku)});
 $("#btn-new-prod").addEventListener("click",()=>openProductForm(null));
 
-function renderAll(){if(ROUTE.it&&ROUTE.it.view==="shist")setTimeout(renderSHist,0);try{renderBitConc()}catch(e){}if(ROUTE.it&&ROUTE.it.view==="lbl"&&!$("#l-rows"))openLabels([],$("#lbl-host"));recompute();renderLists();renderStock();renderInv();renderNpSeg();renderProd();renderProv();renderPed();renderHome();origenHint();if(!$("#v-hist").hidden)renderHist();updatePreview();if(currentModalSku&&S.products.has(currentModalSku))openProduct(currentModalSku,true)}
+function renderAll(){if(ROUTE.it&&ROUTE.it.view==="shist")setTimeout(renderSHist,0);try{renderConsumo()}catch(e){}try{renderBitConc()}catch(e){}if(ROUTE.it&&ROUTE.it.view==="lbl"&&!$("#l-rows"))openLabels([],$("#lbl-host"));recompute();renderLists();renderStock();renderInv();renderNpSeg();renderProd();renderProv();renderPed();renderHome();origenHint();if(!$("#v-hist").hidden)renderHist();updatePreview();if(currentModalSku&&S.products.has(currentModalSku))openProduct(currentModalSku,true)}
 
 /* ---------- modal ---------- */
 let currentModalSku=null;
@@ -4814,6 +4839,70 @@ $("#bc-go").addEventListener("click",async()=>{if(!guardWrite("deposito"))return
   toast(fail.length?`Se registraron ${ok} de ${sel.length}. No se pudieron registrar: ${fail.join(", ")}.`:`Listo: ${ok} movimiento${ok===1?"":"s"} registrado${ok===1?"":"s"} en el stock.`);
   renderBitConc()});
 function where0(p,e){return `${p.sku} (${fmtDay(e.fecha)})`}
+/* ---------- tablero de consumo mensual ---------- */
+let CM_SCOPE=null;const CM_MES=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"],CM_MESL=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+const cmKeyLS=()=>"dep-cm-sel-"+(CM_SCOPE||"equipos");
+function cmMonths(n){const d=new Date(),out=[];for(let i=n-1;i>=0;i--){const x=new Date(d.getFullYear(),d.getMonth()-i,1);out.push(x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0"))}return out}
+const cmLbl=k=>{const [y,m]=k.split("-");return CM_MES[+m-1]+" "+y.slice(2)},cmLblL=k=>{const [y,m]=k.split("-");return CM_MESL[+m-1]+" "+y};
+function cmWho(m){return CM_SCOPE==="metal"?(m.solicitante||""):(m.destino||"")}
+function cmData(){const per=$("#cm-per").value,dest=$("#cm-dest").value,test=scopeTest(CM_SCOPE);
+  let n=+per||0;const mov=S.movs.filter(m=>m.tipo==="egreso"&&m.sku&&test(S.products.get(m.sku)||{sku:m.sku,nombre:m.nombre||""}));
+  if(!n){const first=mov.reduce((a,m)=>{const k=localDay(m.fecha).slice(0,7);return !a||k<a?k:a},"");const d=new Date();n=first?Math.max(2,(d.getFullYear()-+first.slice(0,4))*12+(d.getMonth()+1-+first.slice(5,7))+1):12;n=Math.min(n,60)}
+  const months=cmMonths(n),mi=new Map(months.map((k,i)=>[k,i])),by=new Map(),whoS=new Set();
+  for(const m of mov){const w=cmWho(m);if(w)whoS.add(w);if(dest&&w!==dest)continue;const i=mi.get(localDay(m.fecha).slice(0,7));if(i==null)continue;
+    let r=by.get(m.sku);if(!r){r={sku:m.sku,v:new Array(n).fill(0),c:new Array(n).fill(0)};by.set(m.sku,r)}r.v[i]+=+m.cantidad||0;r.c[i]++}
+  by.forEach(r=>{r.v=r.v.map(x=>Math.round(x*1000)/1000);r.tot=r.v.reduce((a,b)=>a+b,0);const full=r.v.slice(0,-1);r.avg=full.length?full.reduce((a,b)=>a+b,0)/full.length:r.tot;r.p=S.products.get(r.sku)});
+  return {months,by,who:Array.from(whoS).sort((a,b)=>a.localeCompare(b,"es",{numeric:true}))}}
+function cmBars(r,months,lbl){const W=560,H=190,pl=40,pr=8,pt=12,pb=26,n=months.length,iw=W-pl-pr,ih=H-pt-pb;
+  const max=Math.max(...r.v,r.avg,0)||1,step=niceStep(max/4),top=Math.ceil(max/step)*step||1,y=v=>pt+ih-(v/top)*ih,bw=iw/n,gap=Math.max(2,bw*.22),u=esc((r.p&&r.p.unidad)||"u");
+  let g="";for(let t=0;t<=top+1e-9;t+=step){g+=`<line x1="${pl}" x2="${W-pr}" y1="${y(t)}" y2="${y(t)}" stroke="var(--line)" stroke-width="1"${t?' stroke-dasharray="2 3"':""}/><text x="${pl-6}" y="${y(t)+4}" text-anchor="end" font-size="11" fill="var(--muted)">${fmtN(t)}</text>`}
+  const every=Math.ceil(n/12);let b="";
+  r.v.forEach((v,i)=>{const x=pl+i*bw+gap/2,w=Math.max(2,bw-gap),h=Math.max(0,y(0)-y(v)),cur=i===n-1,rad=Math.min(4,w/2,h);
+    if(v>0)b+=`<path d="M${x},${y(0)}V${y(v)+rad}Q${x},${y(v)} ${x+rad},${y(v)}H${x+w-rad}Q${x+w},${y(v)} ${x+w},${y(v)+rad}V${y(0)}Z" fill="var(--accent)"${cur?' fill-opacity=".4"':""}/>`;
+    b+=`<rect x="${pl+i*bw}" y="${pt}" width="${bw}" height="${ih}" fill="transparent" data-cmtip="${esc(`<b>${cmLblL(months[i])}${cur?" (en curso)":""}</b><br>${fmtN(v)} ${u} · ${r.c[i]} salida${r.c[i]===1?"":"s"}`)}"/>`;
+    if(i%every===0||cur)b+=`<text x="${pl+i*bw+bw/2}" y="${H-8}" text-anchor="middle" font-size="11" fill="var(--muted)">${esc(cmLbl(months[i]))}</text>`});
+  const av=r.avg>0?`<line x1="${pl}" x2="${W-pr}" y1="${y(r.avg)}" y2="${y(r.avg)}" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="5 4" opacity=".55"/>`:"";
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${esc(lbl)}" style="display:block;overflow:visible">${g}${b}${av}</svg>`}
+function niceStep(x){if(!(x>0))return 1;const p=Math.pow(10,Math.floor(Math.log10(x))),f=x/p;return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*p}
+function cmSpark(v){const W=110,H=26,max=Math.max(...v)||1,n=v.length,bw=W/n;return `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" aria-hidden="true">${v.map((x,i)=>{const h=Math.max(x>0?1.5:0,(x/max)*(H-2));return h?`<rect x="${i*bw+.5}" y="${H-h}" width="${Math.max(1,bw-1.5)}" height="${h}" rx="1" fill="var(--accent)"${i===n-1?' fill-opacity=".4"':""}/>`:""}).join("")}<line x1="0" x2="${W}" y1="${H-.5}" y2="${H-.5}" stroke="var(--line)"/></svg>`}
+function cmSel(){try{return JSON.parse(lsGet(cmKeyLS())||"null")}catch(e){return null}}
+function renderConsumo(){if($("#v-consumo").hidden)return;
+  $("#cm-niv").value=CM_SCOPE||"";$("#cm-dest-lb").textContent=CM_SCOPE==="metal"?"Retira":"Destino";
+  const D=cmData(),{months,by}=D,ds=$("#cm-dest"),cur=ds.value;
+  ds.innerHTML=`<option value="">${CM_SCOPE==="metal"?"Todas las personas":"Todos los destinos"}</option>`+D.who.map(w=>`<option${w===cur?" selected":""}>${esc(w)}</option>`).join("");if(cur&&!D.who.includes(cur))ds.value="";
+  const rank=Array.from(by.values()).filter(r=>r.tot>0).sort((a,b)=>b.tot-a.tot);
+  let sel=cmSel();if(!Array.isArray(sel))sel=rank.slice(0,4).map(r=>r.sku);sel=sel.filter(k=>S.products.has(k)).slice(0,8);
+  const scName=CM_SCOPE?SCOPES[CM_SCOPE].name:"Insumos Equipos";
+  $("#cm-sub").innerHTML=`${esc(scName)} · salidas por mes entre <b>${esc(cmLblL(months[0]))}</b> y <b>${esc(cmLblL(months[months.length-1]))}</b>${$("#cm-dest").value?` · ${CM_SCOPE==="metal"?"retiradas por":"hacia"} <b>${esc($("#cm-dest").value)}</b>`:""}. El mes en curso se ve más claro porque todavía no terminó.`;
+  trDl("dl-cm",prodList().filter(scopeTest(CM_SCOPE)).map(p=>`<option value="${esc(p.sku+" · "+p.nombre)}"></option>`).join(""));
+  $("#cm-cards").innerHTML=sel.length?sel.map(k=>{const r=by.get(k)||{sku:k,v:new Array(months.length).fill(0),c:new Array(months.length).fill(0),tot:0,avg:0,p:S.products.get(k)},p=r.p||{},u=esc(p.unidad||"u");
+      const last=r.v.length>1?r.v[r.v.length-2]:0,lk=months.length>1?months[months.length-2]:months[0],dif=r.avg>0?Math.round((last-r.avg)/r.avg*100):null;
+      return `<div class="card cm-card"><div class="cm-h"><div style="min-width:0"><div class="mono meta">${esc(k)}</div><div class="cm-n">${esc(p.nombre||k)}</div></div><button class="btn ghost sm" data-cmrm="${esc(k)}" aria-label="Quitar del tablero" title="Quitar del tablero">✕</button></div>
+        <div class="cm-k"><div><span class="meta">Total del período</span><b>${fmtN(r.tot)} ${u}</b></div><div><span class="meta">Promedio mensual</span><b>${fmtN(Math.round(r.avg*10)/10)} ${u}</b></div><div><span class="meta">Último mes (${esc(cmLbl(lk))})</span><b>${fmtN(last)} ${u}</b>${dif!=null&&r.avg>0?`<span class="meta">${dif>0?"▲ +":dif<0?"▼ ":""}${dif}% vs. promedio</span>`:""}</div><div><span class="meta">Stock actual</span><b>${fmtN(stockOf(k))} ${u}</b>${r.avg>0&&stockOf(k)>0?`<span class="meta">≈ ${fmtN(Math.round(stockOf(k)/r.avg*10)/10)} meses de consumo</span>`:stockOf(k)<=0?'<span class="meta">Sin stock</span>':""}</div></div>
+        ${r.tot>0?cmBars(r,months,"Consumo mensual de "+(p.nombre||k)):`<div class="meta" style="padding:30px 0;text-align:center">Sin salidas en el período${$("#cm-dest").value?" para ese destino":""}.</div>`}
+        <div class="meta cm-leg"><span class="cm-sw"></span>Consumo del mes <span class="cm-sw cm-av"></span>Promedio mensual (meses cerrados)</div></div>`}).join(""):`<div class="card empty"><b>Elegí qué elementos comparar</b>Buscalos arriba o tocá <b>+ Comparar</b> en el ranking de abajo.</div>`;
+  $("#cm-rank").innerHTML=rank.slice(0,40).map((r,i)=>{const u=esc((r.p&&r.p.unidad)||"u");return `<tr><td class="meta num">${i+1}</td><td><div class="mono meta">${esc(r.sku)}</div>${esc(r.p?r.p.nombre:r.sku)}</td><td class="r num"><b>${fmtN(r.tot)}</b> ${u}</td><td class="r num hide-m">${fmtN(Math.round(r.avg*10)/10)} ${u}</td><td class="hide-m">${cmSpark(r.v)}</td><td class="r">${sel.includes(r.sku)?'<span class="meta">En el tablero</span>':`<button class="btn sm" data-cmadd="${esc(r.sku)}">+ Comparar</button>`}</td></tr>`}).join("")||`<tr><td colspan="6" class="meta" style="padding:14px">No hay salidas registradas en este período.</td></tr>`;
+  $("#cm-rank-t").textContent=`Ranking de consumo del período (${rank.length} elemento${rank.length===1?"":"s"} con salidas)`}
+function cmSetSel(a){lsSet(cmKeyLS(),JSON.stringify(a));renderConsumo()}
+$("#cm-niv").addEventListener("change",()=>{CM_SCOPE=$("#cm-niv").value||null;$("#cm-dest").value="";renderConsumo()});
+["#cm-per","#cm-dest"].forEach(x=>$(x).addEventListener("change",()=>{if(x==="#cm-per")lsSet("dep-cm-per",$("#cm-per").value);renderConsumo()}));
+$("#cm-add").addEventListener("change",()=>{const k=parseSku($("#cm-add").value);if(!k||!S.products.has(k))return;const s=cmSel()||Array.from(cmData().by.values()).filter(r=>r.tot>0).sort((a,b)=>b.tot-a.tot).slice(0,4).map(r=>r.sku);$("#cm-add").value="";if(!s.includes(k))s.unshift(k);cmSetSel(s.slice(0,8))});
+$("#v-consumo").addEventListener("click",e=>{const a=e.target.closest("[data-cmadd]"),rm=e.target.closest("[data-cmrm]");
+  const cur=()=>cmSel()||Array.from(cmData().by.values()).filter(r=>r.tot>0).sort((a,b)=>b.tot-a.tot).slice(0,4).map(r=>r.sku);
+  if(a){const s=cur();if(!s.includes(a.dataset.cmadd))s.push(a.dataset.cmadd);if(s.length>8){toast("Hasta 8 elementos en el tablero: quitá alguno.");return}cmSetSel(s);$("#cm-cards").scrollIntoView({behavior:"smooth",block:"start"})}
+  if(rm)cmSetSel(cur().filter(k=>k!==rm.dataset.cmrm))});
+{const tip=document.createElement("div");tip.id="cm-tip";tip.hidden=true;document.body.appendChild(tip);
+  const show=(t,x,y)=>{tip.innerHTML=t;tip.hidden=false;const w=tip.offsetWidth;tip.style.left=Math.max(8,Math.min(innerWidth-w-8,x-w/2))+"px";tip.style.top=(y-tip.offsetHeight-12)+"px"};
+  $("#cm-cards").addEventListener("pointermove",e=>{const r=e.target.closest("[data-cmtip]");if(!r){tip.hidden=true;return}show(r.dataset.cmtip,e.clientX,e.clientY)});
+  $("#cm-cards").addEventListener("pointerleave",()=>tip.hidden=true);
+  $("#cm-cards").addEventListener("click",e=>{const r=e.target.closest("[data-cmtip]");if(r)show(r.dataset.cmtip,e.clientX,e.clientY)});
+  window.addEventListener("scroll",()=>tip.hidden=true,{passive:true})}
+$("#cm-xls").addEventListener("click",async()=>{const D=cmData(),rows=Array.from(D.by.values()).filter(r=>r.tot>0).sort((a,b)=>b.tot-a.tot);if(!rows.length){toast("No hay consumo para exportar.");return}
+  try{await loadXlsx()}catch(e){toast("No se pudo cargar el generador de Excel.");return}
+  const aoa=[["SKU","Elemento","Unidad"].concat(D.months.map(cmLblL),["Total","Promedio mensual"])].concat(rows.map(r=>[r.sku,r.p?r.p.nombre:"",(r.p&&r.p.unidad)||"u"].concat(r.v,[r.tot,Math.round(r.avg*100)/100])));
+  const ws=XLSX.utils.aoa_to_sheet(aoa);ws["!cols"]=[{wch:12},{wch:44},{wch:8}].concat(D.months.map(()=>({wch:10})),[{wch:10},{wch:12}]);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Consumo mensual");
+  save(`consumo-mensual-${(CM_SCOPE||"equipos")}-${todayStr()}.xlsx`,new Blob([XLSX.write(wb,{bookType:"xlsx",type:"array"})]))});
+
 /* ---------- equipos de trabajo (reporte diario de equipos) ---------- */
 let SAMPLE=null,SAMPLE_IMG=false;
 const EQ_F=[["equipo","Equipo"],["estado","Estado"],["detalle","Detalle"],["jefe","Jefe de equipo"],["rodado","Rodado"],["obra","N° de obra"],["obraNombre","Obra"],["provincia","Provincia"],["profActual","Prof. actual"],["profFinal","Prof. final"]];
