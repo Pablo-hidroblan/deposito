@@ -2620,7 +2620,8 @@ const BK_COLS=[
  ["sugerencias","Sugerencias",()=>Array.from(S.sugs.values()),[]],
  ["agenda","Agenda de correos",()=>agendaList(),["nombre","email","area","obs","creado","id"]],
  ["perfiles","Perfiles",()=>Array.from(S.perfiles.entries()).map(([id,v])=>Object.assign({id},v)),["id","perfil","asignadoPor","fecha"]],
- ["usuarios","Usuarios",()=>Array.from(S.usuarios.entries()).map(([id,v])=>Object.assign({id},v)),["id","firstSeen","lastSeen","acceso"]]];
+ ["usuarios","Usuarios",()=>Array.from(S.usuarios.entries()).map(([id,v])=>Object.assign({id},v)),["id","firstSeen","lastSeen","acceso"]],
+ ["equipos","Equipos de trabajo",()=>Array.from(S.eqi.values()),["id","equipo","estado","detalle","jefe","rodado","obra","obraNombre","provincia","profActual","profFinal","fechaReporte"]]];
 function bkCell(k,v){if(v==null)return"";if(typeof v==="number"||typeof v==="boolean")return v;
   if(Array.isArray(v)){if(!v.length)return"";if(k==="adjuntos")return v.map(a=>a.nombre||a.id).join(", ");if(k==="presentaciones")return v.map(x=>x.n+(x.f?" = "+x.f:"")).join(" · ");if(k==="items")return v.map(i=>`${i.cantidad} ${i.unidad||""} ${i.sku} ${i.nombre||""}`.replace(/\s+/g," ").trim()).join(" | ");if(v.every(x=>typeof x!=="object"))return v.join(", ");return JSON.stringify(v)}
   if(typeof v==="object")return JSON.stringify(v);const t=String(v);return t.length>32000?t.slice(0,32000)+"…":t}
